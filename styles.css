@@ -497,6 +497,10 @@ footer.bg-purple-deep.px-4.py-8 > a {
   display: none;
 }
 
+footer.bg-purple-deep.px-4.py-8 > span {
+  display: none;
+}
+
 footer.bg-purple-deep.px-4.py-8::after {
   content: "版權所有 © 2026 AGK 學術時事及常識問答隊";
   display: block;
