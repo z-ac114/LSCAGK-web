@@ -465,9 +465,7 @@ header.bg-purple .bg-red {
 
 main > section.bg-purple {
   background:
-    linear-gradient(90deg, rgb(53 17 73 / 88%), rgb(76 26 107 / 44%)),
-    url("/assets/image.jpeg") center / cover;
-  min-height: 34rem;
+    linear-gradient(120deg, var(--purple-deep) 0%, var(--purple) 52%, var(--red) 100%);
 }
 
 main > section.bg-cream {
@@ -486,6 +484,22 @@ main article.rounded-xl {
 
 footer.bg-purple-deep {
   background: #20242e;
+}
+
+footer.bg-purple-deep.px-4.py-8 {
+  border-top: 1px solid rgb(233 217 232 / 70%);
+  font-size: 1rem;
+  line-height: 1.5;
+  padding: 2.25rem 1rem;
+}
+
+footer.bg-purple-deep.px-4.py-8 > a {
+  display: none;
+}
+
+footer.bg-purple-deep.px-4.py-8::after {
+  content: "版權所有 © 2026 AGK 學術時事及常識問答隊";
+  display: block;
 }
 
 .site-hero-content {
@@ -541,6 +555,7 @@ footer.bg-purple-deep {
 
 .quote-card .quote-text {
   margin-bottom: 1.5rem;
+  min-height: 8.2rem;
 }
 
 .quote-mark {
@@ -583,6 +598,18 @@ footer.bg-purple-deep {
   line-height: 1.55;
   margin-top: 0.45rem;
   padding-left: 0.65rem;
+}
+
+.quote-card > .award-list {
+  margin-top: 1.25rem;
+}
+
+.quote-card > .mt-5 {
+  min-height: 3.2rem;
+}
+
+.quote-card:first-child > .award-list {
+  margin-top: 1.75rem;
 }
 
 .section-label {
