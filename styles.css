@@ -455,6 +455,10 @@ header.bg-purple .hover\:bg-purple-deep:hover {
   background: #f5eef7;
 }
 
+header.bg-purple nav a:not([aria-current="page"]):hover {
+  color: var(--purple);
+}
+
 header.bg-purple .bg-red {
   color: #ffffff;
 }
@@ -563,7 +567,7 @@ footer.bg-purple-deep.px-4.py-8::after {
   justify-content: center;
   position: fixed;
   right: 1rem;
-  top: 5rem;
+  top: 5.25rem;
   width: 2.5rem;
   z-index: 70;
 }
