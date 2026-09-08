@@ -21,8 +21,29 @@ function addThemeButton() {
   document.body.append(themeButton);
 }
 
+function protectPastPapers() {
+  const pastPapersLink = document.getElementById("past-papers-link");
+
+  if (!pastPapersLink) {
+    return;
+  }
+
+  pastPapersLink.addEventListener("click", (event) => {
+    const password = window.prompt("請輸入密碼以開啟歷屆試題：");
+
+    if (password !== "agk2627") {
+      event.preventDefault();
+      window.alert("密碼不正確。");
+    }
+  });
+}
+
 if (document.body) {
   addThemeButton();
+  protectPastPapers();
 } else {
-  document.addEventListener("DOMContentLoaded", addThemeButton);
+  document.addEventListener("DOMContentLoaded", () => {
+    addThemeButton();
+    protectPastPapers();
+  });
 }
