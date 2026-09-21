@@ -49,10 +49,19 @@
     <script>
       const SUPABASE_URL = "https://oajvxavzsomymqunpgxx.supabase.co";
       const SUPABASE_ANON_KEY = "sb_publishable_L8QCQotDAIP-Fzm8r5IIWQ_U17i-eFy";
-      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      let supabaseClient = null;
+      try {
+        if (window.supabase && typeof window.supabase.createClient === "function") {
+          supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } else {
+          console.warn("Supabase SDK 未載入，排行榜暫不可用。");
+        }
+      } catch (e) {
+        console.warn("Supabase 初始化失敗，排行榜暫不可用。", e);
+      }
 
       async function renderLeaderboard() {
-        const { data, error } = await supabase.from("leaderboard")
+        const { data, error } = await supabaseClient.from("leaderboard")
           .select("*")
           .order('score', { ascending: false })
           .order('time_taken', { ascending: true })

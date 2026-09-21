@@ -146,10 +146,10 @@
         const LETTERS = ["A", "B", "C", "D", "E", "F"];
         const SUPABASE_URL = "https://oajvxavzsomymqunpgxx.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_L8QCQotDAIP-Fzm8r5IIWQ_U17i-eFy";
-        let supabase = null;
+        let supabaseClient = null;
         try {
           if (window.supabase && typeof window.supabase.createClient === "function") {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
           } else {
             console.warn("Supabase SDK 未載入，成績保存功能不可用，但不影響答題。");
           }
@@ -469,11 +469,11 @@
             date: new Date().toISOString()
           };
           try {
-            if (!supabase) {
+            if (!supabaseClient) {
               alert("成績保存功能暫不可用（Supabase 未載入）。");
               return;
             }
-            const { error } = await supabase.from("leaderboard").insert(payload);
+            const { error } = await supabaseClient.from("leaderboard").insert(payload);
             if (error) throw error;
             window.location.href = "/leaderboard";
           } catch (e) {
