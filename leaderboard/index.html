@@ -11,26 +11,8 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@600;700&display=swap" />
     <title>領袖榜 | AGK 學術時事及常識問答隊</title>
   <style>
-    /* Swiss editorial refactor */
-    :root { --accent:#b64255; }
-    h1 { font-weight:800; letter-spacing:-0.02em; }
-    .text-sm { letter-spacing:0.04em; }
-    body { background:#fff !important; color:#111 !important; }
-    header.bg-purple, main > section.bg-purple, .bg-purple, .bg-cream { background:#fff !important; color:#111 !important; border-bottom:1px solid #e5e5e5; }
-    header.bg-purple a, header.bg-purple .text-cream, header.bg-purple .text-cream\/90 { color:#111 !important; }
-    header.bg-purple .bg-red { background:var(--accent) !important; color:#fff !important; }
-    header.bg-purple nav a { border-radius:0 !important; }
-    .stripes { display:none !important; }
-    .leaderboard-container { max-width:72rem; margin:0 auto; padding:3rem 1.5rem; }
-    .leaderboard-table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
-    .leaderboard-table th, .leaderboard-table td { border-bottom:1px solid #e5e5e5; padding:0.75rem 1rem; text-align:left; }
-    .leaderboard-table th { font-weight:800; letter-spacing:0.08em; text-transform:uppercase; font-size:0.75rem; color:#666; border-bottom:2px solid #111; }
-    .leaderboard-table td { font-weight:500; }
-    .leaderboard-table .rank { width:4rem; color:#666; }
-    .leaderboard-table .score { font-weight:700; }
-    .leaderboard-table .meta { color:#666; font-size:0.875rem; letter-spacing:0.04em; }
-    .leaderboard-table tr.top { background:#fafafa; }
-    .leaderboard-table tr:hover { background:#fafafa; }
+    .leaderboard-container { max-width: 600px; margin: 0 auto; padding: 2rem 1rem; }
+    .leaderboard-card { background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 2rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
   </style>
   </head>
   <body>
@@ -43,7 +25,8 @@
           <nav class="hidden items-center gap-1 md:flex">
             <a href="/" class="min-h-11 rounded-full px-3 py-2 text-sm text-cream/90 hover:bg-purple-deep">隊伍簡介</a>
             <a href="/training" class="min-h-11 rounded-full px-3 py-2 text-sm text-cream/90 hover:bg-purple-deep">訓練資料</a>
-            <a href="/competition" class="min-h-11 rounded-full bg-red px-3 py-2 text-sm text-cream">競賽模擬</a>
+            <a href="/competition" class="min-h-11 rounded-full px-3 py-2 text-sm text-cream/90 hover:bg-purple-deep">競賽模擬</a>
+            <a href="/leaderboard" class="min-h-11 rounded-full bg-red px-3 py-2 text-sm text-cream" aria-current="page">領袖榜</a>
             <a href="/news" class="min-h-11 rounded-full px-3 py-2 text-sm text-cream/90 hover:bg-purple-deep">最新消息</a>
             <a href="/awards" class="min-h-11 rounded-full px-3 py-2 text-sm text-cream/90 hover:bg-purple-deep">得獎詳情</a>
             <a href="/contact" class="min-h-11 rounded-full px-3 py-2 text-sm text-cream/90 hover:bg-purple-deep">聯絡我們</a>

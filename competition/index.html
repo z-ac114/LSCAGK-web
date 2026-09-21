@@ -12,40 +12,8 @@
     <title>競賽模擬 | AGK 學術時事及常識問答隊</title>
     <meta name="description" content="AGK 學術時事及常識問答隊的競賽模擬：全真介面限時作答，即時批改。" />
       <style>
-        /* Swiss editorial refactor */
-        :root { --accent:#b64255; }
-        h1 { font-weight:800; letter-spacing:-0.02em; }
-        .text-sm { letter-spacing:0.04em; }
-        body { background:#fff !important; color:#111 !important; }
-        header.bg-purple, main > section.bg-purple, .bg-purple, .bg-cream { background:#fff !important; color:#111 !important; border-bottom:1px solid #e5e5e5; }
-        header.bg-purple a, header.bg-purple .text-cream, header.bg-purple .text-cream\/90 { color:#111 !important; }
-        header.bg-purple .bg-red { background:var(--accent) !important; color:#fff !important; }
-        header.bg-purple nav a { border-radius:0 !important; }
-        .stripes { display:none !important; }
-        .quiz-card { box-shadow:none !important; border:1px solid #ddd !important; border-radius:0 !important; background:#fff !important; }
-        .quiz-progress-track { border-radius:0 !important; background:#e5e5e5 !important; }
-        .quiz-progress-dot { border-radius:0 !important; background:var(--accent); }
-        .quiz-timer-circle .progress { stroke:var(--accent) !important; }
-        .quiz-question { font-weight:600; margin-top:1rem; }
-        .quiz-option .option-marker { border-radius:0 !important; }
-        .quiz-option.checkbox .option-marker { border-radius:0 !important; }
-        .quiz-btn { border-radius:0 !important; background:#111 !important; color:#fff !important; border:1px solid #111; letter-spacing:-0.01em; }
-        .quiz-btn:hover { background:#000 !important; }
-        .quiz-btn:disabled { background:#eee !important; color:#999 !important; border-color:#eee !important; }
-        .quiz-toast { border-radius:0 !important; background:#111 !important; color:#fff !important; }
-        .quiz-score-big { font-weight:800; letter-spacing:-0.02em; color:#111 !important; }
-        .quiz-review-item { border-radius:0 !important; border:1px solid #ddd !important; transition:none !important; aspect-ratio:1/1; }
-        .quiz-review-item:hover { transform:none !important; }
-        .quiz-review-item.correct { background:#111; color:#fff; border-color:#111; }
-        .quiz-review-item.incorrect-attempt { background:var(--accent); color:#fff; border-color:var(--accent); }
-        .quiz-review-item.wrong, .quiz-review-item.unanswered { background:#fff; color:#999; border-color:#ddd; }
-        .quiz-modal { backdrop-filter:none !important; background:rgba(0,0,0,0.5) !important; }
-        .quiz-modal-content { border-radius:0 !important; box-shadow:none !important; border:1px solid #ddd !important; animation:none !important; }
-        .btn-close-modal { border-radius:0 !important; background:#111 !important; color:#fff !important; border:1px solid #111; }
-        .leaderboard-input { border-radius:0 !important; }
-        .quiz-review-list { gap:0.5rem; }
-        /* High-density grid */
-        .quiz-review-list { grid-template-columns:repeat(auto-fill,minmax(48px,1fr)); }
+        .quiz-card { box-shadow: 0 8px 24px rgb(28 32 43 / 8%); }
+        .quiz-btn { border-radius: 0.5rem; }
       </style>
   </head>
   <body>
@@ -59,6 +27,7 @@
             <a href="/" class="min-h-11 rounded-full px-3 py-2 text-sm text-cream/90 hover:bg-purple-deep">隊伍簡介</a>
             <a href="/training" class="min-h-11 rounded-full px-3 py-2 text-sm text-cream/90 hover:bg-purple-deep">訓練資料</a>
             <a href="/competition" class="min-h-11 rounded-full bg-red px-3 py-2 text-sm text-cream" aria-current="page">競賽模擬</a>
+            <a href="/leaderboard" class="min-h-11 rounded-full px-3 py-2 text-sm text-cream/90 hover:bg-purple-deep">領袖榜</a>
             <a href="/news" class="min-h-11 rounded-full px-3 py-2 text-sm text-cream/90 hover:bg-purple-deep">最新消息</a>
             <a href="/awards" class="min-h-11 rounded-full px-3 py-2 text-sm text-cream/90 hover:bg-purple-deep">得獎詳情</a>
             <a href="/contact" class="min-h-11 rounded-full px-3 py-2 text-sm text-cream/90 hover:bg-purple-deep">聯絡我們</a>
