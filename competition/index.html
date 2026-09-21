@@ -380,6 +380,7 @@
                   <div class="quiz-review-list" id="reviewList"></div>
                   <div class="quiz-results-actions">
                     <button type="button" class="quiz-btn" id="restartBtn">重新開始</button>
+                    <button type="button" class="quiz-btn" id="exportWrongBtn">匯出錯題</button>
                   </div>
                 </div>
               </article>
@@ -661,6 +662,43 @@
 
         $("restartBtn").addEventListener("click", () => {
           location.reload();
+        });
+
+        $("exportWrongBtn").addEventListener("click", () => {
+          // Build wrong questions in database.js format
+          const wrongItems = [];
+          QUESTIONS.forEach((item, i) => {
+            const sel = selections[i];
+            const wasAnswered = sel !== null && !(Array.isArray(sel) && sel.length === 0);
+            let isCorrect = false;
+            if (!wasAnswered) {
+              isCorrect = false;
+            } else if (item.isMulti) {
+              const selSet = new Set(sel);
+              const corrSet = new Set(item.correctAnswer || []);
+              isCorrect = selSet.size === corrSet.size && [...selSet].every(v => corrSet.has(v));
+            } else {
+              isCorrect = sel === item.correctAnswer;
+            }
+            if (!isCorrect) {
+              const options = Array.isArray(item.options) ? item.options : [];
+              const entry = {
+                q: item.q,
+                a: item.isMulti ? item.correctAnswer : item.correctAnswer,
+                option: options,
+                multi: !!item.isMulti
+              };
+              wrongItems.push(entry);
+            }
+          });
+
+          const blob = new Blob([JSON.stringify(wrongItems, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'wrong_questions.json';
+          a.click();
+          URL.revokeObjectURL(url);
         });
 
         $("closeModal").addEventListener("click", () => $("detailModal").classList.remove("active"));
