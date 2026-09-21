@@ -404,12 +404,14 @@
         </div>
       </div>
 
-    <script src="/competition/questions.js"></script>
+    <script src="/competition/qs.js"></script>
       <script>
         const TOTAL_SECONDS = 60; // 总时长：1分钟
         const LETTERS = ["A", "B", "C", "D", "E", "F"];
 
         function buildOptions(correct) {
+          // Options are now provided directly from QUESTION_BANK, so we just shuffle them.
+          // This is a fallback for older data without options.
           const pool = QUESTION_BANK.map((item) => item.a).sort(() => Math.random() - 0.5);
           const used = new Set([correct]);
           const distractors = [];
@@ -430,12 +432,24 @@
         // Randomize questions and prepare data
         const SHUFFLED_BANK = [...QUESTION_BANK].sort(() => Math.random() - 0.5);
         const QUESTIONS = SHUFFLED_BANK.map((item) => {
-          const isMulti = item.q.includes("（多選）") || item.q.includes("(多選)");
-          const options = buildOptions(item.a);
+          const isMulti = item.multi === true || item.q.includes("（多選）") || item.q.includes("(多選)");
+          // 1. Use pre-defined options if they exist. 2. Fallback to auto-generation.
+          let options = Array.isArray(item.options) && item.options.length > 0 ? [...item.options] : buildOptions(item.a);
+          let correctIndex = options.indexOf(item.a);
+          
+          // Shuffle options to prevent the correct answer from always being in the same place
+          for (let i = options.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [options[i], options[j]] = [options[j], options[i]];
+          }
+          // Re-find the index after shuffling
+          correctIndex = options.indexOf(item.a);
+
           return { 
             q: item.q, 
             options, 
-            correctIndex: options.indexOf(item.a), 
+            correctAnswer: item.a,
+            correctIndex, 
             isMulti 
           };
         });
