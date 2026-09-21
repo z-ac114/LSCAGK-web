@@ -10,65 +10,28 @@
     <script src="/theme.js"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@600;700&display=swap" />
     <title>領袖榜 | AGK 學術時事及常識問答隊</title>
-    <style>
-      .leaderboard-container {
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 2rem 1rem;
-      }
-      .leaderboard-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 1rem;
-        padding: 2rem;
-        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
-      }
-      .leaderboard-title {
-        text-align: center;
-        font-family: "Noto Serif TC", serif;
-        font-size: 2rem;
-        color: var(--purple);
-        margin-bottom: 2rem;
-      }
-      .leaderboard-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-      }
-      .leaderboard-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 1rem;
-        border-radius: 0.75rem;
-        background: var(--bg-surface);
-        border: 1px solid var(--border);
-        transition: transform 0.2s ease;
-      }
-      .leaderboard-item:hover { transform: translateX(5px); }
-      .leaderboard-rank {
-        font-weight: 700;
-        width: 30px;
-        color: var(--muted);
-      }
-      .leaderboard-name {
-        flex: 1;
-        margin-left: 1rem;
-        font-weight: 500;
-      }
-      .leaderboard-score {
-        font-weight: 700;
-        color: var(--purple);
-        background: rgba(124, 58, 237, 0.1);
-        padding: 0.25rem 0.75rem;
-        border-radius: 999px;
-        font-size: 0.9rem;
-      }
-      .top-three .leaderboard-rank { color: var(--ink); }
-      .rank-1 { background: #fef3c7; border-color: #fcd34d; }
-      .rank-2 { background: #f3f4f6; border-color: #d1d5db; }
-      .rank-3 { background: #ffedd5; border-color: #fb923c; }
-    </style>
+  <style>
+    /* Swiss editorial refactor */
+    :root { --accent:#b64255; }
+    h1 { font-weight:800; letter-spacing:-0.02em; }
+    .text-sm { letter-spacing:0.04em; }
+    body { background:#fff !important; color:#111 !important; }
+    header.bg-purple, main > section.bg-purple, .bg-purple, .bg-cream { background:#fff !important; color:#111 !important; border-bottom:1px solid #e5e5e5; }
+    header.bg-purple a, header.bg-purple .text-cream, header.bg-purple .text-cream\/90 { color:#111 !important; }
+    header.bg-purple .bg-red { background:var(--accent) !important; color:#fff !important; }
+    header.bg-purple nav a { border-radius:0 !important; }
+    .stripes { display:none !important; }
+    .leaderboard-container { max-width:72rem; margin:0 auto; padding:3rem 1.5rem; }
+    .leaderboard-table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+    .leaderboard-table th, .leaderboard-table td { border-bottom:1px solid #e5e5e5; padding:0.75rem 1rem; text-align:left; }
+    .leaderboard-table th { font-weight:800; letter-spacing:0.08em; text-transform:uppercase; font-size:0.75rem; color:#666; border-bottom:2px solid #111; }
+    .leaderboard-table td { font-weight:500; }
+    .leaderboard-table .rank { width:4rem; color:#666; }
+    .leaderboard-table .score { font-weight:700; }
+    .leaderboard-table .meta { color:#666; font-size:0.875rem; letter-spacing:0.04em; }
+    .leaderboard-table tr.top { background:#fafafa; }
+    .leaderboard-table tr:hover { background:#fafafa; }
+  </style>
   </head>
   <body>
     <div class="flex min-h-screen flex-col bg-cream text-ink">
@@ -89,11 +52,20 @@
       </header>
       <main class="flex-1">
         <div class="leaderboard-container">
-          <h1 class="leaderboard-title">🏆 領袖榜</h1>
-          <div class="leaderboard-card">
-            <div class="leaderboard-list" id="leaderboardList">
-              <!-- Records go here -->
-            </div>
+          <h1 class="text-center font-serif text-4xl font-bold sm:text-5xl">領袖榜</h1>
+          <div class="border border-[#e5e5e5]">
+            <table class="leaderboard-table">
+              <thead>
+                <tr>
+                  <th class="rank">排名</th>
+                  <th>姓名</th>
+                  <th>得分</th>
+                  <th>用時</th>
+                  <th>日期</th>
+                </tr>
+              </thead>
+              <tbody id="leaderboardList"></tbody>
+            </table>
           </div>
         </div>
       </main>
@@ -113,22 +85,22 @@
         
         const list = document.getElementById("leaderboardList");
         if (error || !data || data.length === 0) {
-          list.innerHTML = '<div class="text-center py-8 text-muted">暫無成績記錄</div>';
+          list.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-muted">暫無成績記錄</td></tr>';
           return;
         }
         list.innerHTML = data.map((r, i) => {
-          const rankClass = i === 0 ? "rank-1" : i === 1 ? "rank-2" : i === 2 ? "rank-3" : "";
           const scoreText = `${r.score} / ${r.total}`;
           const timeText = r.time_taken ? `${r.time_taken}s` : "—";
-          const dateText = r.created_at ? new Date(r.created_at).toLocaleString() : "";
+          const dateText = r.created_at ? new Date(r.created_at).toLocaleDateString() : "";
+          const isTop = i < 3;
           return `
-            <div class="leaderboard-item ${rankClass}">
-              <span class="leaderboard-rank">${i + 1}</span>
-              <span class="leaderboard-name">${r.name}</span>
-              <span class="leaderboard-score">${scoreText}</span>
-              <span class="leaderboard-score" style="background: none; color: var(--muted); font-weight: 500;">${timeText}</span>
-              <span class="leaderboard-score" style="background: none; color: var(--muted); font-weight: 400; font-size: 0.8rem;">${dateText}</span>
-            </div>
+            <tr class="${isTop ? 'top' : ''}">
+              <td class="rank">${i + 1}</td>
+              <td>${r.name}</td>
+              <td class="score">${scoreText}</td>
+              <td class="meta">${timeText}</td>
+              <td class="meta">${dateText}</td>
+            </tr>
           `;
         }).join("");
       }
