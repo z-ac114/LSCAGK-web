@@ -12,8 +12,349 @@
     <title>競賽模擬 | AGK 學術時事及常識問答隊</title>
     <meta name="description" content="AGK 學術時事及常識問答隊的競賽模擬：全真介面限時作答，即時批改。" />
       <style>
-        .quiz-card { box-shadow: 0 8px 24px rgb(28 32 43 / 8%); }
-        .quiz-btn { border-radius: 0.5rem; }
+        /* ---- Quiz card ---- */
+        .quiz-card {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 0.75rem;
+          padding: 2rem;
+          box-shadow: 0 2px 10px rgba(45, 36, 48, 0.06);
+        }
+
+        /* ---- Progress ---- */
+        .quiz-progress-row {
+          display: flex;
+          align-items: center;
+          gap: 1.25rem;
+        }
+        .quiz-progress-track {
+          position: relative;
+          flex: 1;
+          height: 4px;
+          background: var(--border);
+          border-radius: 2px;
+        }
+        .quiz-progress-dot {
+          position: absolute;
+          top: 50%;
+          left: 0;
+          transform: translate(-50%, -50%);
+          width: 11px;
+          height: 11px;
+          background: var(--red);
+          border-radius: 50%;
+          transition: left 0.2s ease;
+        }
+        .quiz-progress-label {
+          font-size: 1rem;
+          font-weight: 600;
+          color: var(--ink);
+          white-space: nowrap;
+          font-variant-numeric: tabular-nums;
+        }
+
+        /* ---- Timer ---- */
+        .quiz-timer-container {
+          margin-top: 1.25rem;
+          display: flex;
+          align-items: center;
+          gap: 0.9rem;
+          color: var(--muted);
+          font-size: 0.95rem;
+        }
+        .quiz-timer-circle {
+          position: relative;
+          width: 40px;
+          height: 40px;
+          flex: none;
+        }
+        .quiz-timer-circle svg {
+          transform: rotate(-90deg);
+          width: 40px;
+          height: 40px;
+          display: block;
+        }
+        .quiz-timer-circle circle {
+          fill: none;
+          stroke-width: 4;
+          stroke-linecap: round;
+        }
+        .quiz-timer-circle .bg { stroke: var(--border); }
+        .quiz-timer-circle .progress {
+          stroke: var(--red);
+          stroke-dasharray: 113;
+          transition: stroke-dashoffset 1s linear;
+        }
+        .quiz-timer-text {
+          display: flex;
+          align-items: center;
+          gap: 0.35rem;
+          color: var(--ink);
+        }
+        .quiz-timer-text .divider { margin: 0 0.25rem; color: var(--border); }
+        .quiz-timer-text span[id] {
+          font-weight: 700;
+          font-variant-numeric: tabular-nums;
+        }
+
+        /* ---- Question & options ---- */
+        .quiz-question {
+          margin-top: 1.75rem;
+          font-size: 1.2rem;
+          line-height: 1.75;
+          font-weight: 600;
+          color: var(--ink);
+        }
+        .quiz-options {
+          margin-top: 1.25rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+        .quiz-option {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.75rem;
+          padding: 0.9rem 1.1rem;
+          background: var(--cream);
+          border: 1px solid var(--border);
+          border-radius: 0.5rem;
+          cursor: pointer;
+          font-size: 1rem;
+          line-height: 1.6;
+          color: var(--ink);
+          transition: border-color 0.15s ease, background 0.15s ease;
+        }
+        .quiz-option:hover { border-color: var(--purple); }
+        .quiz-option input {
+          margin-top: 0.3rem;
+          accent-color: var(--purple);
+          flex: none;
+        }
+        .quiz-option.selected {
+          background: var(--surface);
+          border-color: var(--purple);
+          box-shadow: inset 3px 0 0 var(--purple);
+        }
+
+        /* ---- Buttons ---- */
+        .quiz-buttons {
+          margin-top: 1.75rem;
+          display: flex;
+          gap: 0.75rem;
+          flex-wrap: wrap;
+        }
+        .quiz-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 2.75rem;
+          padding: 0 1.5rem;
+          background: var(--purple);
+          color: var(--cream);
+          border: none;
+          border-radius: 0.5rem;
+          font-size: 0.95rem;
+          font-weight: 600;
+          letter-spacing: 0.02em;
+          cursor: pointer;
+          transition: background 0.15s ease;
+        }
+        .quiz-btn:hover { background: var(--purple-deep); }
+        .quiz-btn:disabled {
+          background: var(--border);
+          color: var(--muted);
+          cursor: not-allowed;
+        }
+
+        /* ---- Results ---- */
+        .quiz-results { display: none; }
+        .quiz-results.active { display: block; }
+        .quiz-score {
+          text-align: center;
+          padding: 1.5rem 0 0.5rem;
+        }
+        .quiz-score-big {
+          font-size: 2.75rem;
+          font-weight: 800;
+          letter-spacing: -0.02em;
+          color: var(--purple);
+          font-variant-numeric: tabular-nums;
+        }
+        .quiz-score-sub {
+          margin-top: 0.35rem;
+          font-size: 1rem;
+          color: var(--muted);
+        }
+
+        /* ---- Save score box ---- */
+        .leaderboard {
+          margin-top: 1.75rem;
+          padding: 1.5rem;
+          background: var(--cream);
+          border: 1px solid var(--border);
+          border-radius: 0.75rem;
+        }
+        .leaderboard h2 {
+          margin: 0 0 1rem;
+          font-size: 1.15rem;
+          font-weight: 700;
+          color: var(--ink);
+        }
+        .leaderboard-input-group {
+          display: flex;
+          gap: 0.75rem;
+        }
+        .leaderboard-input {
+          flex: 1;
+          min-height: 2.75rem;
+          padding: 0 1rem;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 0.5rem;
+          font-size: 1rem;
+          color: var(--ink);
+        }
+        .leaderboard-input:focus {
+          outline: none;
+          border-color: var(--purple);
+        }
+
+        /* ---- Review grid ---- */
+        .quiz-review-list {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+          gap: 0.5rem;
+        }
+        .quiz-review-item {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          aspect-ratio: 1;
+          border: 1px solid var(--border);
+          border-radius: 0.375rem;
+          font-size: 0.9rem;
+          font-weight: 600;
+          cursor: pointer;
+          font-variant-numeric: tabular-nums;
+        }
+        .quiz-review-item.correct {
+          background: var(--purple);
+          border-color: var(--purple-deep);
+          color: var(--cream);
+        }
+        .quiz-review-item.incorrect-attempt {
+          background: var(--red);
+          border-color: var(--red);
+          color: var(--cream);
+        }
+        .quiz-review-item.unanswered {
+          background: var(--surface);
+          color: var(--muted);
+        }
+        .quiz-review-item:hover { transform: translateY(-2px); }
+
+        .quiz-results-actions {
+          margin-top: 1.75rem;
+          display: flex;
+          gap: 0.75rem;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+
+        /* ---- Detail modal ---- */
+        .quiz-modal {
+          position: fixed;
+          inset: 0;
+          display: none;
+          align-items: center;
+          justify-content: center;
+          background: rgba(45, 36, 48, 0.55);
+          padding: 1.5rem;
+          z-index: 100;
+        }
+        .quiz-modal.active { display: flex; }
+        .quiz-modal-content {
+          width: 100%;
+          max-width: 560px;
+          max-height: 85vh;
+          overflow-y: auto;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 0.75rem;
+          padding: 1.75rem;
+          box-shadow: 0 10px 30px rgba(45, 36, 48, 0.18);
+        }
+        .quiz-modal-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 1rem;
+        }
+        .quiz-modal-title {
+          margin: 0;
+          font-size: 1.15rem;
+          font-weight: 700;
+          color: var(--ink);
+        }
+        .quiz-modal-body {
+          font-size: 1rem;
+          line-height: 1.75;
+          color: var(--ink);
+        }
+        .quiz-modal-ans-row {
+          display: flex;
+          gap: 1.5rem;
+          flex-wrap: wrap;
+          margin-top: 1.25rem;
+          padding-top: 1rem;
+          border-top: 1px solid var(--border);
+          font-size: 0.95rem;
+        }
+        .quiz-modal-ans-label { color: var(--muted); }
+        .quiz-modal-ans-value { font-weight: 700; }
+        .quiz-modal-ans-value.correct { color: var(--purple); }
+        .quiz-modal-ans-value.wrong { color: var(--red); }
+        .quiz-modal-footer {
+          margin-top: 1.25rem;
+          text-align: right;
+        }
+        .btn-close-modal {
+          display: inline-flex;
+          align-items: center;
+          min-height: 2.5rem;
+          padding: 0 1.25rem;
+          background: var(--surface);
+          color: var(--ink);
+          border: 1px solid var(--border);
+          border-radius: 0.5rem;
+          font-size: 0.9rem;
+          font-weight: 600;
+          cursor: pointer;
+        }
+        .btn-close-modal:hover { border-color: var(--purple); }
+        .quiz-modal-close { cursor: pointer; }
+
+        /* ---- Toast ---- */
+        .quiz-toast {
+          position: fixed;
+          bottom: 2rem;
+          left: 50%;
+          transform: translateX(-50%) translateY(10px);
+          background: var(--ink);
+          color: var(--cream);
+          padding: 0.6rem 1.25rem;
+          border-radius: 0.5rem;
+          font-size: 0.9rem;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.2s ease, transform 0.2s ease;
+          z-index: 110;
+        }
+        .quiz-toast.show {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0);
+        }
       </style>
   </head>
   <body>
@@ -157,54 +498,42 @@
           console.warn("Supabase 初始化失敗，成績保存功能不可用，但不影響答題。", e);
         }
 
-        function buildOptions(correct) {
-          // Options are now provided directly from QUESTION_BANK, so we just shuffle them.
-          // This is a fallback for older data without options.
-          const pool = QUESTION_BANK.map((item) => item.a).sort(() => Math.random() - 0.5);
-          const used = new Set([correct]);
-          const distractors = [];
-          for (const cand of pool) {
-            if (distractors.length >= 3) break;
-            if (used.has(cand)) continue;
-            used.add(cand);
-            distractors.push(cand);
-          }
-          const options = [correct, ...distractors];
-          for (let i = options.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [options[i], options[j]] = [options[j], options[i]];
-          }
-          return options;
-        }
-
-        // Randomize questions and prepare data
+        // Randomize questions and prepare data — only options from the database are used
         let QUESTIONS = [];
         if (typeof QUESTION_BANK === "undefined" || !Array.isArray(QUESTION_BANK) || QUESTION_BANK.length === 0) {
           document.getElementById("questionText").textContent = "題庫載入失敗，請重新整理頁面（Ctrl+Shift+R）。";
           document.getElementById("progressLabel").textContent = "-";
           console.error("QUESTION_BANK 未載入：/competition/questions.js 載入失敗或內容為空。");
         } else {
-        const SHUFFLED_BANK = [...QUESTION_BANK].sort(() => Math.random() - 0.5);
+        const SHUFFLED_BANK = [...QUESTION_BANK]
+          .filter((item) => Array.isArray(item.options) && item.options.length >= 2)
+          .sort(() => Math.random() - 0.5);
         QUESTIONS = SHUFFLED_BANK.map((item) => {
-          const isMulti = item.multi === true || item.q.includes("（多選）") || item.q.includes("(多選)");
-          // 1. Use pre-defined options if they exist. 2. Fallback to auto-generation.
-          let options = Array.isArray(item.options) && item.options.length > 0 ? [...item.options] : buildOptions(item.a);
-          let correctIndex = options.indexOf(item.a);
-          
-          // Shuffle options to prevent the correct answer from always being in the same place
+          const isMulti = item.multi === true;
+          const options = [...item.options];
+
+          // Shuffle options so the correct answer is not always in the same place
           for (let i = options.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [options[i], options[j]] = [options[j], options[i]];
           }
-          // Re-find the index after shuffling
-          correctIndex = options.indexOf(item.a);
 
-          return { 
-            q: item.q, 
-            options, 
+          let correctIndex = -1;
+          let correctIndices = [];
+          if (isMulti) {
+            const correctSet = new Set(String(item.a).split(/[；;]/).map((s) => s.trim()).filter(Boolean));
+            correctIndices = options.map((o, i) => (correctSet.has(o) ? i : -1)).filter((i) => i >= 0);
+          } else {
+            correctIndex = options.indexOf(item.a);
+          }
+
+          return {
+            q: item.q,
+            options,
             correctAnswer: item.a,
-            correctIndex, 
-            isMulti 
+            correctIndex,
+            correctIndices,
+            isMulti
           };
         });
         }
@@ -326,7 +655,9 @@
             const wasAnswered = sel !== null && !(Array.isArray(sel) && sel.length === 0);
             let isCorrect = false;
             if (item.isMulti) {
-              isCorrect = sel && sel.length === 1 && sel[0] === item.correctIndex;
+              const selSet = new Set(sel || []);
+              const corrSet = new Set(item.correctIndices || []);
+              isCorrect = sel !== null && selSet.size === corrSet.size && [...selSet].every((v) => corrSet.has(v));
             } else {
               isCorrect = sel === item.correctIndex;
             }
@@ -373,8 +704,10 @@
           } else {
             yourAns = sel === null ? "未作答" : LETTERS[sel];
           }
-          const correctAns = LETTERS[item.correctIndex];
-          
+          const correctAns = item.isMulti
+            ? (item.correctIndices || []).map(idx => LETTERS[idx]).join(", ")
+            : LETTERS[item.correctIndex];
+
           userVal.textContent = yourAns;
           userVal.className = "quiz-modal-ans-value " + (yourAns === correctAns ? "correct" : "wrong");
           correctVal.textContent = correctAns;
@@ -423,16 +756,16 @@
               isCorrect = false;
             } else if (item.isMulti) {
               const selSet = new Set(sel);
-              const corrSet = new Set(item.correctAnswer || []);
+              const corrSet = new Set(item.correctIndices || []);
               isCorrect = selSet.size === corrSet.size && [...selSet].every(v => corrSet.has(v));
             } else {
-              isCorrect = sel === item.correctAnswer;
+              isCorrect = sel === item.correctIndex;
             }
             if (!isCorrect) {
               const options = Array.isArray(item.options) ? item.options : [];
               const entry = {
                 q: item.q,
-                a: item.isMulti ? item.correctAnswer : item.correctAnswer,
+                a: item.correctAnswer,
                 option: options,
                 multi: !!item.isMulti
               };
