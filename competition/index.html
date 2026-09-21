@@ -191,7 +191,7 @@
           gap: 0.75rem;
           max-height: 30rem;
           overflow-y: auto;
-          padding-right: 0.5rem;
+          padding: 1rem 0.5rem;
         }
         .quiz-review-item {
           aspect-ratio: 1/1;
@@ -202,66 +202,92 @@
           font-size: 0.9rem;
           font-weight: 600;
           cursor: pointer;
-          transition: transform 0.1s ease;
-          border: none;
+          transition: all 0.2s ease;
+          border: 2px solid transparent;
         }
         .quiz-review-item:hover { transform: scale(1.1); }
-        .quiz-review-item.correct { background: #7fbcf2; color: #fff; }
-        .quiz-review-item.wrong { background: #f2f2f2; color: var(--muted); }
+        .quiz-review-item.correct { background: #7fbcf2; color: #fff; border-color: #7fbcf2; }
+        .quiz-review-item.wrong { background: #f2f2f2; color: #aaa; border-color: #f2f2f2; }
         
         .quiz-modal {
           position: fixed;
           inset: 0;
-          background: rgba(0,0,0,0.5);
+          background: rgba(0,0,0,0.6);
           display: none;
           align-items: center;
           justify-content: center;
           z-index: 1000;
           padding: 1rem;
+          backdrop-filter: blur(4px);
         }
         .quiz-modal.active { display: flex; }
         .quiz-modal-content {
           background: white;
-          border-radius: 0.5rem;
+          border-radius: 1rem;
           max-width: 600px;
           width: 100%;
           padding: 2rem;
           position: relative;
-          box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+          animation: modalSlideIn 0.3s ease-out;
+        }
+        @keyframes modalSlideIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
         .quiz-modal-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
           margin-bottom: 1.5rem;
+          border-bottom: 1px solid var(--border);
+          padding-bottom: 1rem;
           font-weight: 700;
-          font-size: 1.2rem;
+          font-size: 1.25rem;
+          color: var(--ink);
         }
         .quiz-modal-close {
           cursor: pointer;
           font-size: 1.5rem;
           color: var(--muted);
+          transition: color 0.2s;
         }
+        .quiz-modal-close:hover { color: var(--red); }
         .quiz-modal-body {
           line-height: 1.8;
           color: var(--ink);
           font-size: 1.1rem;
+          margin-bottom: 2rem;
         }
         .quiz-modal-footer {
-          margin-top: 2rem;
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          border-top: 1px solid var(--border);
+          padding-top: 1.5rem;
+        }
+        .quiz-modal-ans-row {
           display: flex;
           justify-content: space-between;
-          align-items: center;
           font-weight: 600;
+          font-size: 1.1rem;
         }
-        .quiz-modal-footer .btn-close {
+        .quiz-modal-ans-label { color: var(--muted); font-weight: normal; }
+        .quiz-modal-ans-value { color: var(--ink); }
+        .quiz-modal-ans-value.correct { color: #4caf7d; }
+        .quiz-modal-ans-value.wrong { color: var(--red); }
+        .btn-close-modal {
           background: #7fbcf2;
           color: white;
           border: none;
-          padding: 0.5rem 1.5rem;
-          border-radius: 0.25rem;
+          padding: 0.75rem 2rem;
+          border-radius: 0.5rem;
           cursor: pointer;
+          font-weight: 600;
+          align-self: flex-end;
+          transition: background 0.2s;
         }
+        .btn-close-modal:hover { background: #5daae6; }
         .quiz-results-actions { margin-top: 2rem; text-align: center; }
         .leaderboard {
           margin-top: 2rem;
@@ -369,8 +395,11 @@
           </div>
           <div class="quiz-modal-body" id="modalBody"></div>
           <div class="quiz-modal-footer">
-            <div id="modalAnswers"></div>
-            <button class="btn-close" id="modalCloseBtn">關 閉</button>
+            <div class="quiz-modal-ans-row">
+              <span><span class="quiz-modal-ans-label">已選答案：</span><span id="userAnsVal" class="quiz-modal-ans-value"></span></span>
+              <span><span class="quiz-modal-ans-label">正確答案：</span><span id="correctAnsVal" class="quiz-modal-ans-value correct"></span></span>
+            </div>
+            <button class="btn-close-modal" id="modalCloseBtn">關 閉</button>
           </div>
         </div>
       </div>
@@ -527,13 +556,6 @@
             const sel = selections[i];
             let isCorrect = false;
             if (item.isMulti) {
-              const correctAns = item.a;
-              // Simplified: since buildOptions puts correct answer at index 0 and distractors as others,
-              // For multi-select we'd need multi-correct answers in the DB. 
-              // Currently DB has a single string. If it's multi-select, 'a' is a long string of all correct answers.
-              // Let's treat it as: if it's multi, it's correct if all expected are picked.
-              // But our DB only provides one 'a' string for all correct.
-              // Let's just check if the selected indices match the correctIndex (which is index of 'a').
               isCorrect = sel && sel.length === 1 && sel[0] === item.correctIndex;
             } else {
               isCorrect = sel === item.correctIndex;
@@ -542,21 +564,8 @@
             if (isCorrect) correctCount++;
             const div = document.createElement("div");
             div.className = "quiz-review-item " + (isCorrect ? "correct" : "wrong");
-            const q = document.createElement("div");
-            q.className = "quiz-review-q";
-            q.textContent = (i + 1) + ". " + item.q;
-            const a = document.createElement("div");
-            a.className = "quiz-review-a";
-            let yourAns = "未作答";
-            if (item.isMulti) {
-              yourAns = sel && sel.length ? sel.map(idx => LETTERS[idx] + "、" + item.options[idx]).join(", ") : "未作答";
-            } else {
-              yourAns = sel === null ? "未作答" : LETTERS[sel] + "、" + item.options[sel];
-            }
-            const correctAns = LETTERS[item.correctIndex] + "、" + item.options[item.correctIndex];
-            a.innerHTML = "你的答案：<span class=\"tag\">" + esc(yourAns) + "</span>　正確答案：<span class=\"tag\">" + esc(correctAns) + "</span>";
-            div.appendChild(q);
-            div.appendChild(a);
+            div.textContent = (i + 1);
+            div.onclick = () => showDetail(i);
             review.appendChild(div);
           });
 
@@ -569,8 +578,32 @@
           window.scrollTo(0, 0);
         }
 
-        function esc(s) {
-          return String(s).replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">");
+        function showDetail(i) {
+          const item = QUESTIONS[i];
+          const sel = selections[i];
+          const modal = $("detailModal");
+          const body = $("modalBody");
+          const userVal = $("userAnsVal");
+          const correctVal = $("correctAnsVal");
+
+          let qText = (i + 1) + ". " + item.q;
+          let optionsText = item.options.map((opt, idx) => `${LETTERS[idx]}、${opt}`).join("<br>");
+          
+          body.innerHTML = `<div style="white-space: pre-wrap;"><strong style="font-size:1.2rem">${qText}</strong><br><br>${optionsText}</div>`;
+          
+          let yourAns = "未作答";
+          if (item.isMulti) {
+            yourAns = sel && sel.length ? sel.map(idx => LETTERS[idx]).join(", ") : "未作答";
+          } else {
+            yourAns = sel === null ? "未作答" : LETTERS[sel];
+          }
+          const correctAns = LETTERS[item.correctIndex];
+          
+          userVal.textContent = yourAns;
+          userVal.className = "quiz-modal-ans-value " + (yourAns === correctAns ? "correct" : "wrong");
+          correctVal.textContent = correctAns;
+          
+          modal.classList.add("active");
         }
 
         $("prevBtn").addEventListener("click", () => {
