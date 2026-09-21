@@ -11,8 +11,76 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@600;700&display=swap" />
     <title>領袖榜 | AGK 學術時事及常識問答隊</title>
   <style>
-    .leaderboard-container { max-width: 600px; margin: 0 auto; padding: 2rem 1rem; }
-    .leaderboard-card { background: var(--surface); border: 1px solid var(--border); border-radius: 1rem; padding: 2rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
+    .leaderboard-container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+    .leaderboard-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 2rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      margin-top: 1.5rem;
+    }
+    .leaderboard-title {
+      text-align: center;
+      font-family: "Noto Serif TC", serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--purple);
+      margin-bottom: 0.5rem;
+    }
+    .leaderboard-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .leaderboard-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      border-radius: 0.75rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      transition: transform 0.2s ease;
+    }
+    .leaderboard-item:hover { transform: translateX(5px); }
+    .leaderboard-rank {
+      font-weight: 700;
+      width: 30px;
+      color: var(--muted);
+    }
+    .leaderboard-name {
+      flex: 1;
+      font-weight: 500;
+      color: var(--ink);
+    }
+    .leaderboard-score {
+      font-weight: 700;
+      color: var(--purple);
+      white-space: nowrap;
+    }
+    .leaderboard-meta {
+      font-size: 0.8rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .leaderboard-item.top {
+      background: var(--purple);
+      border-color: var(--purple-deep);
+    }
+    .leaderboard-item.top .leaderboard-rank,
+    .leaderboard-item.top .leaderboard-name,
+    .leaderboard-item.top .leaderboard-score { color: var(--cream); }
+    .leaderboard-item.top .leaderboard-meta { color: var(--plum-soft); }
+    .leaderboard-empty {
+      text-align: center;
+      padding: 2rem 0;
+      color: var(--muted);
+    }
   </style>
   </head>
   <body>
@@ -27,20 +95,9 @@
       </header>
       <main class="flex-1">
         <div class="leaderboard-container">
-          <h1 class="text-center font-serif text-4xl font-bold sm:text-5xl">領袖榜</h1>
-          <div class="border border-[#e5e5e5]">
-            <table class="leaderboard-table">
-              <thead>
-                <tr>
-                  <th class="rank">排名</th>
-                  <th>姓名</th>
-                  <th>得分</th>
-                  <th>用時</th>
-                  <th>日期</th>
-                </tr>
-              </thead>
-              <tbody id="leaderboardList"></tbody>
-            </table>
+          <h1 class="leaderboard-title">🏆 領袖榜</h1>
+          <div class="leaderboard-card">
+            <div class="leaderboard-list" id="leaderboardList"></div>
           </div>
         </div>
       </main>
@@ -61,15 +118,19 @@
       }
 
       async function renderLeaderboard() {
+        if (!supabaseClient) {
+          document.getElementById("leaderboardList").innerHTML = '<div class="leaderboard-empty">排行榜暫不可用（Supabase 未載入），請重新整理。</div>';
+          return;
+        }
         const { data, error } = await supabaseClient.from("leaderboard")
           .select("*")
           .order('score', { ascending: false })
           .order('time_taken', { ascending: true })
           .limit(100);
-        
+
         const list = document.getElementById("leaderboardList");
         if (error || !data || data.length === 0) {
-          list.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-muted">暫無成績記錄</td></tr>';
+          list.innerHTML = '<div class="leaderboard-empty">暫無成績記錄</div>';
           return;
         }
         list.innerHTML = data.map((r, i) => {
@@ -78,13 +139,13 @@
           const dateText = r.created_at ? new Date(r.created_at).toLocaleDateString() : "";
           const isTop = i < 3;
           return `
-            <tr class="${isTop ? 'top' : ''}">
-              <td class="rank">${i + 1}</td>
-              <td>${r.name}</td>
-              <td class="score">${scoreText}</td>
-              <td class="meta">${timeText}</td>
-              <td class="meta">${dateText}</td>
-            </tr>
+            <div class="leaderboard-item ${isTop ? 'top' : ''}">
+              <span class="leaderboard-rank">${i + 1}</span>
+              <span class="leaderboard-name">${r.name}</span>
+              <span class="leaderboard-score">${scoreText}</span>
+              <span class="leaderboard-meta">${timeText}</span>
+              <span class="leaderboard-meta">${dateText}</span>
+            </div>
           `;
         }).join("");
       }
