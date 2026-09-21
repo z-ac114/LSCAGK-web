@@ -107,7 +107,8 @@
       async function renderLeaderboard() {
         const { data, error } = await supabase.from("leaderboard")
           .select("*")
-          .order("score", { ascending: false })
+          .order('score', { ascending: false })
+          .order('time_taken', { ascending: true })
           .limit(100);
         
         const list = document.getElementById("leaderboardList");
@@ -118,11 +119,15 @@
         list.innerHTML = data.map((r, i) => {
           const rankClass = i === 0 ? "rank-1" : i === 1 ? "rank-2" : i === 2 ? "rank-3" : "";
           const scoreText = `${r.score} / ${r.total}`;
+          const timeText = r.time_taken ? `${r.time_taken}s` : "—";
+          const dateText = r.created_at ? new Date(r.created_at).toLocaleString() : "";
           return `
             <div class="leaderboard-item ${rankClass}">
               <span class="leaderboard-rank">${i + 1}</span>
               <span class="leaderboard-name">${r.name}</span>
               <span class="leaderboard-score">${scoreText}</span>
+              <span class="leaderboard-score" style="background: none; color: var(--muted); font-weight: 500;">${timeText}</span>
+              <span class="leaderboard-score" style="background: none; color: var(--muted); font-weight: 400; font-size: 0.8rem;">${dateText}</span>
             </div>
           `;
         }).join("");

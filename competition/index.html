@@ -674,10 +674,12 @@
           }
           const score = $("scoreBig").textContent;
           const [correct] = score.split(" / ").map(Number);
+          const timeTaken = TOTAL_SECONDS - timeLeft;
           const payload = { 
             name, 
             score: correct, 
             total: QUESTIONS.length,
+            time_taken: timeTaken,
             date: new Date().toISOString()
           };
           try {
