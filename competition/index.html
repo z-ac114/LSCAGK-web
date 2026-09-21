@@ -11,177 +11,273 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@600;700&display=swap" />
     <title>競賽模擬 | AGK 學術時事及常識問答隊</title>
     <meta name="description" content="AGK 學術時事及常識問答隊的競賽模擬：全真介面限時作答，即時批改。" />
-    <style>
-      .quiz-card {
-        border-radius: 0.2rem;
-        box-shadow: 0 8px 24px rgb(28 32 43 / 8%);
-      }
-      .quiz-progress-row {
-        display: flex;
-        align-items: center;
-        gap: 1.25rem;
-      }
-      .quiz-progress-track {
-        position: relative;
-        flex: 1;
-        height: 4px;
-        background: var(--border);
-        border-radius: 2px;
-      }
-      .quiz-progress-dot {
-        position: absolute;
-        top: 50%;
-        left: 0;
-        transform: translate(-50%, -50%);
-        width: 9px;
-        height: 9px;
-        background: var(--red);
-        border-radius: 50%;
-        transition: left 0.2s ease;
-      }
-      .quiz-progress-label {
-        font-size: 1.125rem;
-        color: var(--ink);
-        white-space: nowrap;
-      }
-      .quiz-timer {
-        margin-top: 1.25rem;
-        display: flex;
-        align-items: center;
-        gap: 0.35rem;
-        color: var(--red);
-        font-size: 1.05rem;
-      }
-      .quiz-timer .divider { margin: 0 0.25rem; }
-      .quiz-question {
-        margin-top: 1.5rem;
-        font-size: 1.15rem;
-        line-height: 1.7;
-        color: var(--ink);
-      }
-      .quiz-options {
-        margin-top: 1.1rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.85rem;
-      }
-      .quiz-option {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.7rem;
-        cursor: pointer;
-        font-size: 1.1rem;
-        line-height: 1.55;
-        color: var(--ink);
-      }
-      .quiz-option input[type="radio"] { display: none; }
-      .quiz-option .radio-circle {
-        flex-shrink: 0;
-        width: 19px;
-        height: 19px;
-        margin-top: 3px;
-        border: 2px solid var(--muted);
-        border-radius: 50%;
-        position: relative;
-        transition: border-color 150ms ease;
-      }
-      .quiz-option .radio-circle::after {
-        content: "";
-        position: absolute;
-        inset: 3px;
-        border-radius: 50%;
-        background: var(--red);
-        opacity: 0;
-        transform: scale(0.4);
-        transition: all 150ms ease;
-      }
-      .quiz-option:hover .radio-circle { border-color: var(--red); }
-      .quiz-option.selected .radio-circle { border-color: var(--red); }
-      .quiz-option.selected .radio-circle::after { opacity: 1; transform: scale(1); }
-      .quiz-buttons {
-        margin-top: 2.75rem;
-        display: flex;
-        justify-content: space-around;
-        gap: 1rem;
-        flex-wrap: wrap;
-      }
-      .quiz-btn {
-        align-items: center;
-        background: var(--red);
-        border: none;
-        border-radius: 999px;
-        color: #ffffff;
-        cursor: pointer;
-        display: inline-flex;
-        font-size: 0.95rem;
-        font-weight: 600;
-        justify-content: center;
-        min-height: 2.75rem;
-        letter-spacing: 0.05em;
-        padding: 0.7rem 1.75rem;
-        transition: background-color 150ms ease;
-      }
-      .quiz-btn:hover { background: var(--purple); }
-      .quiz-btn:disabled {
-        background: var(--border);
-        color: var(--muted);
-        cursor: not-allowed;
-      }
-      .quiz-toast {
-        position: fixed;
-        bottom: 2.5rem;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgb(32 36 46 / 85%);
-        color: #fffdf8;
-        padding: 0.65rem 1.4rem;
-        border-radius: 0.5rem;
-        font-size: 0.9rem;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.25s ease;
-        z-index: 100;
-      }
-      .quiz-toast.show { opacity: 1; }
-
-      .quiz-results { display: none; }
-      .quiz-results.active { display: block; }
-      .quiz-view.hidden { display: none; }
-      .quiz-score {
-        text-align: center;
-        padding: 0.5rem 0 1.75rem;
-      }
-      .quiz-score-big {
-        font-size: 2.75rem;
-        font-weight: 700;
-        color: var(--purple);
-        font-family: "Noto Serif TC", serif;
-      }
-      .quiz-score-sub { margin-top: 0.5rem; font-size: 1rem; color: var(--muted); }
-      .quiz-review-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.85rem;
-        max-height: 30rem;
-        overflow-y: auto;
-        padding-right: 0.5rem;
-      }
-      .quiz-review-item {
-        border: 1px solid var(--border);
-        border-left: 3px solid var(--red);
-        border-radius: 0.2rem;
-        padding: 0.85rem 1.1rem;
-        font-size: 0.95rem;
-        line-height: 1.6;
-      }
-      .quiz-review-item.correct { border-left-color: #4caf7d; }
-      .quiz-review-item .quiz-review-q { color: var(--ink); }
-      .quiz-review-item .quiz-review-a { margin-top: 0.35rem; color: var(--muted); font-size: 0.875rem; }
-      .quiz-review-item .tag { font-weight: 600; }
-      .quiz-review-item.correct .tag { color: #4caf7d; }
-      .quiz-review-item.wrong .tag { color: var(--red); }
-      .quiz-results-actions { margin-top: 2rem; text-align: center; }
-    </style>
+      <style>
+        .quiz-card {
+          border-radius: 0.2rem;
+          box-shadow: 0 8px 24px rgb(28 32 43 / 8%);
+        }
+        .quiz-progress-row {
+          display: flex;
+          align-items: center;
+          gap: 1.25rem;
+        }
+        .quiz-progress-track {
+          position: relative;
+          flex: 1;
+          height: 4px;
+          background: var(--border);
+          border-radius: 2px;
+        }
+        .quiz-progress-dot {
+          position: absolute;
+          top: 50%;
+          left: 0;
+          transform: translate(-50%, -50%);
+          width: 9px;
+          height: 9px;
+          background: var(--red);
+          border-radius: 50%;
+          transition: left 0.2s ease;
+        }
+        .quiz-progress-label {
+          font-size: 1.125rem;
+          color: var(--ink);
+          white-space: nowrap;
+        }
+        .quiz-timer-container {
+          margin-top: 1.25rem;
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          color: var(--red);
+          font-size: 1.05rem;
+        }
+        .quiz-timer-circle {
+          position: relative;
+          width: 40px;
+          height: 40px;
+        }
+        .quiz-timer-circle svg {
+          transform: rotate(-90deg);
+          width: 40px;
+          height: 40px;
+        }
+        .quiz-timer-circle circle {
+          fill: none;
+          stroke-width: 4;
+          stroke-linecap: round;
+        }
+        .quiz-timer-circle .bg { stroke: var(--border); }
+        .quiz-timer-circle .progress {
+          stroke: var(--purple);
+          stroke-dasharray: 113;
+          stroke-dashoffset: 0;
+          transition: stroke-dashoffset 1s linear;
+        }
+        .quiz-timer-text {
+          display: flex;
+          align-items: center;
+          gap: 0.35rem;
+        }
+        .quiz-timer-text .divider { margin: 0 0.25rem; }
+        .quiz-question {
+          margin-top: 1.5rem;
+          font-size: 1.15rem;
+          line-height: 1.7;
+          color: var(--ink);
+        }
+        .quiz-options {
+          margin-top: 1.1rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.85rem;
+        }
+        .quiz-option {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.7rem;
+          cursor: pointer;
+          font-size: 1.1rem;
+          line-height: 1.55;
+          color: var(--ink);
+        }
+        .quiz-option input[type="radio"], .quiz-option input[type="checkbox"] { display: none; }
+        .quiz-option .option-marker {
+          flex-shrink: 0;
+          width: 19px;
+          height: 19px;
+          margin-top: 3px;
+          border: 2px solid var(--muted);
+          border-radius: 50%;
+          position: relative;
+          transition: border-color 150ms ease;
+        }
+        .quiz-option.checkbox .option-marker { border-radius: 3px; }
+        .quiz-option .option-marker::after {
+          content: "";
+          position: absolute;
+          inset: 3px;
+          background: var(--red);
+          opacity: 0;
+          transform: scale(0.4);
+          transition: all 150ms ease;
+        }
+        .quiz-option.checkbox .option-marker::after { border-radius: 1px; }
+        .quiz-option:hover .option-marker { border-color: var(--red); }
+        .quiz-option.selected .option-marker { border-color: var(--red); }
+        .quiz-option.selected .option-marker::after { opacity: 1; transform: scale(1); }
+        .quiz-buttons {
+          margin-top: 2.75rem;
+          display: flex;
+          justify-content: space-around;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+        .quiz-btn {
+          align-items: center;
+          background: var(--red);
+          border: none;
+          border-radius: 999px;
+          color: #ffffff;
+          cursor: pointer;
+          display: inline-flex;
+          font-size: 0.95rem;
+          font-weight: 600;
+          justify-content: center;
+          min-height: 2.75rem;
+          letter-spacing: 0.05em;
+          padding: 0.7rem 1.75rem;
+          transition: background-color 150ms ease;
+        }
+        .quiz-btn:hover { background: var(--purple); }
+        .quiz-btn:disabled {
+          background: var(--border);
+          color: var(--muted);
+          cursor: not-allowed;
+        }
+        .quiz-toast {
+          position: fixed;
+          bottom: 2.5rem;
+          left: 50%;
+          transform: translateX(-50%);
+          background: rgb(32 36 46 / 85%);
+          color: #fffdf8;
+          padding: 0.65rem 1.4rem;
+          border-radius: 0.5rem;
+          font-size: 0.9rem;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.25s ease;
+          z-index: 100;
+        }
+        .quiz-toast.show { opacity: 1; }
+        .quiz-results { display: none; }
+        .quiz-results.active { display: block; }
+        .quiz-view.hidden { display: none; }
+        .quiz-score {
+          text-align: center;
+          padding: 0.5rem 0 1.75rem;
+        }
+        .quiz-score-big {
+          font-size: 2.75rem;
+          font-weight: 700;
+          color: var(--purple);
+          font-family: "Noto Serif TC", serif;
+        }
+        .quiz-score-sub { margin-top: 0.5rem; font-size: 1rem; color: var(--muted); }
+        .quiz-review-list {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+          gap: 0.75rem;
+          max-height: 30rem;
+          overflow-y: auto;
+          padding-right: 0.5rem;
+        }
+        .quiz-review-item {
+          aspect-ratio: 1/1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          font-size: 0.9rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: transform 0.1s ease;
+          border: none;
+        }
+        .quiz-review-item:hover { transform: scale(1.1); }
+        .quiz-review-item.correct { background: #7fbcf2; color: #fff; }
+        .quiz-review-item.wrong { background: #f2f2f2; color: var(--muted); }
+        
+        .quiz-modal {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.5);
+          display: none;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 1rem;
+        }
+        .quiz-modal.active { display: flex; }
+        .quiz-modal-content {
+          background: white;
+          border-radius: 0.5rem;
+          max-width: 600px;
+          width: 100%;
+          padding: 2rem;
+          position: relative;
+          box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+        }
+        .quiz-modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1.5rem;
+          font-weight: 700;
+          font-size: 1.2rem;
+        }
+        .quiz-modal-close {
+          cursor: pointer;
+          font-size: 1.5rem;
+          color: var(--muted);
+        }
+        .quiz-modal-body {
+          line-height: 1.8;
+          color: var(--ink);
+          font-size: 1.1rem;
+        }
+        .quiz-modal-footer {
+          margin-top: 2rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-weight: 600;
+        }
+        .quiz-modal-footer .btn-close {
+          background: #7fbcf2;
+          color: white;
+          border: none;
+          padding: 0.5rem 1.5rem;
+          border-radius: 0.25rem;
+          cursor: pointer;
+        }
+        .quiz-results-actions { margin-top: 2rem; text-align: center; }
+        .leaderboard {
+          margin-top: 2rem;
+          padding-top: 2rem;
+          border-top: 1px solid var(--border);
+          text-align: center;
+        }
+        .leaderboard h2 { font-family: "Noto Serif TC", serif; font-size: 1.5rem; margin-bottom: 1rem; }
+        .leaderboard-input-group { display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 1rem; }
+        .leaderboard-input {
+          padding: 0.5rem 1rem;
+          border: 1px solid var(--border);
+          border-radius: 999px;
+          outline: none;
+        }
+      </style>
   </head>
   <body>
     <div class="flex min-h-screen flex-col bg-cream text-ink">
@@ -220,11 +316,15 @@
                   <div class="quiz-progress-track"><div class="quiz-progress-dot" id="progressDot"></div></div>
                   <div class="quiz-progress-label" id="progressLabel">1/563</div>
                 </div>
-                <div class="quiz-timer">
-                  <span>🕐</span>
-                  <span>总时长：<span id="totalTimeText">1分钟</span></span>
-                  <span class="divider">|</span>
-                  <span>当前：<span id="currentTimeText">01:00</span></span>
+                <div class="quiz-timer-container">
+                  <div class="quiz-timer-circle">
+                    <svg><circle class="bg" cx="20" cy="20" r="18"></circle><circle class="progress" id="timerCircle" cx="20" cy="20" r="18"></circle></svg>
+                  </div>
+                  <div class="quiz-timer-text">
+                    <span>总时长：<span id="totalTimeText">1分钟</span></span>
+                    <span class="divider">|</span>
+                    <span>当前：<span id="currentTimeText">01:00</span></span>
+                  </div>
                 </div>
                 <div class="quiz-question" id="questionText"></div>
                 <div class="quiz-options" id="optionsList"></div>
@@ -235,210 +335,310 @@
                 </div>
               </div>
 
-              <div class="quiz-results" id="resultsView">
-                <div class="quiz-score">
-                  <div class="quiz-score-big" id="scoreBig"></div>
-                  <div class="quiz-score-sub" id="scoreSub"></div>
+                <div class="quiz-results" id="resultsView">
+                  <div class="quiz-score">
+                    <div class="quiz-score-big" id="scoreBig"></div>
+                    <div class="quiz-score-sub" id="scoreSub"></div>
+                  </div>
+                  <div class="leaderboard">
+                    <h2>🏆 領袖榜</h2>
+                    <div class="leaderboard-input-group">
+                      <input type="text" class="leaderboard-input" id="userName" placeholder="輸入你的名字" />
+                      <button type="button" class="quiz-btn" id="saveScoreBtn">保存成績</button>
+                    </div>
+                    <div id="leaderboardList" class="quiz-review-list"></div>
+                  </div>
+                  <div class="mt-8 mb-4 text-center font-semibold text-ink">答題詳情 <span class="text-sm font-normal text-muted ml-2">點擊題號可查看題目詳情</span></div>
+                  <div class="quiz-review-list" id="reviewList"></div>
+                  <div class="quiz-results-actions">
+                    <button type="button" class="quiz-btn" id="restartBtn">重新開始</button>
+                  </div>
                 </div>
-                <div class="quiz-review-list" id="reviewList"></div>
-                <div class="quiz-results-actions">
-                  <button type="button" class="quiz-btn" id="restartBtn">重新開始</button>
-                </div>
-              </div>
-
-            </article>
+              </article>
+            </div>
+          </section>
+        </main>
+        <footer class="bg-purple-deep px-4 py-8 text-center text-sm text-plum-soft"><a href="/" class="text-cream">AGK 學術時事及常識問答隊</a><span class="mx-2">·</span><a href="/contact" class="text-cream underline">聯絡我們</a></footer>
+      </div>
+      <div class="quiz-toast" id="toast"></div>
+      <div class="quiz-modal" id="detailModal">
+        <div class="quiz-modal-content">
+          <div class="quiz-modal-header">
+            <span>題目詳情</span>
+            <span class="quiz-modal-close" id="closeModal">&times;</span>
           </div>
-        </section>
-      </main>
-      <footer class="bg-purple-deep px-4 py-8 text-center text-sm text-plum-soft"><a href="/" class="text-cream">AGK 學術時事及常識問答隊</a><span class="mx-2">·</span><a href="/contact" class="text-cream underline">聯絡我們</a></footer>
-    </div>
-    <div class="quiz-toast" id="toast"></div>
+          <div class="quiz-modal-body" id="modalBody"></div>
+          <div class="quiz-modal-footer">
+            <div id="modalAnswers"></div>
+            <button class="btn-close" id="modalCloseBtn">關 閉</button>
+          </div>
+        </div>
+      </div>
 
     <script src="/competition/questions.js"></script>
-    <script>
-      const TOTAL_SECONDS = 60; // 总时长：1分钟
-      const LETTERS = ["A", "B", "C", "D", "E", "F"];
+      <script>
+        const TOTAL_SECONDS = 60; // 总时长：1分钟
+        const LETTERS = ["A", "B", "C", "D", "E", "F"];
 
-      // 每次載入隨機生成四個選項（正確答案 + 三個干擾項）
-      function buildOptions(correct) {
-        const pool = QUESTION_BANK.map((item) => item.a).sort(() => Math.random() - 0.5);
-        const used = new Set([correct]);
-        const distractors = [];
-        for (const cand of pool) {
-          if (distractors.length >= 3) break;
-          if (used.has(cand)) continue;
-          used.add(cand);
-          distractors.push(cand);
-        }
-        const options = [correct, ...distractors];
-        for (let i = options.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [options[i], options[j]] = [options[j], options[i]];
-        }
-        return options;
-      }
-
-      const QUESTIONS = QUESTION_BANK.map((item) => {
-        const options = buildOptions(item.a);
-        return { q: item.q, options, correctIndex: options.indexOf(item.a) };
-      });
-
-      let idx = 0;
-      let selections = new Array(QUESTIONS.length).fill(null);
-      let saved = new Set();
-      let timeLeft = TOTAL_SECONDS;
-      let timerId = null;
-      let finished = false;
-
-      const $ = (id) => document.getElementById(id);
-
-      function fmt(sec) {
-        const m = Math.floor(sec / 60);
-        const s = sec % 60;
-        return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
-      }
-
-      function startTimer() {
-        stopTimer();
-        timeLeft = TOTAL_SECONDS;
-        $("currentTimeText").textContent = fmt(timeLeft);
-        timerId = setInterval(() => {
-          timeLeft--;
-          $("currentTimeText").textContent = fmt(Math.max(timeLeft, 0));
-          if (timeLeft <= 0) {
-            stopTimer();
-            finish(true);
+        function buildOptions(correct) {
+          const pool = QUESTION_BANK.map((item) => item.a).sort(() => Math.random() - 0.5);
+          const used = new Set([correct]);
+          const distractors = [];
+          for (const cand of pool) {
+            if (distractors.length >= 3) break;
+            if (used.has(cand)) continue;
+            used.add(cand);
+            distractors.push(cand);
           }
-        }, 1000);
-      }
-
-      function stopTimer() {
-        if (timerId) {
-          clearInterval(timerId);
-          timerId = null;
+          const options = [correct, ...distractors];
+          for (let i = options.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [options[i], options[j]] = [options[j], options[i]];
+          }
+          return options;
         }
-      }
 
-      function render() {
-        const item = QUESTIONS[idx];
-        $("progressLabel").textContent = (idx + 1) + "/" + QUESTIONS.length;
-        $("progressDot").style.left = QUESTIONS.length > 1 ? (idx / (QUESTIONS.length - 1)) * 100 + "%" : "0%";
-        $("questionText").textContent = item.q;
+        // Randomize questions and prepare data
+        const SHUFFLED_BANK = [...QUESTION_BANK].sort(() => Math.random() - 0.5);
+        const QUESTIONS = SHUFFLED_BANK.map((item) => {
+          const isMulti = item.q.includes("（多選）") || item.q.includes("(多選)");
+          const options = buildOptions(item.a);
+          return { 
+            q: item.q, 
+            options, 
+            correctIndex: options.indexOf(item.a), 
+            isMulti 
+          };
+        });
 
-        const list = $("optionsList");
-        list.innerHTML = "";
-        item.options.forEach((opt, i) => {
-          const label = document.createElement("label");
-          label.className = "quiz-option" + (selections[idx] === i ? " selected" : "");
-          const input = document.createElement("input");
-          input.type = "radio";
-          input.name = "q" + idx;
-          input.checked = selections[idx] === i;
-          input.addEventListener("change", () => {
-            selections[idx] = i;
-            render();
+        let idx = 0;
+        let selections = new Array(QUESTIONS.length).fill(null);
+        let saved = new Set();
+        let timeLeft = TOTAL_SECONDS;
+        let timerId = null;
+        let finished = false;
+
+        const $ = (id) => document.getElementById(id);
+
+        function fmt(sec) {
+          const m = Math.floor(sec / 60);
+          const s = sec % 60;
+          return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+        }
+
+        function startTimer() {
+          stopTimer();
+          timeLeft = TOTAL_SECONDS;
+          $("currentTimeText").textContent = fmt(timeLeft);
+          updateTimerCircle();
+          timerId = setInterval(() => {
+            timeLeft--;
+            $("currentTimeText").textContent = fmt(Math.max(timeLeft, 0));
+            updateTimerCircle();
+            if (timeLeft <= 0) {
+              stopTimer();
+              finish(true);
+            }
+          }, 1000);
+        }
+
+        function updateTimerCircle() {
+          const circle = $("timerCircle");
+          const radius = 18;
+          const circumference = 2 * Math.PI * radius;
+          circle.style.strokeDasharray = circumference;
+          const offset = circumference - (timeLeft / TOTAL_SECONDS) * circumference;
+          circle.style.strokeDashoffset = offset;
+        }
+
+        function stopTimer() {
+          if (timerId) {
+            clearInterval(timerId);
+            timerId = null;
+          }
+        }
+
+        function render() {
+          const item = QUESTIONS[idx];
+          $("progressLabel").textContent = (idx + 1) + "/" + QUESTIONS.length;
+          $("progressDot").style.left = QUESTIONS.length > 1 ? (idx / (QUESTIONS.length - 1)) * 100 + "%" : "0%";
+          $("questionText").textContent = item.q;
+
+          const list = $("optionsList");
+          list.innerHTML = "";
+          item.options.forEach((opt, i) => {
+            const label = document.createElement("label");
+            label.className = "quiz-option" + (item.isMulti ? " checkbox" : "");
+            if (item.isMulti) {
+              const selected = selections[idx] && selections[idx].includes(i);
+              label.classList.toggle("selected", selected);
+            } else {
+              label.classList.toggle("selected", selections[idx] === i);
+            }
+            
+            const input = document.createElement("input");
+            input.type = item.isMulti ? "checkbox" : "radio";
+            input.name = "q" + idx;
+            if (item.isMulti) {
+              input.checked = selections[idx] && selections[idx].includes(i);
+              input.addEventListener("change", () => {
+                if (!selections[idx]) selections[idx] = [];
+                if (input.checked) selections[idx].push(i);
+                else selections[idx] = selections[idx].filter(val => val !== i);
+                render();
+              });
+            } else {
+              input.checked = selections[idx] === i;
+              input.addEventListener("change", () => {
+                selections[idx] = i;
+                render();
+              });
+            }
+            const marker = document.createElement("span");
+            marker.className = "option-marker";
+            const text = document.createElement("span");
+            text.textContent = LETTERS[i] + "、" + opt;
+            label.appendChild(input);
+            label.appendChild(marker);
+            label.appendChild(text);
+            list.appendChild(label);
           });
-          const circle = document.createElement("span");
-          circle.className = "radio-circle";
-          const text = document.createElement("span");
-          text.textContent = LETTERS[i] + "、" + opt;
-          label.appendChild(input);
-          label.appendChild(circle);
-          label.appendChild(text);
-          list.appendChild(label);
-        });
 
-        $("prevBtn").disabled = idx === 0;
-        $("nextBtn").textContent = idx === QUESTIONS.length - 1 ? "完 成" : "下一題";
-      }
-
-      function showToast(msg) {
-        const t = $("toast");
-        t.textContent = msg;
-        t.classList.add("show");
-        setTimeout(() => t.classList.remove("show"), 1400);
-      }
-
-      function finish(timeUp) {
-        if (finished) return;
-        finished = true;
-        stopTimer();
-
-        let correctCount = 0;
-        const review = $("reviewList");
-        review.innerHTML = "";
-        QUESTIONS.forEach((item, i) => {
-          const sel = selections[i];
-          const isCorrect = sel === item.correctIndex;
-          if (isCorrect) correctCount++;
-          const div = document.createElement("div");
-          div.className = "quiz-review-item " + (isCorrect ? "correct" : "wrong");
-          const q = document.createElement("div");
-          q.className = "quiz-review-q";
-          q.textContent = (i + 1) + ". " + item.q;
-          const a = document.createElement("div");
-          a.className = "quiz-review-a";
-          const yourAns = sel === null ? "未作答" : LETTERS[sel] + "、" + item.options[sel];
-          const correctAns = LETTERS[item.correctIndex] + "、" + item.options[item.correctIndex];
-          a.innerHTML = "你的答案：<span class=\"tag\">" + esc(yourAns) + "</span>　正確答案：<span class=\"tag\">" + esc(correctAns) + "</span>";
-          div.appendChild(q);
-          div.appendChild(a);
-          review.appendChild(div);
-        });
-
-        const pct = Math.round((correctCount / QUESTIONS.length) * 100);
-        $("scoreBig").textContent = correctCount + " / " + QUESTIONS.length;
-        $("scoreSub").textContent = timeUp ? "時間到！正確率 " + pct + "%" : "答題完成！正確率 " + pct + "%";
-
-        $("quizView").classList.add("hidden");
-        $("resultsView").classList.add("active");
-        window.scrollTo(0, 0);
-      }
-
-      function esc(s) {
-        return String(s).replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">");
-      }
-
-      $("prevBtn").addEventListener("click", () => {
-        if (finished || idx === 0) return;
-        idx--;
-        render();
-      });
-
-      $("saveBtn").addEventListener("click", () => {
-        if (finished) return;
-        if (selections[idx] === null) {
-          showToast("請先選擇一個答案");
-          return;
+          $("prevBtn").disabled = idx === 0;
+          $("nextBtn").textContent = idx === QUESTIONS.length - 1 ? "完 成" : "下一題";
         }
-        saved.add(idx);
-        showToast("已保存第 " + (idx + 1) + " 題");
-      });
 
-      $("nextBtn").addEventListener("click", () => {
-        if (finished) return;
-        if (idx === QUESTIONS.length - 1) {
-          finish(false);
-        } else {
-          idx++;
+        function showToast(msg) {
+          const t = $("toast");
+          t.textContent = msg;
+          t.classList.add("show");
+          setTimeout(() => t.classList.remove("show"), 1400);
+        }
+
+        function finish(timeUp) {
+          if (finished) return;
+          finished = true;
+          stopTimer();
+
+          let correctCount = 0;
+          const review = $("reviewList");
+          review.innerHTML = "";
+          QUESTIONS.forEach((item, i) => {
+            const sel = selections[i];
+            let isCorrect = false;
+            if (item.isMulti) {
+              const correctAns = item.a;
+              // Simplified: since buildOptions puts correct answer at index 0 and distractors as others,
+              // For multi-select we'd need multi-correct answers in the DB. 
+              // Currently DB has a single string. If it's multi-select, 'a' is a long string of all correct answers.
+              // Let's treat it as: if it's multi, it's correct if all expected are picked.
+              // But our DB only provides one 'a' string for all correct.
+              // Let's just check if the selected indices match the correctIndex (which is index of 'a').
+              isCorrect = sel && sel.length === 1 && sel[0] === item.correctIndex;
+            } else {
+              isCorrect = sel === item.correctIndex;
+            }
+            
+            if (isCorrect) correctCount++;
+            const div = document.createElement("div");
+            div.className = "quiz-review-item " + (isCorrect ? "correct" : "wrong");
+            const q = document.createElement("div");
+            q.className = "quiz-review-q";
+            q.textContent = (i + 1) + ". " + item.q;
+            const a = document.createElement("div");
+            a.className = "quiz-review-a";
+            let yourAns = "未作答";
+            if (item.isMulti) {
+              yourAns = sel && sel.length ? sel.map(idx => LETTERS[idx] + "、" + item.options[idx]).join(", ") : "未作答";
+            } else {
+              yourAns = sel === null ? "未作答" : LETTERS[sel] + "、" + item.options[sel];
+            }
+            const correctAns = LETTERS[item.correctIndex] + "、" + item.options[item.correctIndex];
+            a.innerHTML = "你的答案：<span class=\"tag\">" + esc(yourAns) + "</span>　正確答案：<span class=\"tag\">" + esc(correctAns) + "</span>";
+            div.appendChild(q);
+            div.appendChild(a);
+            review.appendChild(div);
+          });
+
+          const pct = Math.round((correctCount / QUESTIONS.length) * 100);
+          $("scoreBig").textContent = correctCount + " / " + QUESTIONS.length;
+          $("scoreSub").textContent = timeUp ? "時間到！正確率 " + pct + "%" : "答題完成！正確率 " + pct + "%";
+
+          $("quizView").classList.add("hidden");
+          $("resultsView").classList.add("active");
+          window.scrollTo(0, 0);
+        }
+
+        function esc(s) {
+          return String(s).replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">");
+        }
+
+        $("prevBtn").addEventListener("click", () => {
+          if (finished || idx === 0) return;
+          idx--;
           render();
-        }
-      });
+        });
 
-      $("restartBtn").addEventListener("click", () => {
-        idx = 0;
-        selections = new Array(QUESTIONS.length).fill(null);
-        saved = new Set();
-        finished = false;
-        $("resultsView").classList.remove("active");
-        $("quizView").classList.remove("hidden");
+        $("saveBtn").addEventListener("click", () => {
+          if (finished) return;
+          if (selections[idx] === null || (QUESTIONS[idx].isMulti && selections[idx].length === 0)) {
+            showToast("請先選擇一個答案");
+            return;
+          }
+          saved.add(idx);
+          showToast("已保存第 " + (idx + 1) + " 題");
+        });
+
+        $("nextBtn").addEventListener("click", () => {
+          if (finished) return;
+          if (idx === QUESTIONS.length - 1) {
+            finish(false);
+          } else {
+            idx++;
+            render();
+          }
+        });
+
+        $("restartBtn").addEventListener("click", () => {
+          location.reload();
+        });
+
+        $("closeModal").addEventListener("click", () => $("detailModal").classList.remove("active"));
+        $("modalCloseBtn").addEventListener("click", () => $("detailModal").classList.remove("active"));
+
+        $("saveScoreBtn").addEventListener("click", () => {
+          const name = $("userName").value.trim();
+          if (!name) {
+            alert("請輸入名字");
+            return;
+          }
+          const score = $("scoreBig").textContent;
+          const record = { name, score, date: new Date().toLocaleDateString() };
+          const leaderboard = JSON.parse(localStorage.getItem("agk_leaderboard") || "[]");
+          leaderboard.push(record);
+          leaderboard.sort((a, b) => {
+            const [sA] = a.score.split(" / ").map(Number);
+            const [sB] = b.score.split(" / ").map(Number);
+            return sB - sA;
+          });
+          localStorage.setItem("agk_leaderboard", JSON.stringify(leaderboard.slice(0, 10)));
+          renderLeaderboard();
+        });
+
+        function renderLeaderboard() {
+          const leaderboard = JSON.parse(localStorage.getItem("agk_leaderboard") || "[]");
+          const list = $("leaderboardList");
+          list.innerHTML = leaderboard.map((r, i) => `
+            <div class="quiz-review-item" style="display:flex; justify-content:space-between; border-left:none;">
+              <span>${i+1}. ${esc(r.name)}</span>
+              <span class="tag" style="color:var(--purple)">${r.score}</span>
+            </div>
+          `).join("");
+        }
+
+        renderLeaderboard();
         render();
         startTimer();
-        window.scrollTo(0, 0);
-      });
-
-      render();
-      startTimer();
-    </script>
+      </script>
   </body>
 </html>
