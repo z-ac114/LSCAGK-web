@@ -406,10 +406,14 @@
         </div>
       </div>
 
-    <script src="/competition/hi.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/competition/questions.js"></script>
       <script>
         const TOTAL_SECONDS = 60; // 总时长：1分钟
         const LETTERS = ["A", "B", "C", "D", "E", "F"];
+        const SUPABASE_URL = "https://oajvxavzsomymqunpgxx.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_L8QCQotDAIP-Fzm8r5IIWQ_U17i-eFy";
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         function buildOptions(correct) {
           // Options are now provided directly from QUESTION_BANK, so we just shuffle them.
@@ -662,23 +666,28 @@
         $("closeModal").addEventListener("click", () => $("detailModal").classList.remove("active"));
         $("modalCloseBtn").addEventListener("click", () => $("detailModal").classList.remove("active"));
 
-        $("saveScoreBtn").addEventListener("click", () => {
+        $("saveScoreBtn").addEventListener("click", async () => {
           const name = $("userName").value.trim();
           if (!name) {
             alert("請輸入名字");
             return;
           }
           const score = $("scoreBig").textContent;
-          const record = { name, score, date: new Date().toLocaleDateString() };
-          const leaderboard = JSON.parse(localStorage.getItem("agk_leaderboard") || "[]");
-          leaderboard.push(record);
-          leaderboard.sort((a, b) => {
-            const [sA] = a.score.split(" / ").map(Number);
-            const [sB] = b.score.split(" / ").map(Number);
-            return sB - sA;
-          });
-          localStorage.setItem("agk_leaderboard", JSON.stringify(leaderboard.slice(0, 10)));
-          window.location.href = "/leaderboard";
+          const [correct] = score.split(" / ").map(Number);
+          const payload = { 
+            name, 
+            score: correct, 
+            total: QUESTIONS.length,
+            date: new Date().toISOString()
+          };
+          try {
+            const { error } = await supabase.from("leaderboard").insert(payload);
+            if (error) throw error;
+            window.location.href = "/leaderboard";
+          } catch (e) {
+            console.error(e);
+            alert("保存失敗，請稍後再試");
+          }
         });
 
         function renderLeaderboard() {

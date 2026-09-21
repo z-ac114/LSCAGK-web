@@ -98,21 +98,31 @@
         </div>
       </main>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-      function renderLeaderboard() {
-        const leaderboard = JSON.parse(localStorage.getItem("agk_leaderboard") || "[]");
+      const SUPABASE_URL = "https://oajvxavzsomymqunpgxx.supabase.co";
+      const SUPABASE_ANON_KEY = "sb_publishable_L8QCQotDAIP-Fzm8r5IIWQ_U17i-eFy";
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      async function renderLeaderboard() {
+        const { data, error } = await supabase.from("leaderboard")
+          .select("*")
+          .order("score", { ascending: false })
+          .limit(100);
+        
         const list = document.getElementById("leaderboardList");
-        if (leaderboard.length === 0) {
+        if (error || !data || data.length === 0) {
           list.innerHTML = '<div class="text-center py-8 text-muted">暫無成績記錄</div>';
           return;
         }
-        list.innerHTML = leaderboard.map((r, i) => {
+        list.innerHTML = data.map((r, i) => {
           const rankClass = i === 0 ? "rank-1" : i === 1 ? "rank-2" : i === 2 ? "rank-3" : "";
+          const scoreText = `${r.score} / ${r.total}`;
           return `
             <div class="leaderboard-item ${rankClass}">
               <span class="leaderboard-rank">${i + 1}</span>
               <span class="leaderboard-name">${r.name}</span>
-              <span class="leaderboard-score">${r.score}</span>
+              <span class="leaderboard-score">${scoreText}</span>
             </div>
           `;
         }).join("");
