@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-Hant" class="antialiased">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="icon" type="image/png" href="/assets/agk-icon.png" />
+    <script src="/theme.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@600;700&display=swap" />
+    <title>領袖榜 | AGK 學術時事及常識問答隊</title>
+    <style>
+      .leaderboard-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+      }
+      .leaderboard-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+      }
+      .leaderboard-title {
+        text-align: center;
+        font-family: "Noto Serif TC", serif;
+        font-size: 2rem;
+        color: var(--purple);
+        margin-bottom: 2rem;
+      }
+      .leaderboard-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .leaderboard-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        transition: transform 0.2s ease;
+      }
+      .leaderboard-item:hover { transform: translateX(5px); }
+      .leaderboard-rank {
+        font-weight: 700;
+        width: 30px;
+        color: var(--muted);
+      }
+      .leaderboard-name {
+        flex: 1;
+        margin-left: 1rem;
+        font-weight: 500;
+      }
+      .leaderboard-score {
+        font-weight: 700;
+        color: var(--purple);
+        background: rgba(124, 58, 237, 0.1);
+        padding: 0.25rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.9rem;
+      }
+      .top-three .leaderboard-rank { color: var(--ink); }
+      .rank-1 { background: #fef3c7; border-color: #fcd34d; }
+      .rank-2 { background: #f3f4f6; border-color: #d1d5db; }
+      .rank-3 { background: #ffedd5; border-color: #fb923c; }
+    </style>
+  </head>
+  <body>
+    <div class="flex min-h-screen flex-col bg-cream text-ink">
+      <header class="sticky top-0 z-50 bg-purple text-cream">
+        <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+          <a class="flex min-h-11 items-center gap-2 font-serif text-lg font-semibold tracking-wide" href="/">
+            <img class="brand-icon" src="/assets/agk-icon.png" width="36" height="36" alt="" aria-hidden="true" /><span>AGK <span class="hidden font-sans text-sm font-normal text-plum-soft sm:inline">學術時事及常識問答隊</span></span>
+          </a>
+          <nav class="hidden items-center gap-1 md:flex">
+            <a href="/" class="min-h-11 rounded-full px-3 py-2 text-sm text-cream/90 hover:bg-purple-deep">隊伍簡介</a>
+            <a href="/training" class="min-h-11 rounded-full px-3 py-2 text-sm text-cream/90 hover:bg-purple-deep">訓練資料</a>
+            <a href="/competition" class="min-h-11 rounded-full bg-red px-3 py-2 text-sm text-cream">競賽模擬</a>
+            <a href="/news" class="min-h-11 rounded-full px-3 py-2 text-sm text-cream/90 hover:bg-purple-deep">最新消息</a>
+            <a href="/awards" class="min-h-11 rounded-full px-3 py-2 text-sm text-cream/90 hover:bg-purple-deep">得獎詳情</a>
+            <a href="/contact" class="min-h-11 rounded-full px-3 py-2 text-sm text-cream/90 hover:bg-purple-deep">聯絡我們</a>
+          </nav>
+        </div>
+      </header>
+      <main class="flex-1">
+        <div class="leaderboard-container">
+          <h1 class="leaderboard-title">🏆 領袖榜</h1>
+          <div class="leaderboard-card">
+            <div class="leaderboard-list" id="leaderboardList">
+              <!-- Records go here -->
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <script>
+      function renderLeaderboard() {
+        const leaderboard = JSON.parse(localStorage.getItem("agk_leaderboard") || "[]");
+        const list = document.getElementById("leaderboardList");
+        if (leaderboard.length === 0) {
+          list.innerHTML = '<div class="text-center py-8 text-muted">暫無成績記錄</div>';
+          return;
+        }
+        list.innerHTML = leaderboard.map((r, i) => {
+          const rankClass = i === 0 ? "rank-1" : i === 1 ? "rank-2" : i === 2 ? "rank-3" : "";
+          return `
+            <div class="leaderboard-item ${rankClass}">
+              <span class="leaderboard-rank">${i + 1}</span>
+              <span class="leaderboard-name">${r.name}</span>
+              <span class="leaderboard-score">${r.score}</span>
+            </div>
+          `;
+        }).join("");
+      }
+      renderLeaderboard();
+    </script>
+  </body>
+</html>
