@@ -53,49 +53,57 @@
           font-variant-numeric: tabular-nums;
         }
 
-        /* ---- Timer ---- */
+        /* ---- Timer (time inside the circle) ---- */
         .quiz-timer-container {
-          margin-top: 1.25rem;
+          margin-top: 1.5rem;
           display: flex;
           align-items: center;
-          gap: 0.9rem;
-          color: var(--muted);
-          font-size: 0.95rem;
+          gap: 1.1rem;
         }
         .quiz-timer-circle {
           position: relative;
-          width: 64px;
-          height: 64px;
+          width: 80px;
+          height: 80px;
           flex: none;
         }
         .quiz-timer-circle svg {
           /* flipped horizontally: ring drains counter-clockwise */
           transform: rotate(-90deg) scaleX(-1);
-          width: 64px;
-          height: 64px;
+          width: 80px;
+          height: 80px;
           display: block;
         }
         .quiz-timer-circle circle {
           fill: none;
-          stroke-width: 6;
+          stroke-width: 7;
           stroke-linecap: round;
         }
-        .quiz-timer-circle .bg { stroke: var(--border); }
+        .quiz-timer-circle .bg { stroke: #9aa0a6; }
         .quiz-timer-circle .progress {
-          stroke: var(--red);
-          stroke-dasharray: 188.5;
+          stroke: #5fb983;
+          stroke-dasharray: 226.2;
           transition: stroke-dashoffset 1s linear;
         }
         .quiz-timer-text {
+          position: absolute;
+          inset: 0;
           display: flex;
           align-items: center;
-          gap: 0.35rem;
-          color: var(--ink);
-        }
-        .quiz-timer-text .divider { margin: 0 0.25rem; color: var(--border); }
-        .quiz-timer-text span[id] {
+          justify-content: center;
+          font-size: 1.4rem;
           font-weight: 700;
+          letter-spacing: -0.01em;
+          color: var(--ink);
           font-variant-numeric: tabular-nums;
+          pointer-events: none;
+        }
+        .quiz-timer-meta {
+          font-size: 0.95rem;
+          color: var(--muted);
+        }
+        .quiz-timer-meta span[id] {
+          font-weight: 700;
+          color: var(--ink);
         }
 
         /* ---- Question & options ---- */
@@ -356,6 +364,53 @@
           opacity: 1;
           transform: translateX(-50%) translateY(0);
         }
+
+        /* ---- Dark mode readability fixes ---- */
+        .dark-mode .quiz-option {
+          background: var(--surface);
+        }
+        .dark-mode .quiz-option:hover,
+        .dark-mode .quiz-option.selected {
+          border-color: #a87fd6;
+        }
+        .dark-mode .quiz-option.selected {
+          box-shadow: inset 3px 0 0 #a87fd6;
+        }
+        .dark-mode .quiz-option input {
+          accent-color: #a87fd6;
+        }
+        .dark-mode .leaderboard {
+          background: var(--surface);
+        }
+        .dark-mode .quiz-score-big,
+        .dark-mode .quiz-modal-ans-value.correct {
+          color: #e7c9ee;
+        }
+        .dark-mode .quiz-btn {
+          background: #5b2f80;
+        }
+        .dark-mode .quiz-btn:hover {
+          background: #6f3f99;
+        }
+        .dark-mode .quiz-btn:disabled {
+          background: #3a404d;
+          color: #8b93a1;
+        }
+        .dark-mode .quiz-review-item.correct {
+          background: #5b2f80;
+          border-color: #6f3f99;
+        }
+        .dark-mode .quiz-review-item.incorrect-attempt {
+          background: #b04a55;
+          border-color: #b04a55;
+        }
+        .dark-mode .quiz-modal-content {
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+        }
+        .dark-mode .quiz-toast {
+          background: #454b59;
+          color: #f3eaf5;
+        }
       </style>
   </head>
   <body>
@@ -388,12 +443,11 @@
                 </div>
                 <div class="quiz-timer-container">
                   <div class="quiz-timer-circle">
-                    <svg viewBox="0 0 64 64"><circle class="bg" cx="32" cy="32" r="30"></circle><circle class="progress" id="timerCircle" cx="32" cy="32" r="30"></circle></svg>
+                    <svg viewBox="0 0 80 80"><circle class="bg" cx="40" cy="40" r="36"></circle><circle class="progress" id="timerCircle" cx="40" cy="40" r="36"></circle></svg>
+                    <div class="quiz-timer-text"><span id="currentTimeText">3:00</span></div>
                   </div>
-                  <div class="quiz-timer-text">
-                    <span>总时长：<span id="totalTimeText">3分钟</span></span>
-                    <span class="divider">|</span>
-                    <span>当前：<span id="currentTimeText">03:00</span></span>
+                  <div class="quiz-timer-meta">
+                    <span>总时长 <span id="totalTimeText">3分钟</span></span>
                   </div>
                 </div>
                 <div class="quiz-question" id="questionText"></div>
@@ -551,7 +605,7 @@
         function fmt(sec) {
           const m = Math.floor(sec / 60);
           const s = sec % 60;
-          return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+          return m + ":" + String(s).padStart(2, "0");
         }
 
         function startTimer() {

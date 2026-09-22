@@ -623,6 +623,10 @@ footer.bg-purple-deep.px-4.py-8::after {
   background: #20232b;
 }
 
+.dark-mode .bg-cream {
+  background: #20232b;
+}
+
 .dark-mode .bg-surface,
 .dark-mode .profile-card-light {
   background: #2b303b;
