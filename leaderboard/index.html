@@ -161,6 +161,7 @@
     }
     .sq-ok { color: #2e7d32; font-weight: 700; }
     .sq-wrong { color: var(--red); font-weight: 700; }
+    .sq-un { color: var(--muted); font-weight: 700; }
     .sq-item {
       display: flex;
       gap: 0.75rem;
@@ -171,6 +172,9 @@
     }
     .sq-item.ok { border-left: 3px solid #2e7d32; }
     .sq-item.wrong { border-left: 3px solid var(--red); }
+    .sq-item.un { border-left: 3px solid var(--border); }
+    .sq-item.un .sq-badge { background: var(--border); color: var(--muted); }
+    .sq-item.un .sq-ans span:first-child { color: var(--muted); }
     .sq-badge {
       flex: none;
       width: 1.5rem;
@@ -353,27 +357,31 @@
         el.classList.remove("hidden");
         el.scrollIntoView({ behavior: "smooth", block: "center" });
 
-        // per-question review (right / wrong) if details were stored with the entry
+        // per-question review (correct / wrong / unanswered) if details were stored with the entry
         const qWrap = document.getElementById("sharedQuestions");
         const details = Array.isArray(data.details) ? data.details : null;
         if (details && details.length) {
           const right = details.filter((d) => d.ok).length;
-          const wrong = details.length - right;
-          const unanswered = (data.total || 0) - details.length;
+          const wrong = details.filter((d) => !d.ok && d.ua != null).length;
+          const unanswered = details.filter((d) => !d.ok && d.ua == null).length;
           let html = `
             <div class="sq-summary">
-              已答 ${details.length} 題 · <span class="sq-ok">答對 ${right}</span> · <span class="sq-wrong">答錯 ${wrong}</span>${unanswered > 0 ? ` · 未答 ${unanswered}` : ""}
+              共 ${details.length} 題 · <span class="sq-ok">答對 ${right}</span> · <span class="sq-wrong">答錯 ${wrong}</span> · <span class="sq-un">未答 ${unanswered}</span>
             </div>
           `;
-          html += details.map((d, i) => `
-            <div class="sq-item ${d.ok ? 'ok' : 'wrong'}">
-              <span class="sq-badge">${d.ok ? '✓' : '✗'}</span>
-              <div class="sq-body">
-                <p class="sq-q">${i + 1}. ${esc(d.q)}</p>
-                <p class="sq-ans"><span>你的答案：${esc(d.ua)}</span><span>正確答案：${esc(d.ca)}</span></p>
+          html += details.map((d, i) => {
+            const status = d.ok ? 'ok' : (d.ua != null ? 'wrong' : 'un');
+            const badge = d.ok ? '✓' : (d.ua != null ? '✗' : '–');
+            return `
+              <div class="sq-item ${status}">
+                <span class="sq-badge">${badge}</span>
+                <div class="sq-body">
+                  <p class="sq-q">${i + 1}. ${esc(d.q)}</p>
+                  <p class="sq-ans"><span>你的答案：${esc(d.ua == null ? "未作答" : d.ua)}</span><span>正確答案：${esc(d.ca)}</span></p>
+                </div>
               </div>
-            </div>
-          `).join("");
+            `;
+          }).join("");
           qWrap.innerHTML = html;
           qWrap.classList.remove("hidden");
         }

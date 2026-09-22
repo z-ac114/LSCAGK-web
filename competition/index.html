@@ -808,14 +808,12 @@
 
             if (isCorrect) correctCount++;
 
-            if (wasAnswered) {
-              runDetails.push({
-                q: item.q,
-                ua: describeAnswer(item, sel),
-                ca: describeAnswer(item, item.isMulti ? item.correctIndices : item.correctIndex),
-                ok: isCorrect
-              });
-            }
+            runDetails.push({
+              q: item.q,
+              ua: wasAnswered ? describeAnswer(item, sel) : null,
+              ca: describeAnswer(item, item.isMulti ? item.correctIndices : item.correctIndex),
+              ok: isCorrect
+            });
 
             const div = document.createElement("div");
             let statusClass = "unanswered";
