@@ -146,6 +146,69 @@
     .dark-mode .shared-entry .shared-rank {
       background: #5b2f80;
     }
+
+    /* ---- Shared entry: per-question review ---- */
+    .shared-questions {
+      margin-top: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .sq-summary {
+      font-size: 0.95rem;
+      color: var(--ink);
+      padding: 0.25rem 0;
+    }
+    .sq-ok { color: #2e7d32; font-weight: 700; }
+    .sq-wrong { color: var(--red); font-weight: 700; }
+    .sq-item {
+      display: flex;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+    }
+    .sq-item.ok { border-left: 3px solid #2e7d32; }
+    .sq-item.wrong { border-left: 3px solid var(--red); }
+    .sq-badge {
+      flex: none;
+      width: 1.5rem;
+      height: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .sq-item.ok .sq-badge { background: #2e7d32; }
+    .sq-item.wrong .sq-badge { background: var(--red); }
+    .sq-body { flex: 1; min-width: 0; }
+    .sq-q {
+      margin: 0;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: var(--ink);
+      overflow-wrap: anywhere;
+    }
+    .sq-ans {
+      margin: 0.4rem 0 0;
+      font-size: 0.85rem;
+      color: var(--muted);
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .sq-item.wrong .sq-ans span:first-child { color: var(--red); }
+
+    /* dark mode */
+    .dark-mode .sq-item {
+      background: #2b303b;
+      border-color: #454b59;
+    }
+    .dark-mode .sq-ok { color: #7dc98a; }
     .dark-mode .leaderboard-item.top {
       background: #5b2f80;
       border-color: #6f3f99;
@@ -167,6 +230,8 @@
           <h1 class="leaderboard-title">排行榜</h1>
 
           <div class="shared-entry hidden" id="sharedEntry"></div>
+
+          <div class="shared-questions hidden" id="sharedQuestions"></div>
 
           <div class="leaderboard-section">
             <h2 class="leaderboard-section-title">基本題庫</h2>
@@ -280,13 +345,45 @@
         const dateText = data.created_at ? new Date(data.created_at).toLocaleDateString() : "";
         const el = document.getElementById("sharedEntry");
         el.innerHTML = `
-          <div class="shared-name">${data.name}</div>
+          <div class="shared-name">${esc(data.name)}</div>
           <div class="shared-score">${scoreText}</div>
           <div class="shared-meta">${modeLabel(data.mode)} · 用時 ${timeText} · ${dateText}</div>
           ${rank !== null ? `<div class="shared-rank">排名 第 ${rank} 位</div>` : ""}
         `;
         el.classList.remove("hidden");
         el.scrollIntoView({ behavior: "smooth", block: "center" });
+
+        // per-question review (right / wrong) if details were stored with the entry
+        const qWrap = document.getElementById("sharedQuestions");
+        const details = Array.isArray(data.details) ? data.details : null;
+        if (details && details.length) {
+          const right = details.filter((d) => d.ok).length;
+          const wrong = details.length - right;
+          const unanswered = (data.total || 0) - details.length;
+          let html = `
+            <div class="sq-summary">
+              已答 ${details.length} 題 · <span class="sq-ok">答對 ${right}</span> · <span class="sq-wrong">答錯 ${wrong}</span>${unanswered > 0 ? ` · 未答 ${unanswered}` : ""}
+            </div>
+          `;
+          html += details.map((d, i) => `
+            <div class="sq-item ${d.ok ? 'ok' : 'wrong'}">
+              <span class="sq-badge">${d.ok ? '✓' : '✗'}</span>
+              <div class="sq-body">
+                <p class="sq-q">${i + 1}. ${esc(d.q)}</p>
+                <p class="sq-ans"><span>你的答案：${esc(d.ua)}</span><span>正確答案：${esc(d.ca)}</span></p>
+              </div>
+            </div>
+          `).join("");
+          qWrap.innerHTML = html;
+          qWrap.classList.remove("hidden");
+        }
+      }
+
+      function esc(s) {
+        return String(s == null ? "" : s)
+          .replace(/&/g, "&" + "amp;")
+          .replace(/</g, "&" + "lt;")
+          .replace(/>/g, "&" + "gt;");
       }
 
       renderAll();

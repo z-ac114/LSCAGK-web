@@ -695,6 +695,7 @@
         let runStartTime = 0;
         let currentMode = "normal";
         let elapsedId = null;
+        let runDetails = [];
 
         const $ = (id) => document.getElementById(id);
 
@@ -776,12 +777,21 @@
           setTimeout(() => t.classList.remove("show"), 1400);
         }
 
+        function describeAnswer(item, sel) {
+          if (sel === null || sel === undefined) return "未作答";
+          if (Array.isArray(sel)) {
+            return sel.length ? sel.map((i) => LETTERS[i] + "、" + item.options[i]).join("、") : "未作答";
+          }
+          return LETTERS[sel] + "、" + item.options[sel];
+        }
+
         function finish() {
           if (finished) return;
           finished = true;
           stopElapsedTimer();
 
           let correctCount = 0;
+          runDetails = [];
           const review = $("reviewList");
           review.innerHTML = "";
           QUESTIONS.forEach((item, i) => {
@@ -795,8 +805,18 @@
             } else {
               isCorrect = sel === item.correctIndex;
             }
-            
+
             if (isCorrect) correctCount++;
+
+            if (wasAnswered) {
+              runDetails.push({
+                q: item.q,
+                ua: describeAnswer(item, sel),
+                ca: describeAnswer(item, item.isMulti ? item.correctIndices : item.correctIndex),
+                ok: isCorrect
+              });
+            }
+
             const div = document.createElement("div");
             let statusClass = "unanswered";
             if (wasAnswered) {
@@ -978,7 +998,8 @@
             score: correct,
             total: QUESTIONS.length,
             time_taken: timeTaken,
-            mode: currentMode
+            mode: currentMode,
+            details: runDetails
           };
           try {
             if (!supabaseClient) {
