@@ -81,6 +81,18 @@
       padding: 2rem 0;
       color: var(--muted);
     }
+    .leaderboard-section {
+      margin-top: 2rem;
+    }
+    .leaderboard-section-title {
+      margin: 0 0 0.75rem;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .leaderboard-card + .leaderboard-section {
+      margin-top: 0;
+    }
 
     /* ---- Dark mode readability fixes ---- */
     .dark-mode .leaderboard-title,
@@ -106,8 +118,26 @@
       <main class="flex-1">
         <div class="leaderboard-container">
           <h1 class="leaderboard-title">排行榜</h1>
-          <div class="leaderboard-card">
-            <div class="leaderboard-list" id="leaderboardList"></div>
+
+          <div class="leaderboard-section">
+            <h2 class="leaderboard-section-title">基本題庫</h2>
+            <div class="leaderboard-card">
+              <div class="leaderboard-list" id="listNormal"></div>
+            </div>
+          </div>
+
+          <div class="leaderboard-section">
+            <h2 class="leaderboard-section-title">春季題庫（Spring Bank）</h2>
+            <div class="leaderboard-card">
+              <div class="leaderboard-list" id="listSpring"></div>
+            </div>
+          </div>
+
+          <div class="leaderboard-section">
+            <h2 class="leaderboard-section-title">基本題庫＋春季題庫</h2>
+            <div class="leaderboard-card">
+              <div class="leaderboard-list" id="listBoth"></div>
+            </div>
           </div>
         </div>
       </main>
@@ -127,25 +157,26 @@
         console.warn("Supabase 初始化失敗，排行榜暫不可用。", e);
       }
 
-      async function renderLeaderboard() {
+      async function renderMode(mode, listId) {
+        const list = document.getElementById(listId);
         if (!supabaseClient) {
-          document.getElementById("leaderboardList").innerHTML = '<div class="leaderboard-empty">排行榜暫不可用（Supabase 未載入），請重新整理。</div>';
+          list.innerHTML = '<div class="leaderboard-empty">排行榜暫不可用（Supabase 未載入），請重新整理。</div>';
           return;
         }
         const { data, error } = await supabaseClient.from("leaderboard")
           .select("*")
+          .eq("mode", mode)
           .order('score', { ascending: false })
           .order('time_taken', { ascending: true })
           .limit(100);
 
-        const list = document.getElementById("leaderboardList");
         if (error || !data || data.length === 0) {
           list.innerHTML = '<div class="leaderboard-empty">暫無成績記錄</div>';
           return;
         }
         list.innerHTML = data.map((r, i) => {
           const scoreText = `${r.score} / ${r.total}`;
-          const timeText = r.time_taken ? `${r.time_taken}s` : "—";
+          const timeText = r.time_taken != null ? `${r.time_taken}s` : "—";
           const dateText = r.created_at ? new Date(r.created_at).toLocaleDateString() : "";
           const isTop = i < 3;
           return `
@@ -159,7 +190,15 @@
           `;
         }).join("");
       }
-      renderLeaderboard();
+
+      async function renderAll() {
+        await Promise.all([
+          renderMode("normal", "listNormal"),
+          renderMode("spring", "listSpring"),
+          renderMode("both", "listBoth"),
+        ]);
+      }
+      renderAll();
     </script>
         <footer class="bg-purple-deep text-plum-soft">
         <div class="stripes h-3 w-full" aria-hidden="true"></div>
