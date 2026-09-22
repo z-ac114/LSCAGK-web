@@ -64,25 +64,26 @@
         }
         .quiz-timer-circle {
           position: relative;
-          width: 40px;
-          height: 40px;
+          width: 64px;
+          height: 64px;
           flex: none;
         }
         .quiz-timer-circle svg {
-          transform: rotate(-90deg);
-          width: 40px;
-          height: 40px;
+          /* flipped horizontally: ring drains counter-clockwise */
+          transform: rotate(-90deg) scaleX(-1);
+          width: 64px;
+          height: 64px;
           display: block;
         }
         .quiz-timer-circle circle {
           fill: none;
-          stroke-width: 4;
+          stroke-width: 6;
           stroke-linecap: round;
         }
         .quiz-timer-circle .bg { stroke: var(--border); }
         .quiz-timer-circle .progress {
           stroke: var(--red);
-          stroke-dasharray: 113;
+          stroke-dasharray: 188.5;
           transition: stroke-dashoffset 1s linear;
         }
         .quiz-timer-text {
@@ -383,16 +384,16 @@
               <div class="quiz-view" id="quizView">
                 <div class="quiz-progress-row">
                   <div class="quiz-progress-track"><div class="quiz-progress-dot" id="progressDot"></div></div>
-                  <div class="quiz-progress-label" id="progressLabel">1/496</div>
+                  <div class="quiz-progress-label" id="progressLabel">1/1062</div>
                 </div>
                 <div class="quiz-timer-container">
                   <div class="quiz-timer-circle">
-                    <svg><circle class="bg" cx="20" cy="20" r="18"></circle><circle class="progress" id="timerCircle" cx="20" cy="20" r="18"></circle></svg>
+                    <svg viewBox="0 0 64 64"><circle class="bg" cx="32" cy="32" r="30"></circle><circle class="progress" id="timerCircle" cx="32" cy="32" r="30"></circle></svg>
                   </div>
                   <div class="quiz-timer-text">
-                    <span>总时长：<span id="totalTimeText">1分钟</span></span>
+                    <span>总时长：<span id="totalTimeText">3分钟</span></span>
                     <span class="divider">|</span>
-                    <span>当前：<span id="currentTimeText">01:00</span></span>
+                    <span>当前：<span id="currentTimeText">03:00</span></span>
                   </div>
                 </div>
                 <div class="quiz-question" id="questionText"></div>
@@ -483,7 +484,7 @@
     <script src="/competition/questions.js"></script>
     <script src="questions.js"></script>
       <script>
-        const TOTAL_SECONDS = 60; // 总时长：1分钟
+        const TOTAL_SECONDS = 180; // 总时长：3分钟
         const LETTERS = ["A", "B", "C", "D", "E", "F"];
         const SUPABASE_URL = "https://oajvxavzsomymqunpgxx.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_L8QCQotDAIP-Fzm8r5IIWQ_U17i-eFy";
@@ -571,7 +572,7 @@
 
         function updateTimerCircle() {
           const circle = $("timerCircle");
-          const radius = 18;
+          const radius = parseFloat(circle.getAttribute("r")) || 30;
           const circumference = 2 * Math.PI * radius;
           circle.style.strokeDasharray = circumference;
           const offset = circumference - (timeLeft / TOTAL_SECONDS) * circumference;
