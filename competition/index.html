@@ -218,6 +218,28 @@
           border-color: var(--purple);
         }
 
+        /* ---- Share link ---- */
+        .share-link-row {
+          margin-top: 1rem;
+          padding: 1rem;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 0.5rem;
+        }
+        .share-link-label {
+          display: block;
+          font-size: 0.85rem;
+          color: var(--muted);
+          margin-bottom: 0.5rem;
+        }
+        .share-link-controls {
+          display: flex;
+          gap: 0.75rem;
+        }
+        .share-link-controls .leaderboard-input {
+          font-size: 0.9rem;
+        }
+
         /* ---- Review grid ---- */
         .quiz-review-list {
           display: grid;
@@ -496,7 +518,13 @@
                       <input type="text" class="leaderboard-input" id="userName" placeholder="輸入你的名字" />
                       <button type="button" class="quiz-btn" id="saveScoreBtn">保存成績</button>
                     </div>
-                    <div id="leaderboardList" class="quiz-review-list"></div>
+                    <div class="share-link-row hidden" id="shareLinkRow">
+                      <label class="share-link-label" for="shareLinkInput">成績連結（可用於其他裝置開啟）</label>
+                      <div class="share-link-controls">
+                        <input type="text" class="leaderboard-input" id="shareLinkInput" readonly />
+                        <button type="button" class="quiz-btn" id="copyShareLinkBtn">複製連結</button>
+                      </div>
+                    </div>
                   </div>
                   <div class="mt-8 mb-4 text-center font-semibold text-ink">答題詳情 <span class="text-sm font-normal text-muted ml-2">點擊題號可查看題目詳情</span></div>
                   <div class="quiz-review-list" id="reviewList"></div>
@@ -957,12 +985,32 @@
               alert("成績保存功能暫不可用（Supabase 未載入）。");
               return;
             }
-            const { error } = await supabaseClient.from("leaderboard").insert(payload);
+            const { data, error } = await supabaseClient
+              .from("leaderboard")
+              .insert(payload)
+              .select()
+              .single();
             if (error) throw error;
-            window.location.href = "/leaderboard";
+            const shareUrl = window.location.origin + "/leaderboard/?entry=" + data.id;
+            $("shareLinkInput").value = shareUrl;
+            $("shareLinkRow").classList.remove("hidden");
+            showToast("成績已保存，可複製連結分享");
           } catch (e) {
             console.error(e);
             alert("保存失敗，請稍後再試");
+          }
+        });
+
+        $("copyShareLinkBtn").addEventListener("click", async () => {
+          const url = $("shareLinkInput").value;
+          if (!url) return;
+          try {
+            await navigator.clipboard.writeText(url);
+            showToast("已複製連結");
+          } catch (e) {
+            $("shareLinkInput").select();
+            document.execCommand("copy");
+            showToast("已複製連結");
           }
         });
 

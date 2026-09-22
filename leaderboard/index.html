@@ -84,7 +84,44 @@
     .leaderboard-section {
       margin-top: 2rem;
     }
-    .leaderboard-section-title {
+    .shared-entry {
+      margin-bottom: 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--purple);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      box-shadow: 0 0 0 4px rgba(76, 26, 107, 0.12);
+      text-align: center;
+    }
+    .shared-entry .shared-name {
+      font-family: "Noto Serif TC", serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--ink);
+    }
+    .shared-entry .shared-score {
+      margin-top: 0.35rem;
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--purple);
+      font-variant-numeric: tabular-nums;
+    }
+    .shared-entry .shared-meta {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .shared-entry .shared-rank {
+      display: inline-block;
+      margin-top: 0.75rem;
+      padding: 0.35rem 1rem;
+      background: var(--purple);
+      color: var(--cream);
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }    .leaderboard-section-title {
       margin: 0 0 0.75rem;
       font-size: 1.2rem;
       font-weight: 700;
@@ -98,6 +135,16 @@
     .dark-mode .leaderboard-title,
     .dark-mode .leaderboard-score {
       color: #e7c9ee;
+    }
+    .dark-mode .shared-entry {
+      border-color: #a87fd6;
+      box-shadow: 0 0 0 4px rgba(168, 127, 214, 0.18);
+    }
+    .dark-mode .shared-entry .shared-score {
+      color: #e7c9ee;
+    }
+    .dark-mode .shared-entry .shared-rank {
+      background: #5b2f80;
     }
     .dark-mode .leaderboard-item.top {
       background: #5b2f80;
@@ -118,6 +165,8 @@
       <main class="flex-1">
         <div class="leaderboard-container">
           <h1 class="leaderboard-title">排行榜</h1>
+
+          <div class="shared-entry hidden" id="sharedEntry"></div>
 
           <div class="leaderboard-section">
             <h2 class="leaderboard-section-title">基本題庫</h2>
@@ -198,7 +247,50 @@
           renderMode("both", "listBoth"),
         ]);
       }
+
+      function modeLabel(mode) {
+        return mode === "both" ? "基本題庫＋春季題庫" : mode === "spring" ? "春季題庫" : "基本題庫";
+      }
+
+      async function renderSharedEntry() {
+        const params = new URLSearchParams(window.location.search);
+        const entryId = params.get("entry");
+        if (!entryId || !supabaseClient) return;
+
+        const { data, error } = await supabaseClient
+          .from("leaderboard")
+          .select("*")
+          .eq("id", entryId)
+          .maybeSingle();
+        if (error || !data) return;
+
+        // rank = (number of entries in the same mode with a higher score) + 1
+        let rank = null;
+        try {
+          const { count, error: countError } = await supabaseClient
+            .from("leaderboard")
+            .select("*", { count: "exact", head: true })
+            .eq("mode", data.mode)
+            .gt("score", data.score);
+          if (!countError && typeof count === "number") rank = count + 1;
+        } catch (e) { /* rank is optional */ }
+
+        const scoreText = `${data.score} / ${data.total}`;
+        const timeText = data.time_taken != null ? `${data.time_taken}s` : "—";
+        const dateText = data.created_at ? new Date(data.created_at).toLocaleDateString() : "";
+        const el = document.getElementById("sharedEntry");
+        el.innerHTML = `
+          <div class="shared-name">${data.name}</div>
+          <div class="shared-score">${scoreText}</div>
+          <div class="shared-meta">${modeLabel(data.mode)} · 用時 ${timeText} · ${dateText}</div>
+          ${rank !== null ? `<div class="shared-rank">排名 第 ${rank} 位</div>` : ""}
+        `;
+        el.classList.remove("hidden");
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+
       renderAll();
+      renderSharedEntry();
     </script>
         <footer class="bg-purple-deep text-plum-soft">
         <div class="stripes h-3 w-full" aria-hidden="true"></div>
