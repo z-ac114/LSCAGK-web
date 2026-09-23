@@ -1,16 +1,17 @@
 :root {
-  --cream: #f9f4ea;
-  --ink: #2d2430;
-  --muted: #555a66;
-  --purple: #4c1a6b;
-  --purple-deep: #351149;
-  --red: #b64255;
-  --plum-soft: #e9d9e8;
-  --rose-soft: #f1d7da;
-  --surface: #fffdf8;
-  --border: #e7dcd5;
+  --cream: #f4f4f4;
+  --ink: #3e3e3e;
+  --muted: #606060;
+  --purple: #542884;
+  --purple-deep: #3d1d61;
+  --red: #d42522;
+  --plum-soft: #ebe1f0;
+  --rose-soft: #fdeceb;
+  --surface: #ffffff;
+  --border: #e4e4e4;
   --space-unit: 0.25rem;
   --school-gold: #c69a3a;
+  --lasalle-red-dark: #ae0906;
 }
 
 * {
@@ -31,7 +32,7 @@ body {
   margin: 0;
   background: var(--cream);
   color: var(--ink);
-  font-family: "Noto Sans TC", sans-serif;
+  font-family: "Lato", "Noto Sans TC", sans-serif;
   line-height: 1.5;
   transition: background-color 240ms ease, color 240ms ease;
 }
@@ -51,7 +52,7 @@ button {
 }
 
 .font-sans {
-  font-family: "Noto Sans TC", sans-serif;
+  font-family: "Lato", "Noto Sans TC", sans-serif;
 }
 .font-serif {
   font-family: "Noto Serif TC", serif;
@@ -439,24 +440,28 @@ body {
 header.bg-purple {
   background: #ffffff;
   border-bottom: 1px solid #e8e9ed;
-  color: var(--purple);
+  color: var(--ink);
 }
 
 header.bg-purple .text-cream,
 header.bg-purple .text-cream\/90 {
-  color: var(--purple);
+  color: var(--ink);
 }
 
 header.bg-purple .text-plum-soft {
-  color: #5f3b72;
+  color: #7c7c7c;
 }
 
 header.bg-purple .hover\:bg-purple-deep:hover {
-  background: #f5eef7;
+  background: #f4f4f4;
 }
 
 header.bg-purple nav a:not([aria-current="page"]):hover {
-  color: var(--purple);
+  color: var(--lasalle-red-dark);
+}
+
+header.bg-purple nav a {
+  border-radius: 0;
 }
 
 header.bg-purple .bg-red {
