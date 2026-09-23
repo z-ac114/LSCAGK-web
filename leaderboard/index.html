@@ -394,8 +394,16 @@
           .replace(/>/g, "&" + "gt;");
       }
 
-      renderAll();
-      renderSharedEntry();
+      // entry-link view: show only the shared result stats, not the leaderboard boards
+      (function init() {
+        const isEntryView = !!new URLSearchParams(window.location.search).get("entry");
+        if (isEntryView) {
+          document.querySelectorAll(".leaderboard-section").forEach((el) => el.classList.add("hidden"));
+          renderSharedEntry();
+        } else {
+          renderAll();
+        }
+      })();
     </script>
         <footer class="bg-purple-deep text-plum-soft">
         <div class="stripes h-3 w-full" aria-hidden="true"></div>

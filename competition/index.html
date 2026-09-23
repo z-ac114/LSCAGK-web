@@ -240,39 +240,116 @@
           font-size: 0.9rem;
         }
 
-        /* ---- Review grid ---- */
-        .quiz-review-list {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
-          gap: 0.5rem;
+        /* ---- Review panel (filterable list) ---- */
+        .review-panel {
+          margin-top: 1.75rem;
         }
-        .quiz-review-item {
+        .review-summary {
+          font-size: 0.95rem;
+          color: var(--ink);
+          padding-bottom: 0.75rem;
+        }
+        .rv-ok { color: #2e7d32; font-weight: 700; }
+        .rv-wrong { color: var(--red); font-weight: 700; }
+        .rv-un { color: var(--muted); font-weight: 700; }
+        .review-filters {
           display: flex;
+          gap: 0.5rem;
+          flex-wrap: wrap;
+          padding-bottom: 0.9rem;
+          border-bottom: 1px solid var(--border);
+          margin-bottom: 0.9rem;
+        }
+        .review-filter {
+          display: inline-flex;
           align-items: center;
-          justify-content: center;
-          aspect-ratio: 1;
+          min-height: 2.1rem;
+          padding: 0 1rem;
+          background: var(--surface);
+          color: var(--ink);
           border: 1px solid var(--border);
-          border-radius: 0.375rem;
-          font-size: 0.9rem;
+          border-radius: 999px;
+          font-size: 0.85rem;
           font-weight: 600;
           cursor: pointer;
-          font-variant-numeric: tabular-nums;
+          transition: border-color 0.15s ease, background 0.15s ease;
         }
-        .quiz-review-item.correct {
+        .review-filter:hover { border-color: var(--purple); }
+        .review-filter.active {
           background: var(--purple);
           border-color: var(--purple-deep);
           color: var(--cream);
         }
-        .quiz-review-item.incorrect-attempt {
-          background: var(--red);
-          border-color: var(--red);
-          color: var(--cream);
+        .review-scroll {
+          display: flex;
+          flex-direction: column;
+          gap: 0.6rem;
+          max-height: 26rem;
+          overflow-y: auto;
+          padding-right: 0.25rem;
         }
-        .quiz-review-item.unanswered {
-          background: var(--surface);
+        .review-empty {
+          text-align: center;
+          padding: 2rem 0;
           color: var(--muted);
         }
-        .quiz-review-item:hover { transform: translateY(-2px); }
+        .review-item {
+          display: flex;
+          gap: 0.75rem;
+          padding: 1rem;
+          background: var(--cream);
+          border: 1px solid var(--border);
+          border-radius: 0.5rem;
+        }
+        .review-item.ok { border-left: 3px solid #2e7d32; }
+        .review-item.wrong { border-left: 3px solid var(--red); }
+        .review-item.un { border-left: 3px solid var(--border); }
+        .review-badge {
+          flex: none;
+          width: 1.5rem;
+          height: 1.5rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          font-size: 0.85rem;
+          font-weight: 700;
+          color: #fff;
+        }
+        .review-item.ok .review-badge { background: #2e7d32; }
+        .review-item.wrong .review-badge { background: var(--red); }
+        .review-item.un .review-badge { background: var(--border); color: var(--muted); }
+        .review-body { flex: 1; min-width: 0; }
+        .review-q {
+          margin: 0;
+          font-size: 0.95rem;
+          line-height: 1.6;
+          color: var(--ink);
+          overflow-wrap: anywhere;
+        }
+        .review-ans {
+          margin: 0.4rem 0 0;
+          font-size: 0.85rem;
+          color: var(--muted);
+          display: flex;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+        .review-item.wrong .review-ans span:first-child { color: var(--red); }
+
+        /* dark mode review fixes */
+        .dark-mode .review-item {
+          background: var(--surface);
+        }
+        .dark-mode .review-item.un .review-badge {
+          background: #3a404d;
+          color: #8b93a1;
+        }
+        .dark-mode .rv-ok { color: #7dc98a; }
+        .dark-mode .review-filter.active {
+          background: #5b2f80;
+          border-color: #6f3f99;
+        }
 
         .quiz-results-actions {
           margin-top: 1.75rem;
@@ -282,7 +359,8 @@
           flex-wrap: wrap;
         }
 
-        /* ---- Detail modal ---- */
+
+        /* ---- Modal container (start popup) ---- */
         .quiz-modal {
           position: fixed;
           inset: 0;
@@ -296,7 +374,7 @@
         .quiz-modal.active { display: flex; }
         .quiz-modal-content {
           width: 100%;
-          max-width: 560px;
+          max-width: 480px;
           max-height: 85vh;
           overflow-y: auto;
           background: var(--surface);
@@ -317,43 +395,10 @@
           font-weight: 700;
           color: var(--ink);
         }
-        .quiz-modal-body {
-          font-size: 1rem;
-          line-height: 1.75;
-          color: var(--ink);
-        }
-        .quiz-modal-ans-row {
-          display: flex;
-          gap: 1.5rem;
-          flex-wrap: wrap;
-          margin-top: 1.25rem;
-          padding-top: 1rem;
-          border-top: 1px solid var(--border);
-          font-size: 0.95rem;
-        }
-        .quiz-modal-ans-label { color: var(--muted); }
-        .quiz-modal-ans-value { font-weight: 700; }
-        .quiz-modal-ans-value.correct { color: var(--purple); }
-        .quiz-modal-ans-value.wrong { color: var(--red); }
         .quiz-modal-footer {
           margin-top: 1.25rem;
           text-align: right;
         }
-        .btn-close-modal {
-          display: inline-flex;
-          align-items: center;
-          min-height: 2.5rem;
-          padding: 0 1.25rem;
-          background: var(--surface);
-          color: var(--ink);
-          border: 1px solid var(--border);
-          border-radius: 0.5rem;
-          font-size: 0.9rem;
-          font-weight: 600;
-          cursor: pointer;
-        }
-        .btn-close-modal:hover { border-color: var(--purple); }
-        .quiz-modal-close { cursor: pointer; }
 
         /* ---- Toast ---- */
         .quiz-toast {
@@ -441,16 +486,11 @@
           background: #3a404d;
           color: #8b93a1;
         }
-        .dark-mode .quiz-review-item.correct {
-          background: #5b2f80;
-          border-color: #6f3f99;
+        .dark-mode .review-item.ok .review-badge {
+          background: #2e7d32;
         }
-        .dark-mode .quiz-review-item.incorrect-attempt {
+        .dark-mode .review-item.wrong .review-badge {
           background: #b04a55;
-          border-color: #b04a55;
-        }
-        .dark-mode .quiz-modal-content {
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
         }
         .dark-mode .quiz-toast {
           background: #454b59;
@@ -458,6 +498,9 @@
         }
         .dark-mode .quiz-start-option {
           background: var(--surface);
+        }
+        .dark-mode .quiz-modal-content {
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
         }
       </style>
   </head>
@@ -526,8 +569,16 @@
                       </div>
                     </div>
                   </div>
-                  <div class="mt-8 mb-4 text-center font-semibold text-ink">答題詳情 <span class="text-sm font-normal text-muted ml-2">點擊題號可查看題目詳情</span></div>
-                  <div class="quiz-review-list" id="reviewList"></div>
+                  <div class="review-panel">
+                    <div class="review-summary" id="reviewSummary"></div>
+                    <div class="review-filters" id="reviewFilters">
+                      <button type="button" class="review-filter active" data-filter="wrong">答錯</button>
+                      <button type="button" class="review-filter" data-filter="correct">答對</button>
+                      <button type="button" class="review-filter" data-filter="unanswered">未答</button>
+                      <button type="button" class="review-filter" data-filter="all">全部</button>
+                    </div>
+                    <div class="review-scroll" id="reviewList"></div>
+                  </div>
                   <div class="quiz-results-actions">
                     <button type="button" class="quiz-btn" id="restartBtn">重新開始</button>
                     <button type="button" class="quiz-btn" id="exportWrongBtn">匯出錯題</button>
@@ -588,22 +639,6 @@
           </div>
           <div class="quiz-modal-footer">
             <button class="quiz-btn" id="startQuizBtn">開始比賽</button>
-          </div>
-        </div>
-      </div>
-      <div class="quiz-modal" id="detailModal">
-        <div class="quiz-modal-content">
-          <div class="quiz-modal-header">
-            <span>題目詳情</span>
-            <span class="quiz-modal-close" id="closeModal">&times;</span>
-          </div>
-          <div class="quiz-modal-body" id="modalBody"></div>
-          <div class="quiz-modal-footer">
-            <div class="quiz-modal-ans-row">
-              <span><span class="quiz-modal-ans-label">已選答案：</span><span id="userAnsVal" class="quiz-modal-ans-value"></span></span>
-              <span><span class="quiz-modal-ans-label">正確答案：</span><span id="correctAnsVal" class="quiz-modal-ans-value correct"></span></span>
-            </div>
-            <button class="btn-close-modal" id="modalCloseBtn">關 閉</button>
           </div>
         </div>
       </div>
@@ -792,8 +827,6 @@
 
           let correctCount = 0;
           runDetails = [];
-          const review = $("reviewList");
-          review.innerHTML = "";
           QUESTIONS.forEach((item, i) => {
             const sel = selections[i];
             const wasAnswered = sel !== null && !(Array.isArray(sel) && sel.length === 0);
@@ -814,58 +847,67 @@
               ca: describeAnswer(item, item.isMulti ? item.correctIndices : item.correctIndex),
               ok: isCorrect
             });
-
-            const div = document.createElement("div");
-            let statusClass = "unanswered";
-            if (wasAnswered) {
-              statusClass = isCorrect ? "correct" : "incorrect-attempt";
-            } else {
-              statusClass = "unanswered";
-            }
-            div.className = "quiz-review-item " + statusClass;
-            div.textContent = (i + 1);
-            div.onclick = () => showDetail(i);
-            review.appendChild(div);
           });
 
+          const wrongCount = runDetails.filter((d) => !d.ok && d.ua != null).length;
+          const unansweredCount = runDetails.filter((d) => d.ua == null).length;
           const pct = Math.round((correctCount / QUESTIONS.length) * 100);
           $("scoreBig").textContent = correctCount + " / " + QUESTIONS.length;
           $("scoreSub").textContent = "答題完成！正確率 " + pct + "%";
+          $("reviewSummary").innerHTML =
+            "共 " + QUESTIONS.length + " 題 · <span class='rv-ok'>答對 " + correctCount +
+            "</span> · <span class='rv-wrong'>答錯 " + wrongCount +
+            "</span> · <span class='rv-un'>未答 " + unansweredCount + "</span>";
+          renderReview();
 
           $("quizView").classList.add("hidden");
           $("resultsView").classList.add("active");
           window.scrollTo(0, 0);
         }
 
-        function showDetail(i) {
-          const item = QUESTIONS[i];
-          const sel = selections[i];
-          const modal = $("detailModal");
-          const body = $("modalBody");
-          const userVal = $("userAnsVal");
-          const correctVal = $("correctAnsVal");
-
-          let qText = (i + 1) + ". " + item.q;
-          let optionsText = item.options.map((opt, idx) => `${LETTERS[idx]}、${opt}`).join("<br>");
-          
-          body.innerHTML = `<div style="white-space: pre-wrap;"><strong style="font-size:1.2rem">${qText}</strong><br><br>${optionsText}</div>`;
-          
-          let yourAns = "未作答";
-          if (item.isMulti) {
-            yourAns = sel && sel.length ? sel.map(idx => LETTERS[idx]).join(", ") : "未作答";
-          } else {
-            yourAns = sel === null ? "未作答" : LETTERS[sel];
-          }
-          const correctAns = item.isMulti
-            ? (item.correctIndices || []).map(idx => LETTERS[idx]).join(", ")
-            : LETTERS[item.correctIndex];
-
-          userVal.textContent = yourAns;
-          userVal.className = "quiz-modal-ans-value " + (yourAns === correctAns ? "correct" : "wrong");
-          correctVal.textContent = correctAns;
-          
-          modal.classList.add("active");
+        function esc(s) {
+          return String(s == null ? "" : s)
+            .replace(/&/g, "&" + "amp;")
+            .replace(/</g, "&" + "lt;")
+            .replace(/>/g, "&" + "gt;");
         }
+
+        let reviewFilter = "wrong";
+
+        function renderReview() {
+          const items = runDetails.map((d, i) => ({ d, n: i + 1 }));
+          const filtered = reviewFilter === "all" ? items : items.filter(({ d }) => {
+            if (reviewFilter === "wrong") return !d.ok && d.ua != null;
+            if (reviewFilter === "correct") return d.ok;
+            return d.ua == null;
+          });
+          const list = $("reviewList");
+          if (filtered.length === 0) {
+            list.innerHTML = '<div class="review-empty">沒有記錄</div>';
+            return;
+          }
+          list.innerHTML = filtered.map(({ d, n }) => {
+            const status = d.ok ? "ok" : (d.ua != null ? "wrong" : "un");
+            const badge = d.ok ? "✓" : (d.ua != null ? "✗" : "–");
+            return `
+              <div class="review-item ${status}">
+                <span class="review-badge">${badge}</span>
+                <div class="review-body">
+                  <p class="review-q">${n}. ${esc(d.q)}</p>
+                  <p class="review-ans"><span>你的答案：${esc(d.ua == null ? "未作答" : d.ua)}</span><span>正確答案：${esc(d.ca)}</span></p>
+                </div>
+              </div>
+            `;
+          }).join("");
+        }
+
+        $("reviewFilters").addEventListener("click", (e) => {
+          const btn = e.target && e.target.closest ? e.target.closest(".review-filter") : null;
+          if (!btn) return;
+          reviewFilter = btn.dataset.filter || "all";
+          document.querySelectorAll("#reviewFilters .review-filter").forEach((b) => b.classList.toggle("active", b === btn));
+          renderReview();
+        });
 
         // ---- Pre-start bank selection popup ----
         const countUsable = (bank) =>
@@ -979,9 +1021,6 @@
           URL.revokeObjectURL(url);
         });
 
-        $("closeModal").addEventListener("click", () => $("detailModal").classList.remove("active"));
-        $("modalCloseBtn").addEventListener("click", () => $("detailModal").classList.remove("active"));
-
         $("saveScoreBtn").addEventListener("click", async () => {
           const name = $("userName").value.trim();
           if (!name) {
@@ -1032,10 +1071,6 @@
             showToast("已複製連結");
           }
         });
-
-        function renderLeaderboard() {
-          // Removed as it's now a separate page
-        }
 
         if (QUESTIONS.length > 0) {
           render();
