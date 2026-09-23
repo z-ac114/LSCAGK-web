@@ -175,6 +175,59 @@
     .sq-item.un { border-left: 3px solid var(--border); }
     .sq-item.un .sq-badge { background: var(--border); color: var(--muted); }
     .sq-item.un .sq-ans span:first-child { color: var(--muted); }
+
+    /* ---- Shared entry: filter toggle ---- */
+    .shared-filters {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      padding-bottom: 0.9rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0.9rem;
+    }
+    .review-filter {
+      display: inline-flex;
+      align-items: center;
+      min-height: 2.1rem;
+      padding: 0 1rem;
+      background: var(--surface);
+      color: var(--ink);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+      font-variant-numeric: tabular-nums;
+    }
+    .review-filter:hover { border-color: var(--purple); }
+    .review-filter.active {
+      background: var(--purple);
+      border-color: var(--purple-deep);
+      color: var(--cream);
+    }
+    .sq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      max-height: 30rem;
+      overflow-y: auto;
+      padding-right: 0.25rem;
+    }
+    .review-empty {
+      text-align: center;
+      padding: 2rem 0;
+      color: var(--muted);
+    }
+
+    /* dark mode filters */
+    .dark-mode .review-filter {
+      background: #2b303b;
+    }
+    .dark-mode .review-filter.active {
+      background: #5b2f80;
+      border-color: #6f3f99;
+    }
     .sq-badge {
       flex: none;
       width: 1.5rem;
@@ -357,35 +410,69 @@
         el.classList.remove("hidden");
         el.scrollIntoView({ behavior: "smooth", block: "center" });
 
-        // per-question review (correct / wrong / unanswered) if details were stored with the entry
+        // per-question review (correct / wrong / unanswered) with filter toggle
+        sharedDetails = Array.isArray(data.details) ? data.details : null;
+        if (sharedDetails && sharedDetails.length) {
+          renderSharedQuestions();
+        }
+      }
+
+      let sharedDetails = null;
+      let sharedFilter = "all";
+
+      function renderSharedQuestions() {
         const qWrap = document.getElementById("sharedQuestions");
-        const details = Array.isArray(data.details) ? data.details : null;
-        if (details && details.length) {
-          const right = details.filter((d) => d.ok).length;
-          const wrong = details.filter((d) => !d.ok && d.ua != null).length;
-          const unanswered = details.filter((d) => !d.ok && d.ua == null).length;
-          let html = `
-            <div class="sq-summary">
-              共 ${details.length} 題 · <span class="sq-ok">答對 ${right}</span> · <span class="sq-wrong">答錯 ${wrong}</span> · <span class="sq-un">未答 ${unanswered}</span>
-            </div>
-          `;
-          html += details.map((d, i) => {
-            const status = d.ok ? 'ok' : (d.ua != null ? 'wrong' : 'un');
-            const badge = d.ok ? '✓' : (d.ua != null ? '✗' : '–');
+        if (!sharedDetails || !sharedDetails.length) return;
+
+        const right = sharedDetails.filter((d) => d.ok).length;
+        const wrong = sharedDetails.filter((d) => !d.ok && d.ua != null).length;
+        const unanswered = sharedDetails.filter((d) => !d.ok && d.ua == null).length;
+
+        const counts = { all: sharedDetails.length, ok: right, wrong: wrong, un: unanswered };
+        const labels = { all: "全部", ok: "答對", wrong: "答錯", un: "未答" };
+        let html = '<div class="shared-filters">';
+        for (const key of ["all", "ok", "wrong", "un"]) {
+          html += `<button type="button" class="review-filter${sharedFilter === key ? " active" : ""}" data-filter="${key}">${labels[key]} ${counts[key]}</button>`;
+        }
+        html += "</div>";
+
+        const filtered = sharedFilter === "all" ? sharedDetails : sharedDetails.filter((d) => {
+          if (sharedFilter === "ok") return d.ok;
+          if (sharedFilter === "wrong") return !d.ok && d.ua != null;
+          return !d.ok && d.ua == null;
+        });
+
+        html += '<div class="sq-list">';
+        if (filtered.length === 0) {
+          html += '<div class="review-empty">沒有記錄</div>';
+        } else {
+          html += filtered.map((d) => {
+            const n = sharedDetails.indexOf(d) + 1;
+            const status = d.ok ? "ok" : (d.ua != null ? "wrong" : "un");
+            const badge = d.ok ? "✓" : (d.ua != null ? "✗" : "–");
             return `
               <div class="sq-item ${status}">
                 <span class="sq-badge">${badge}</span>
                 <div class="sq-body">
-                  <p class="sq-q">${i + 1}. ${esc(d.q)}</p>
+                  <p class="sq-q">${n}. ${esc(d.q)}</p>
                   <p class="sq-ans"><span>你的答案：${esc(d.ua == null ? "未作答" : d.ua)}</span><span>正確答案：${esc(d.ca)}</span></p>
                 </div>
               </div>
             `;
           }).join("");
-          qWrap.innerHTML = html;
-          qWrap.classList.remove("hidden");
         }
+        html += "</div>";
+
+        qWrap.innerHTML = html;
+        qWrap.classList.remove("hidden");
       }
+
+      document.getElementById("sharedQuestions").addEventListener("click", (e) => {
+        const btn = e.target && e.target.closest ? e.target.closest(".review-filter") : null;
+        if (!btn) return;
+        sharedFilter = btn.dataset.filter || "all";
+        renderSharedQuestions();
+      });
 
       function esc(s) {
         return String(s == null ? "" : s)
