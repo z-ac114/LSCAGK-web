@@ -174,7 +174,7 @@ button {
   border-radius: 0.375rem;
 }
 .rounded-xl {
-  border-radius: 0.75rem;
+  border-radius: 0.375rem;
 }
 .rounded-full {
   border-radius: 9999px;
@@ -374,8 +374,7 @@ button {
   grid-template-columns: repeat(1, minmax(0, 1fr));
 }
 .stripes {
-  background: linear-gradient(90deg, var(--purple), var(--red), var(--purple))
-    center / 100% 2px no-repeat;
+  background: var(--red) center / 100% 2px no-repeat;
 }
 .active {
   cursor: default;
@@ -469,13 +468,11 @@ header.bg-purple .bg-red {
 }
 
 .stripes {
-  background: linear-gradient(90deg, var(--purple), var(--red), var(--purple))
-    center / 100% 2px no-repeat;
+  background: var(--red) center / 100% 2px no-repeat;
 }
 
 main > section.bg-purple {
-  background:
-    linear-gradient(120deg, var(--purple-deep) 0%, var(--purple) 52%, var(--red) 100%);
+  background: var(--purple);
 }
 
 main > section.bg-cream {
@@ -494,8 +491,8 @@ main > section.bg-red {
 
 article.rounded-xl,
 main article.rounded-xl {
-  border-radius: 0.2rem;
-  box-shadow: 0 8px 24px rgb(28 32 43 / 8%);
+  border-radius: 0;
+  box-shadow: none;
 }
 
 footer.bg-purple-deep {
