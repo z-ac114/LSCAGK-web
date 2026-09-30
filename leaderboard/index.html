@@ -68,28 +68,62 @@
       white-space: nowrap;
     }
     .leaderboard-item.top {
-      background: var(--purple);
-      border-color: var(--purple-deep);
+      background: var(--red);
+      border-color: var(--lasalle-red-dark);
     }
     .leaderboard-item.top .leaderboard-rank,
     .leaderboard-item.top .leaderboard-name,
-    .leaderboard-item.top .leaderboard-score { color: var(--cream); }
-    .leaderboard-item.top .leaderboard-meta { color: var(--plum-soft); }
+    .leaderboard-item.top .leaderboard-score { color: #ffffff; }
+    .leaderboard-item.top .leaderboard-meta { color: rgb(255 255 255 / 80%); }
     .leaderboard-empty {
       text-align: center;
       padding: 2rem 0;
       color: var(--muted);
     }
-    .leaderboard-section {
-      margin-top: 2rem;
+
+    /* ---- Board toggle bar ---- */
+    .lb-tabs {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+      padding-bottom: 0.9rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.25rem;
+    }
+    .lb-tab {
+      display: inline-flex;
+      align-items: center;
+      min-height: 2.2rem;
+      padding: 0 1.1rem;
+      background: var(--surface);
+      color: var(--ink);
+      border: 1px solid var(--border);
+      border-radius: 0.25rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .lb-tab:hover { border-color: var(--red); }
+    .lb-tab.active {
+      background: var(--red);
+      border-color: var(--lasalle-red-dark);
+      color: #ffffff;
+    }
+    .dark-mode .lb-tab {
+      background: #2b303b;
+    }
+    .dark-mode .lb-tab.active {
+      background: var(--red);
+      border-color: var(--lasalle-red-dark);
     }
     .shared-entry {
       margin-bottom: 1.5rem;
       background: var(--surface);
       border: 1px solid var(--purple);
-      border-radius: 1rem;
+      border-radius: 0.375rem;
       padding: 1.5rem;
-      box-shadow: 0 0 0 4px rgba(76, 26, 107, 0.12);
       text-align: center;
     }
     .shared-entry .shared-name {
@@ -120,14 +154,6 @@
       border-radius: 0.25rem;
       font-size: 0.9rem;
       font-weight: 700;
-    }    .leaderboard-section-title {
-      margin: 0 0 0.75rem;
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: var(--ink);
-    }
-    .leaderboard-card + .leaderboard-section {
-      margin-top: 0;
     }
 
     /* ---- Dark mode readability fixes ---- */
@@ -135,9 +161,12 @@
     .dark-mode .leaderboard-score {
       color: #e7c9ee;
     }
+    .dark-mode .leaderboard-item.top {
+      background: var(--red);
+      border-color: var(--lasalle-red-dark);
+    }
     .dark-mode .shared-entry {
       border-color: #a87fd6;
-      box-shadow: 0 0 0 4px rgba(168, 127, 214, 0.18);
     }
     .dark-mode .shared-entry .shared-score {
       color: #e7c9ee;
@@ -266,8 +295,8 @@
     }
     .dark-mode .sq-ok { color: #7dc98a; }
     .dark-mode .leaderboard-item.top {
-      background: #63359b;
-      border-color: #7a4bb3;
+      background: var(--red);
+      border-color: var(--lasalle-red-dark);
     }
   </style>
   </head>
@@ -289,39 +318,20 @@
 
           <div class="shared-questions hidden" id="sharedQuestions"></div>
 
-          <div class="leaderboard-section">
-            <h2 class="leaderboard-section-title">第八屆紫荊杯</h2>
-            <div class="leaderboard-card">
-              <div class="leaderboard-list" id="listNormal"></div>
-            </div>
+          <div class="lb-tabs" id="lbTabs">
+            <button type="button" class="lb-tab active" data-board="listNormal">第八屆紫荊杯</button>
+            <button type="button" class="lb-tab" data-board="listSpring">春季題庫</button>
+            <button type="button" class="lb-tab" data-board="listZijing9">第九屆紫荊杯</button>
+            <button type="button" class="lb-tab" data-board="listNational">國情知識問答比賽</button>
+            <button type="button" class="lb-tab" data-board="listMixed">混合題庫</button>
           </div>
 
-          <div class="leaderboard-section">
-            <h2 class="leaderboard-section-title">春季題庫（Spring Bank）</h2>
-            <div class="leaderboard-card">
-              <div class="leaderboard-list" id="listSpring"></div>
-            </div>
-          </div>
-
-          <div class="leaderboard-section">
-            <h2 class="leaderboard-section-title">第九屆紫荊杯</h2>
-            <div class="leaderboard-card">
-              <div class="leaderboard-list" id="listZijing9"></div>
-            </div>
-          </div>
-
-          <div class="leaderboard-section">
-            <h2 class="leaderboard-section-title">國情知識問答比賽</h2>
-            <div class="leaderboard-card">
-              <div class="leaderboard-list" id="listNational"></div>
-            </div>
-          </div>
-
-          <div class="leaderboard-section">
-            <h2 class="leaderboard-section-title">混合題庫（多題庫組合）</h2>
-            <div class="leaderboard-card">
-              <div class="leaderboard-list" id="listMixed"></div>
-            </div>
+          <div class="leaderboard-card">
+            <div class="leaderboard-list" id="listNormal"></div>
+            <div class="leaderboard-list hidden" id="listSpring"></div>
+            <div class="leaderboard-list hidden" id="listZijing9"></div>
+            <div class="leaderboard-list hidden" id="listNational"></div>
+            <div class="leaderboard-list hidden" id="listMixed"></div>
           </div>
         </div>
       </main>
@@ -527,14 +537,38 @@
           .replace(/>/g, "&" + "gt;");
       }
 
+      // tab bar: one board visible at a time, fetched lazily and cached
+      const fetchedBoards = new Set();
+
+      async function activateTab(boardId) {
+        document.querySelectorAll(".leaderboard-list").forEach((el) => el.classList.add("hidden"));
+        const list = document.getElementById(boardId);
+        if (list) list.classList.remove("hidden");
+        if (fetchedBoards.has(boardId)) return;
+        fetchedBoards.add(boardId);
+        if (boardId === "listMixed") {
+          await renderMixed(boardId);
+        } else {
+          const mode = boardId.replace("list", "").toLowerCase();
+          await renderMode(mode, boardId);
+        }
+      }
+
+      document.getElementById("lbTabs").addEventListener("click", (e) => {
+        const tab = e.target && e.target.closest ? e.target.closest(".lb-tab") : null;
+        if (!tab) return;
+        document.querySelectorAll(".lb-tab").forEach((t) => t.classList.toggle("active", t === tab));
+        activateTab(tab.dataset.board);
+      });
+
       // entry-link view: show only the shared result stats, not the leaderboard boards
       (function init() {
         const isEntryView = !!new URLSearchParams(window.location.search).get("entry");
         if (isEntryView) {
-          document.querySelectorAll(".leaderboard-section").forEach((el) => el.classList.add("hidden"));
+          document.querySelectorAll(".lb-tabs, .leaderboard-card").forEach((el) => el.classList.add("hidden"));
           renderSharedEntry();
         } else {
-          renderAll();
+          activateTab("listNormal");
         }
       })();
     </script>
