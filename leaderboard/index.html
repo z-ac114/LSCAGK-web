@@ -37,35 +37,51 @@
       gap: 0.75rem;
     }
     .leaderboard-item {
-      display: flex;
+      display: grid;
+      grid-template-columns: 2.2rem minmax(0, 1fr) 7.5rem 3.5rem 4rem 5.5rem;
+      gap: 0.9rem;
       align-items: center;
-      gap: 1rem;
-      padding: 1rem;
+      padding: 0.9rem 1rem;
       border-radius: 0.25rem;
       background: var(--surface);
       border: 1px solid var(--border);
       transition: transform 0.2s ease;
     }
     .leaderboard-item:hover { transform: translateX(5px); }
-    .leaderboard-rank {
+    .leaderboard-head {
+      display: grid;
+      grid-template-columns: 2.2rem minmax(0, 1fr) 7.5rem 3.5rem 4rem 5.5rem;
+      gap: 0.9rem;
+      align-items: center;
+      padding: 0 1rem 0.6rem;
+      font-size: 0.8rem;
       font-weight: 700;
-      width: 30px;
       color: var(--muted);
     }
+    .leaderboard-head span:nth-child(n + 3) { text-align: right; }
+    .leaderboard-rank {
+      font-weight: 700;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
     .leaderboard-name {
-      flex: 1;
       font-weight: 500;
       color: var(--ink);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .leaderboard-score {
       font-weight: 700;
       color: var(--purple);
-      white-space: nowrap;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
     }
     .leaderboard-meta {
       font-size: 0.8rem;
       color: var(--muted);
-      white-space: nowrap;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
     }
     .leaderboard-item.top {
       background: var(--red);
@@ -364,7 +380,12 @@
           list.innerHTML = '<div class="leaderboard-empty">暫無成績記錄</div>';
           return;
         }
-        list.innerHTML = rows.map((r, i) => {
+        const head = `
+          <div class="leaderboard-head">
+            <span>排名</span><span>姓名</span><span>答對</span><span>準確率</span><span>用時</span><span>日期</span>
+          </div>
+        `;
+        list.innerHTML = head + rows.map((r, i) => {
           const scoreText = `${r.score} / ${r.total}`;
           const accText = r.accuracy != null ? `${Math.round(r.accuracy * 100)}%` : "";
           const timeText = r.time_taken != null ? `${r.time_taken}s` : "—";
@@ -392,8 +413,8 @@
         const { data, error } = await supabaseClient.from("leaderboard")
           .select("*")
           .eq("mode", mode)
-          .order('accuracy', { ascending: false })
           .order('score', { ascending: false })
+          .order('accuracy', { ascending: false })
           .limit(100);
         if (error) {
           document.getElementById(listId).innerHTML = '<div class="leaderboard-empty">暫無成績記錄</div>';
@@ -410,8 +431,8 @@
         }
         const { data, error } = await supabaseClient.from("leaderboard")
           .select("*")
-          .order('accuracy', { ascending: false })
           .order('score', { ascending: false })
+          .order('accuracy', { ascending: false })
           .limit(500);
         if (error) {
           document.getElementById(listId).innerHTML = '<div class="leaderboard-empty">暫無成績記錄</div>';
