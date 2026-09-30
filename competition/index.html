@@ -1031,6 +1031,51 @@
           }
         });
 
+        // ---- Keyboard shortcuts: 1-9/0 select options, space = next, delete = previous ----
+        document.addEventListener("keydown", (e) => {
+          if (finished) return;
+          if ($("startModal").classList.contains("active")) return;
+          const tag = e.target && e.target.tagName;
+          if (tag === "INPUT" || tag === "TEXTAREA") return;
+          const item = QUESTIONS[idx];
+          if (!item) return;
+
+          // number keys select the matching option (1-9, 0 = 10th)
+          const keyIdx = e.key >= "1" && e.key <= "9" ? Number(e.key) - 1 : e.key === "0" ? 9 : -1;
+          if (keyIdx >= 0 && keyIdx < item.options.length) {
+            if (item.isMulti) {
+              if (!selections[idx]) selections[idx] = [];
+              const pos = selections[idx].indexOf(keyIdx);
+              if (pos >= 0) selections[idx].splice(pos, 1);
+              else selections[idx].push(keyIdx);
+            } else {
+              selections[idx] = keyIdx;
+            }
+            render();
+            e.preventDefault();
+            return;
+          }
+
+          // space = next question (does not finish on the last question)
+          if (e.key === " ") {
+            e.preventDefault();
+            if (idx < QUESTIONS.length - 1) {
+              idx++;
+              render();
+            }
+            return;
+          }
+
+          // delete/backspace = previous question
+          if (e.key === "Delete" || e.key === "Backspace") {
+            e.preventDefault();
+            if (idx > 0) {
+              idx--;
+              render();
+            }
+          }
+        });
+
         $("restartBtn").addEventListener("click", () => {
           location.reload();
         });
@@ -1085,6 +1130,7 @@
             name,
             score: correct,
             total: QUESTIONS.length,
+            accuracy: Number((correct / QUESTIONS.length).toFixed(4)),
             time_taken: timeTaken,
             mode: currentMode,
             details: runDetails

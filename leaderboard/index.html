@@ -290,7 +290,7 @@
           <div class="shared-questions hidden" id="sharedQuestions"></div>
 
           <div class="leaderboard-section">
-            <h2 class="leaderboard-section-title">基本題庫</h2>
+            <h2 class="leaderboard-section-title">第八屆紫荊杯</h2>
             <div class="leaderboard-card">
               <div class="leaderboard-list" id="listNormal"></div>
             </div>
@@ -304,9 +304,23 @@
           </div>
 
           <div class="leaderboard-section">
-            <h2 class="leaderboard-section-title">基本題庫＋春季題庫</h2>
+            <h2 class="leaderboard-section-title">第九屆紫荊杯</h2>
             <div class="leaderboard-card">
-              <div class="leaderboard-list" id="listBoth"></div>
+              <div class="leaderboard-list" id="listZijing9"></div>
+            </div>
+          </div>
+
+          <div class="leaderboard-section">
+            <h2 class="leaderboard-section-title">國情知識問答比賽</h2>
+            <div class="leaderboard-card">
+              <div class="leaderboard-list" id="listNational"></div>
+            </div>
+          </div>
+
+          <div class="leaderboard-section">
+            <h2 class="leaderboard-section-title">混合題庫（多題庫組合）</h2>
+            <div class="leaderboard-card">
+              <div class="leaderboard-list" id="listMixed"></div>
             </div>
           </div>
         </div>
@@ -327,33 +341,26 @@
         console.warn("Supabase 初始化失敗，排行榜暫不可用。", e);
       }
 
-      async function renderMode(mode, listId) {
-        const list = document.getElementById(listId);
-        if (!supabaseClient) {
-          list.innerHTML = '<div class="leaderboard-empty">排行榜暫不可用（Supabase 未載入），請重新整理。</div>';
-          return;
-        }
-        const { data, error } = await supabaseClient.from("leaderboard")
-          .select("*")
-          .eq("mode", mode)
-          .order('score', { ascending: false })
-          .order('time_taken', { ascending: true })
-          .limit(100);
+      const SINGLE_MODES = ["normal", "spring", "zijing9", "national"];
 
-        if (error || !data || data.length === 0) {
+      async function renderList(listId, rows) {
+        const list = document.getElementById(listId);
+        if (!rows || rows.length === 0) {
           list.innerHTML = '<div class="leaderboard-empty">暫無成績記錄</div>';
           return;
         }
-        list.innerHTML = data.map((r, i) => {
+        list.innerHTML = rows.map((r, i) => {
           const scoreText = `${r.score} / ${r.total}`;
+          const accText = r.accuracy != null ? `${Math.round(r.accuracy * 100)}%` : "";
           const timeText = r.time_taken != null ? `${r.time_taken}s` : "—";
           const dateText = r.created_at ? new Date(r.created_at).toLocaleDateString() : "";
           const isTop = i < 3;
           return `
             <div class="leaderboard-item ${isTop ? 'top' : ''}">
               <span class="leaderboard-rank">${i + 1}</span>
-              <span class="leaderboard-name">${r.name}</span>
+              <span class="leaderboard-name">${esc(r.name)}</span>
               <span class="leaderboard-score">${scoreText}</span>
+              <span class="leaderboard-meta">${accText}</span>
               <span class="leaderboard-meta">${timeText}</span>
               <span class="leaderboard-meta">${dateText}</span>
             </div>
@@ -361,11 +368,51 @@
         }).join("");
       }
 
+      // single category: rank by accuracy, then correct questions
+      async function renderMode(mode, listId) {
+        if (!supabaseClient) {
+          document.getElementById(listId).innerHTML = '<div class="leaderboard-empty">排行榜暫不可用（Supabase 未載入），請重新整理。</div>';
+          return;
+        }
+        const { data, error } = await supabaseClient.from("leaderboard")
+          .select("*")
+          .eq("mode", mode)
+          .order('accuracy', { ascending: false })
+          .order('score', { ascending: false })
+          .limit(100);
+        if (error) {
+          document.getElementById(listId).innerHTML = '<div class="leaderboard-empty">暫無成績記錄</div>';
+          return;
+        }
+        await renderList(listId, data);
+      }
+
+      // the rest: any combination of banks (mixed modes), rank by accuracy then correct questions
+      async function renderMixed(listId) {
+        if (!supabaseClient) {
+          document.getElementById(listId).innerHTML = '<div class="leaderboard-empty">排行榜暫不可用（Supabase 未載入），請重新整理。</div>';
+          return;
+        }
+        const { data, error } = await supabaseClient.from("leaderboard")
+          .select("*")
+          .order('accuracy', { ascending: false })
+          .order('score', { ascending: false })
+          .limit(500);
+        if (error) {
+          document.getElementById(listId).innerHTML = '<div class="leaderboard-empty">暫無成績記錄</div>';
+          return;
+        }
+        const mixed = (data || []).filter((r) => !SINGLE_MODES.includes(r.mode));
+        await renderList(listId, mixed);
+      }
+
       async function renderAll() {
         await Promise.all([
           renderMode("normal", "listNormal"),
           renderMode("spring", "listSpring"),
-          renderMode("both", "listBoth"),
+          renderMode("zijing9", "listZijing9"),
+          renderMode("national", "listNational"),
+          renderMixed("listMixed"),
         ]);
       }
 
