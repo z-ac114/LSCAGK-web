@@ -629,11 +629,19 @@
           <div class="quiz-start-options">
             <label class="quiz-start-option">
               <input type="checkbox" id="bankNormalToggle" checked />
-              <span>基本題庫 <span class="quiz-start-count" id="bankNormalCount"></span></span>
+              <span>第八屆紫荊杯 <span class="quiz-start-count" id="bankNormalCount"></span></span>
             </label>
             <label class="quiz-start-option">
               <input type="checkbox" id="bankSpringToggle" />
               <span>春季題庫（Spring Bank） <span class="quiz-start-count" id="bankSpringCount"></span></span>
+            </label>
+            <label class="quiz-start-option">
+              <input type="checkbox" id="bankZijing9Toggle" />
+              <span>第九屆紫荊杯 <span class="quiz-start-count" id="bankZijing9Count"></span></span>
+            </label>
+            <label class="quiz-start-option">
+              <input type="checkbox" id="bankNationalToggle" />
+              <span>國情知識問答比賽 <span class="quiz-start-count" id="bankNationalCount"></span></span>
             </label>
           </div>
           <div class="quiz-modal-footer">
@@ -647,6 +655,10 @@
     <script src="questions.js"></script>
     <script src="/competition/spring.js"></script>
     <script src="spring.js"></script>
+    <script src="/competition/zijing9.js"></script>
+    <script src="zijing9.js"></script>
+    <script src="/competition/national.js"></script>
+    <script src="national.js"></script>
       <script>
         const LETTERS = ["A", "B", "C", "D", "E", "F"];
         const SUPABASE_URL = "https://oajvxavzsomymqunpgxx.supabase.co";
@@ -665,22 +677,31 @@
         // Randomize questions and prepare data — only options from the database are used
         let QUESTIONS = [];
 
-        function buildQuestions(useNormal, useSpring) {
-          let base = (useNormal !== false && typeof QUESTION_BANK !== "undefined" && Array.isArray(QUESTION_BANK)) ? QUESTION_BANK.slice() : [];
-          if (useSpring && typeof SPRING_QUESTION_BANK !== "undefined" && Array.isArray(SPRING_QUESTION_BANK)) {
-            // merge spring bank into this run's pool, dropping exact duplicate questions
-            const seen = new Set(base.map((q) => q.q));
-            for (const q of SPRING_QUESTION_BANK) {
+        function bankOrEmpty(varName) {
+          return (typeof window[varName] !== "undefined" && Array.isArray(window[varName])) ? window[varName] : [];
+        }
+
+        function buildQuestions(useNormal, useSpring, useZijing9, useNational) {
+          // merge selected banks into this run's pool, dropping exact duplicate questions
+          let base = [];
+          const seen = new Set();
+          const banks = [];
+          if (useNormal !== false) banks.push(bankOrEmpty("QUESTION_BANK"));
+          if (useSpring) banks.push(bankOrEmpty("SPRING_QUESTION_BANK"));
+          if (useZijing9) banks.push(bankOrEmpty("ZIJING9_QUESTION_BANK"));
+          if (useNational) banks.push(bankOrEmpty("NATIONAL_QUESTION_BANK"));
+          for (const b of banks) {
+            for (const q of b) {
               if (!seen.has(q.q)) {
                 seen.add(q.q);
-                base = base.concat(q);
+                base.push(q);
               }
             }
           }
           if (base.length === 0) {
             document.getElementById("questionText").textContent = "題庫載入失敗，請重新整理頁面（Ctrl+Shift+R）。";
             document.getElementById("progressLabel").textContent = "-";
-            console.error("QUESTION_BANK 未載入：/competition/questions.js 載入失敗或內容為空。");
+            console.error("題庫載入失敗：未載入任何題庫或內容為空。");
             QUESTIONS = [];
             return false;
           }
@@ -913,43 +934,52 @@
           (Array.isArray(bank) ? bank : []).filter((q) => Array.isArray(q.options) && q.options.length >= 2).length;
 
         function updateBankCounts() {
-          const normalEl = $("bankNormalCount");
-          const springEl = $("bankSpringCount");
-          normalEl.textContent = "（" + countUsable(QUESTION_BANK) + " 題）";
-          springEl.textContent = (typeof SPRING_QUESTION_BANK !== "undefined" && Array.isArray(SPRING_QUESTION_BANK))
-            ? "（" + countUsable(SPRING_QUESTION_BANK) + " 題）"
-            : "（未載入）";
-          if (typeof SPRING_QUESTION_BANK === "undefined" || !Array.isArray(SPRING_QUESTION_BANK)) {
-            $("bankSpringToggle").disabled = true;
+          const entries = [
+            ["bankNormalCount", "QUESTION_BANK", "bankNormalToggle"],
+            ["bankSpringCount", "SPRING_QUESTION_BANK", "bankSpringToggle"],
+            ["bankZijing9Count", "ZIJING9_QUESTION_BANK", "bankZijing9Toggle"],
+            ["bankNationalCount", "NATIONAL_QUESTION_BANK", "bankNationalToggle"],
+          ];
+          for (const [countId, varName, toggleId] of entries) {
+            const bank = bankOrEmpty(varName);
+            $(countId).textContent = bank.length ? "（" + countUsable(bank) + " 題）" : "（未載入）";
+            if (!bank.length) $(toggleId).disabled = true;
           }
         }
         updateBankCounts();
 
-        // spring bank is password-protected
-        const SPRING_BANK_PASSWORD = "agk2627";
-        $("bankSpringToggle").addEventListener("change", () => {
-          const toggle = $("bankSpringToggle");
-          if (toggle.checked) {
-            const password = window.prompt("請輸入密碼以使用春季題庫：");
-            if (password === null) {
-              toggle.checked = false;
-              return;
+        // competition banks are password-protected
+        const BANK_PASSWORD = "agk2627";
+        function gateWithPassword(toggleId, label) {
+          $(toggleId).addEventListener("change", () => {
+            const toggle = $(toggleId);
+            if (toggle.checked) {
+              const password = window.prompt("請輸入密碼以使用" + label + "：");
+              if (password === null) {
+                toggle.checked = false;
+                return;
+              }
+              if (password !== BANK_PASSWORD) {
+                toggle.checked = false;
+                window.alert("密碼不正確。");
+              }
             }
-            if (password !== SPRING_BANK_PASSWORD) {
-              toggle.checked = false;
-              window.alert("密碼不正確。");
-            }
-          }
-        });
+          });
+        }
+        gateWithPassword("bankSpringToggle", "春季題庫");
+        gateWithPassword("bankZijing9Toggle", "第九屆紫荊杯");
+        gateWithPassword("bankNationalToggle", "國情知識問答比賽");
 
         function startQuiz() {
-          const useNormal = $("bankNormalToggle").checked;
+          const useNormal = $("bankNormalToggle").checked && !$("bankNormalToggle").disabled;
           const useSpring = $("bankSpringToggle").checked && !$("bankSpringToggle").disabled;
-          if (!useNormal && !useSpring) {
+          const useZijing9 = $("bankZijing9Toggle").checked && !$("bankZijing9Toggle").disabled;
+          const useNational = $("bankNationalToggle").checked && !$("bankNationalToggle").disabled;
+          if (!useNormal && !useSpring && !useZijing9 && !useNational) {
             showToast("請選擇至少一個題庫");
             return;
           }
-          if (!buildQuestions(useNormal, useSpring)) {
+          if (!buildQuestions(useNormal, useSpring, useZijing9, useNational)) {
             showToast("題庫載入失敗，請重新整理頁面");
             return;
           }
@@ -958,7 +988,12 @@
           saved = new Set();
           finished = false;
           runStartTime = Date.now();
-          currentMode = useNormal && useSpring ? "both" : useSpring ? "spring" : "normal";
+          const active = [];
+          if (useNormal) active.push("normal");
+          if (useSpring) active.push("spring");
+          if (useZijing9) active.push("zijing9");
+          if (useNational) active.push("national");
+          currentMode = active.length === 2 && useNormal && useSpring ? "both" : active.join("+");
           $("quizView").classList.remove("hidden");
           $("resultsView").classList.remove("active");
           $("startModal").classList.remove("active");
