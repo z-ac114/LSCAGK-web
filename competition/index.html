@@ -580,7 +580,8 @@
                   </div>
                   <div class="quiz-results-actions">
                     <button type="button" class="quiz-btn" id="restartBtn">重新開始</button>
-                    <button type="button" class="quiz-btn" id="exportWrongBtn">匯出錯題</button>
+                    <button type="button" class="quiz-btn" id="exportWrongBtn">匯出錯題（JSON）</button>
+                    <button type="button" class="quiz-btn" id="exportWrongPdfBtn">匯出錯題（PDF）</button>
                   </div>
                 </div>
               </article>
@@ -643,6 +644,10 @@
               <input type="checkbox" id="bankNationalToggle" />
               <span>國情知識問答比賽 <span class="quiz-start-count" id="bankNationalCount"></span></span>
             </label>
+            <label class="quiz-start-option">
+              <input type="checkbox" id="bankLongtrekToggle" />
+              <span>長征閱讀材料（Long Trek） <span class="quiz-start-count" id="bankLongtrekCount"></span></span>
+            </label>
           </div>
           <div class="quiz-modal-footer">
             <button class="quiz-btn" id="startQuizBtn">開始比賽</button>
@@ -659,6 +664,8 @@
     <script src="zijing9.js"></script>
     <script src="/competition/national.js"></script>
     <script src="national.js"></script>
+    <script src="/competition/longtrek.js"></script>
+    <script src="longtrek.js"></script>
       <script>
         const LETTERS = ["A", "B", "C", "D", "E", "F"];
         const SUPABASE_URL = "https://oajvxavzsomymqunpgxx.supabase.co";
@@ -681,7 +688,7 @@
           return (typeof window[varName] !== "undefined" && Array.isArray(window[varName])) ? window[varName] : [];
         }
 
-        function buildQuestions(useNormal, useSpring, useZijing9, useNational) {
+        function buildQuestions(useNormal, useSpring, useZijing9, useNational, useLongtrek) {
           // merge selected banks into this run's pool, dropping exact duplicate questions
           let base = [];
           const seen = new Set();
@@ -690,6 +697,7 @@
           if (useSpring) banks.push(bankOrEmpty("SPRING_QUESTION_BANK"));
           if (useZijing9) banks.push(bankOrEmpty("ZIJING9_QUESTION_BANK"));
           if (useNational) banks.push(bankOrEmpty("NATIONAL_QUESTION_BANK"));
+          if (useLongtrek) banks.push(bankOrEmpty("LONG_TREK_QUESTION_BANK"));
           for (const b of banks) {
             for (const q of b) {
               if (!seen.has(q.q)) {
@@ -939,6 +947,7 @@
             ["bankSpringCount", "SPRING_QUESTION_BANK", "bankSpringToggle"],
             ["bankZijing9Count", "ZIJING9_QUESTION_BANK", "bankZijing9Toggle"],
             ["bankNationalCount", "NATIONAL_QUESTION_BANK", "bankNationalToggle"],
+            ["bankLongtrekCount", "LONG_TREK_QUESTION_BANK", "bankLongtrekToggle"],
           ];
           for (const [countId, varName, toggleId] of entries) {
             const bank = bankOrEmpty(varName);
@@ -948,12 +957,14 @@
         }
         updateBankCounts();
 
-        // competition banks are password-protected
+        // competition banks are password-protected (one correct entry unlocks all for this page session)
         const BANK_PASSWORD = "agk2627";
+        let bankPasswordUnlocked = false;
         function gateWithPassword(toggleId, label) {
           $(toggleId).addEventListener("change", () => {
             const toggle = $(toggleId);
             if (toggle.checked) {
+              if (bankPasswordUnlocked) return;
               const password = window.prompt("請輸入密碼以使用" + label + "：");
               if (password === null) {
                 toggle.checked = false;
@@ -962,24 +973,28 @@
               if (password !== BANK_PASSWORD) {
                 toggle.checked = false;
                 window.alert("密碼不正確。");
+                return;
               }
+              bankPasswordUnlocked = true;
             }
           });
         }
         gateWithPassword("bankSpringToggle", "春季題庫");
-        gateWithPassword("bankZijing9Toggle", "第九屆紫荊杯");
         gateWithPassword("bankNationalToggle", "國情知識問答比賽");
+        gateWithPassword("bankLongtrekToggle", "長征閱讀材料");
+        // 第九屆紫荊杯 needs no password
 
         function startQuiz() {
           const useNormal = $("bankNormalToggle").checked && !$("bankNormalToggle").disabled;
           const useSpring = $("bankSpringToggle").checked && !$("bankSpringToggle").disabled;
           const useZijing9 = $("bankZijing9Toggle").checked && !$("bankZijing9Toggle").disabled;
           const useNational = $("bankNationalToggle").checked && !$("bankNationalToggle").disabled;
-          if (!useNormal && !useSpring && !useZijing9 && !useNational) {
+          const useLongtrek = $("bankLongtrekToggle").checked && !$("bankLongtrekToggle").disabled;
+          if (!useNormal && !useSpring && !useZijing9 && !useNational && !useLongtrek) {
             showToast("請選擇至少一個題庫");
             return;
           }
-          if (!buildQuestions(useNormal, useSpring, useZijing9, useNational)) {
+          if (!buildQuestions(useNormal, useSpring, useZijing9, useNational, useLongtrek)) {
             showToast("題庫載入失敗，請重新整理頁面");
             return;
           }
@@ -993,6 +1008,7 @@
           if (useSpring) active.push("spring");
           if (useZijing9) active.push("zijing9");
           if (useNational) active.push("national");
+          if (useLongtrek) active.push("longtrek");
           currentMode = active.length === 2 && useNormal && useSpring ? "both" : active.join("+");
           $("quizView").classList.remove("hidden");
           $("resultsView").classList.remove("active");

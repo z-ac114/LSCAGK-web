@@ -12,7 +12,7 @@
     <title>排行榜 | AGK 學術時事及常識問答隊</title>
   <style>
     .leaderboard-container {
-      max-width: 800px;
+      max-width: 860px;
       margin: 0 auto;
       padding: 2rem 1rem;
     }
@@ -344,6 +344,7 @@
             <button type="button" class="lb-tab" data-board="listSpring">春季題庫</button>
             <button type="button" class="lb-tab" data-board="listZijing9">第九屆紫荊杯</button>
             <button type="button" class="lb-tab" data-board="listNational">國情知識問答比賽</button>
+            <button type="button" class="lb-tab" data-board="listLongtrek">長征閱讀材料</button>
             <button type="button" class="lb-tab" data-board="listMixed">混合題庫</button>
           </div>
 
@@ -352,6 +353,7 @@
             <div class="leaderboard-list hidden" id="listSpring"></div>
             <div class="leaderboard-list hidden" id="listZijing9"></div>
             <div class="leaderboard-list hidden" id="listNational"></div>
+            <div class="leaderboard-list hidden" id="listLongtrek"></div>
             <div class="leaderboard-list hidden" id="listMixed"></div>
           </div>
         </div>
@@ -372,7 +374,7 @@
         console.warn("Supabase 初始化失敗，排行榜暫不可用。", e);
       }
 
-      const SINGLE_MODES = ["normal", "spring", "zijing9", "national"];
+      const SINGLE_MODES = ["normal", "spring", "zijing9", "national", "longtrek"];
 
       async function renderList(listId, rows) {
         const list = document.getElementById(listId);
