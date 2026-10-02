@@ -1096,6 +1096,68 @@
           location.reload();
         });
 
+        $("exportWrongPdfBtn").addEventListener("click", () => {
+          // wrong questions, question + answer only (print -> save as PDF)
+          const wrongItems = [];
+          QUESTIONS.forEach((item, i) => {
+            const sel = selections[i];
+            const wasAnswered = sel !== null && !(Array.isArray(sel) && sel.length === 0);
+            let isCorrect = false;
+            if (!wasAnswered) {
+              isCorrect = false;
+            } else if (item.isMulti) {
+              const selSet = new Set(sel);
+              const corrSet = new Set(item.correctIndices || []);
+              isCorrect = selSet.size === corrSet.size && [...selSet].every((v) => corrSet.has(v));
+            } else {
+              isCorrect = sel === item.correctIndex;
+            }
+            if (!isCorrect) {
+              wrongItems.push({ n: i + 1, q: item.q, a: item.correctAnswer });
+            }
+          });
+
+          if (wrongItems.length === 0) {
+            showToast("沒有錯題可匯出");
+            return;
+          }
+
+          const win = window.open("", "_blank", "width=800,height=900");
+          if (!win) {
+            alert("請允許彈出視窗以匯出 PDF。");
+            return;
+          }
+          const itemsHtml = wrongItems.map((it) => `
+            <div class="item">
+              <p class="q">${it.n}. ${esc(it.q)}</p>
+              <p class="a">答：${esc(it.a)}</p>
+            </div>
+          `).join("");
+          win.document.write(`<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>錯題複習</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" />
+  <style>
+    body { font-family: "Lato", "Noto Sans TC", sans-serif; color: #3e3e3e; margin: 40px; }
+    h1 { font-size: 22px; font-weight: 700; margin: 0 0 6px; }
+    p.meta { color: #606060; font-size: 13px; margin: 0 0 24px; }
+    .item { border-top: 1px solid #e4e4e4; padding: 14px 0; page-break-inside: avoid; }
+    .q { margin: 0; font-size: 15px; line-height: 1.7; }
+    .a { margin: 6px 0 0; font-size: 14px; font-weight: 700; color: #542884; }
+  </style>
+</head>
+<body>
+  <h1>錯題複習</h1>
+  <p class="meta">共 ${wrongItems.length} 題 · 使用瀏覽器列印對話框可另存為 PDF</p>
+  ${itemsHtml}
+  <script>window.onload = function () { window.print(); };<\/script>
+</body>
+</html>`);
+          win.document.close();
+        });
+
         $("exportWrongBtn").addEventListener("click", () => {
           // Build wrong questions in database.js format
           const wrongItems = [];
