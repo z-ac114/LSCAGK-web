@@ -624,7 +624,7 @@
           <div class="mx-auto max-w-3xl">
             <article class="quiz-card border border-border bg-surface p-6 sm:p-8">
 
-              <div class="quiz-view" id="quizView">
+              <div class="quiz-view hidden" id="quizView">
                 <div class="quiz-progress-row">
                   <div class="quiz-progress-track"><div class="quiz-progress-dot" id="progressDot"></div></div>
                   <div class="quiz-progress-label" id="progressLabel">1/1062</div>
@@ -729,16 +729,16 @@
           <div class="quiz-start-options">
             <label class="quiz-start-option">
               <input type="radio" name="gameMode" id="modeSprintToggle" checked />
-              <span>60秒挑戰 <span class="quiz-start-count">連擊計分 · 上限 100 · 可選題庫</span></span>
+              <span>60秒挑戰 <span class="quiz-start-count">連擊計分 · 上限 100 · 固定題庫</span></span>
             </label>
             <label class="quiz-start-option">
               <input type="radio" name="gameMode" id="modeInfiniteToggle" />
-              <span>無限模式 <span class="quiz-start-count">第九屆紫荊杯＋長征閱讀材料 · 無需選擇題庫</span></span>
+              <span>無限模式 <span class="quiz-start-count">可選題庫</span></span>
             </label>
           </div>
-          <div class="quiz-start-note hidden" id="infiniteNote">無限模式使用固定題庫：第九屆紫荊杯＋長征閱讀材料，無需密碼。</div>
-          <div class="quiz-start-banks" id="bankSection">
-            <p class="quiz-start-banks-label">60秒挑戰題庫（可選多個）：</p>
+          <div class="quiz-start-note hidden" id="modeNote">60秒挑戰使用固定題庫：第九屆紫荊杯＋長征閱讀材料（單選題），無需選擇。</div>
+          <div class="quiz-start-banks hidden" id="bankSection">
+            <p class="quiz-start-banks-label">無限模式題庫（可選多個）：</p>
             <div class="quiz-start-options">
               <label class="quiz-start-option">
                 <input type="checkbox" id="bankNormalToggle" checked />
@@ -1007,6 +1007,7 @@
             } else if (item.isMulti) {
               input.checked = selections[idx] && selections[idx].includes(i);
               input.addEventListener("change", () => {
+                if (!started) { input.checked = false; return; }
                 if (!selections[idx]) selections[idx] = [];
                 if (input.checked) selections[idx].push(i);
                 else selections[idx] = selections[idx].filter(val => val !== i);
@@ -1014,10 +1015,11 @@
               });
             } else if (gameMode === "sprint") {
               input.checked = selections[idx] === i;
-              input.addEventListener("change", () => sprintAnswer(i));
+              input.addEventListener("change", () => { if (started) sprintAnswer(i); else input.checked = false; });
             } else {
               input.checked = selections[idx] === i;
               input.addEventListener("change", () => {
+                if (!started) { input.checked = false; return; }
                 selections[idx] = i;
                 render();
               });
@@ -1187,7 +1189,7 @@
           renderReview();
         });
 
-        // ---- Pre-start bank selection popup ----
+        // ---- bank counts + password gates (used by the infinite mode) ----
         const countUsable = (bank) =>
           (Array.isArray(bank) ? bank : []).filter((q) => Array.isArray(q.options) && q.options.length >= 2).length;
 
@@ -1207,7 +1209,7 @@
         }
         updateBankCounts();
 
-        // competition banks are password-protected (one correct entry unlocks all for this page session)
+        // gated banks: one correct entry unlocks all for this page session; 第九屆紫荊杯 is free
         const BANK_PASSWORD = "agk2627";
         let bankPasswordUnlocked = false;
         function gateWithPassword(toggleId, label) {
@@ -1231,22 +1233,32 @@
         }
         gateWithPassword("bankSpringToggle", "春季題庫");
         gateWithPassword("bankNationalToggle", "國情知識問答比賽");
-        // 第九屆紫荊杯 and 長征閱讀材料 need no password
+        gateWithPassword("bankLongtrekToggle", "長征閱讀材料");
+        // 第九屆紫荊杯 needs no password
 
-        // mode selector: the 60s mode picks banks; the infinite mode is fixed (zijing9 + longtrek)
+        // mode UI: the 60s mode = fixed pool (no selection); the infinite mode = pick banks
         function updateModeUI() {
           const sprint = $("modeSprintToggle").checked;
-          // the 60s mode picks banks; the infinite mode is fixed (第九屆紫荊杯 + 長征閱讀材料, no password)
-          $("bankSection").classList.toggle("hidden", !sprint);
-          $("infiniteNote").classList.toggle("hidden", sprint);
+          $("bankSection").classList.toggle("hidden", !sprint ? false : true);
+          $("modeNote").classList.toggle("hidden", !sprint ? true : false);
         }
         $("modeSprintToggle").addEventListener("change", updateModeUI);
         $("modeInfiniteToggle").addEventListener("change", updateModeUI);
         updateModeUI();
 
+        // quiz cannot be interacted with before 開始比賽
+        let started = false;
+
         function startQuiz() {
           gameMode = $("modeSprintToggle").checked ? "sprint" : "infinite";
           if (gameMode === "sprint") {
+            // fixed pool: 第九屆紫荊杯 + 長征閱讀材料, single-choice only
+            if (!buildQuestions(false, false, true, false, true, true)) {
+              showToast("題庫載入失敗，請重新整理頁面");
+              return;
+            }
+            currentMode = "sprint";
+          } else {
             const useNormal = $("bankNormalToggle").checked && !$("bankNormalToggle").disabled;
             const useSpring = $("bankSpringToggle").checked && !$("bankSpringToggle").disabled;
             const useZijing9 = $("bankZijing9Toggle").checked && !$("bankZijing9Toggle").disabled;
@@ -1256,7 +1268,7 @@
               showToast("請選擇至少一個題庫");
               return;
             }
-            if (!buildQuestions(useNormal, useSpring, useZijing9, useNational, useLongtrek, true)) {
+            if (!buildQuestions(useNormal, useSpring, useZijing9, useNational, useLongtrek)) {
               showToast("題庫載入失敗，請重新整理頁面");
               return;
             }
@@ -1266,16 +1278,9 @@
             if (useZijing9) active.push("zijing9");
             if (useNational) active.push("national");
             if (useLongtrek) active.push("longtrek");
-            currentMode = "sprint";
-            sprintBanksLabel = active.join("+");
-          } else {
-            // fixed pool: 第九屆紫荊杯 + 長征閱讀材料, no password needed
-            if (!buildQuestions(false, false, true, false, true)) {
-              showToast("題庫載入失敗，請重新整理頁面");
-              return;
-            }
-            currentMode = "zijing9+longtrek";
+            currentMode = active.length === 2 && useNormal && useSpring ? "both" : active.join("+");
           }
+          started = true;
           idx = 0;
           selections = new Array(QUESTIONS.length).fill(null);
           sprintState = new Array(QUESTIONS.length).fill(null);
@@ -1333,7 +1338,7 @@
 
         // ---- Keyboard shortcuts: 1-9/0 select options, space = next, delete = previous ----
         document.addEventListener("keydown", (e) => {
-          if (finished) return;
+          if (finished || !started) return;
           if ($("startModal").classList.contains("active")) return;
           const tag = e.target && e.target.tagName;
           if (tag === "INPUT" || tag === "TEXTAREA") return;
@@ -1424,6 +1429,8 @@
               <p class="a">答：${esc(it.a)}</p>
             </div>
           `).join("");
+          const runDate = new Date(runStartTime).toLocaleString("zh-Hant", { hour12: false });
+          const logoUrl = window.location.origin + "/assets/agk-icon.png";
           win.document.write(`<!doctype html>
 <html lang="zh-Hant">
 <head>
@@ -1432,6 +1439,10 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" />
   <style>
     body { font-family: "Lato", "Noto Sans TC", sans-serif; color: #3e3e3e; margin: 40px; }
+    .topbar { display: flex; align-items: center; gap: 12px; border-bottom: 3px solid #d42522; padding-bottom: 12px; margin-bottom: 26px; }
+    .topbar img { height: 42px; }
+    .topbar .brand { font-size: 16px; font-weight: 700; color: #3e3e3e; }
+    .topbar .stamp { margin-left: auto; font-size: 12px; color: #606060; }
     h1 { font-size: 22px; font-weight: 700; margin: 0 0 6px; }
     p.meta { color: #606060; font-size: 13px; margin: 0 0 24px; }
     .item { border-top: 1px solid #e4e4e4; padding: 14px 0; page-break-inside: avoid; }
@@ -1440,6 +1451,11 @@
   </style>
 </head>
 <body>
+  <div class="topbar">
+    <img src="${logoUrl}" alt="" />
+    <span class="brand">AGK 學術時事及常識問答隊</span>
+    <span class="stamp">訓練時間：${runDate}</span>
+  </div>
   <h1>錯題複習</h1>
   <p class="meta">共 ${wrongItems.length} 題 · 使用瀏覽器列印對話框可另存為 PDF</p>
   ${itemsHtml}
