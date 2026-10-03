@@ -216,7 +216,7 @@ body {
   margin: 0;
   background: var(--cream);
   color: var(--ink);
-  font-family: "Lato", "Noto Sans TC", sans-serif;
+  font-family: "Noto Sans TC", "Lato", sans-serif;
   line-height: 1.5;
   transition: background-color 240ms ease, color 240ms ease;
 }
@@ -236,7 +236,7 @@ button {
 }
 
 .font-sans {
-  font-family: "Lato", "Noto Sans TC", sans-serif;
+  font-family: "Noto Sans TC", "Lato", sans-serif;
 }
 .font-serif {
   font-family: "Noto Serif TC", serif;

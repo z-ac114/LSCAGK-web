@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="icon" type="image/png" href="../assets/agk-icon.png" />
     <script src="../theme.js"></script>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@600;700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@600;700&display=swap" />
     <title>排行榜 | AGK 學術時事及常識問答隊</title>
   <style>
     .leaderboard-container {
@@ -103,7 +103,7 @@
     .leaderboard-item.top .leaderboard-rank,
     .leaderboard-item.top .leaderboard-name,
     .leaderboard-item.top .leaderboard-score { color: #ffffff; }
-    .leaderboard-item.top .leaderboard-meta { color: rgb(255 255 255 / 80%); }
+    .leaderboard-item.top .leaderboard-meta { color: rgb(255 255 255 / 92%); }
     .leaderboard-empty {
       text-align: center;
       padding: 2rem 0;
@@ -328,6 +328,13 @@
       border-color: #454b59;
     }
     .dark-mode .sq-ok { color: #7dc98a; }
+    /* lighter red for small red text on dark backgrounds (contrast) */
+    .dark-mode .sq-wrong,
+    .dark-mode .sq-item.wrong .sq-ans span:first-child,
+    .dark-mode .rv-wrong,
+    .dark-mode .ls-kicker-red {
+      color: #f28779;
+    }
     .dark-mode .leaderboard-item.top {
       background: var(--red);
       border-color: var(--lasalle-red-dark);

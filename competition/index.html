@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="icon" type="image/png" href="../assets/agk-icon.png" />
     <script src="../theme.js"></script>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@600;700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@600;700&display=swap" />
     <title>競賽模擬 | AGK 學術時事及常識問答隊</title>
     <meta name="description" content="AGK 學術時事及常識問答隊的競賽模擬：全真介面限時作答，即時批改。" />
       <style>
@@ -490,6 +490,13 @@
         .dark-mode .quiz-option.correct-answer {
           border-color: #2e7d32;
           box-shadow: inset 3px 0 0 #2e7d32;
+        }
+        /* lighter red for small red text on dark backgrounds (contrast) */
+        .dark-mode .rv-wrong,
+        .dark-mode .review-item.wrong .review-ans span:first-child,
+        .dark-mode .quiz-modal-ans-value.wrong,
+        .dark-mode .ls-kicker-red {
+          color: #f28779;
         }
         .dark-mode .quiz-option.selected {
           box-shadow: inset 3px 0 0 #a87fd6;
