@@ -133,6 +133,21 @@
           border-color: var(--purple);
           box-shadow: inset 3px 0 0 var(--purple);
         }
+        /* sprint instant feedback: green = your correct pick, red = your wrong pick */
+        .quiz-option.correct {
+          background: #e8f5ec;
+          border-color: #2e7d32;
+          box-shadow: inset 3px 0 0 #2e7d32;
+        }
+        .quiz-option.wrong {
+          background: #fdeceb;
+          border-color: var(--red);
+          box-shadow: inset 3px 0 0 var(--red);
+        }
+        .quiz-option.correct-answer {
+          border-color: #2e7d32;
+          box-shadow: inset 3px 0 0 #2e7d32;
+        }
 
         /* ---- Buttons ---- */
         .quiz-buttons {
@@ -461,6 +476,20 @@
         .dark-mode .quiz-option:hover,
         .dark-mode .quiz-option.selected {
           border-color: #a87fd6;
+        }
+        .dark-mode .quiz-option.correct {
+          background: #1e3a26;
+          border-color: #2e7d32;
+          box-shadow: inset 3px 0 0 #2e7d32;
+        }
+        .dark-mode .quiz-option.wrong {
+          background: #3a221f;
+          border-color: var(--red);
+          box-shadow: inset 3px 0 0 var(--red);
+        }
+        .dark-mode .quiz-option.correct-answer {
+          border-color: #2e7d32;
+          box-shadow: inset 3px 0 0 #2e7d32;
         }
         .dark-mode .quiz-option.selected {
           box-shadow: inset 3px 0 0 #a87fd6;
@@ -1108,8 +1137,7 @@
         }
         gateWithPassword("bankSpringToggle", "春季題庫");
         gateWithPassword("bankNationalToggle", "國情知識問答比賽");
-        gateWithPassword("bankLongtrekToggle", "長征閱讀材料");
-        // 第九屆紫荊杯 needs no password
+        // 第九屆紫荊杯 and 長征閱讀材料 need no password
 
         // mode selector: the 60s mode picks banks; the infinite mode is fixed (zijing9 + longtrek)
         function updateModeUI() {

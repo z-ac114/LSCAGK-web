@@ -39,6 +39,169 @@
   box-sizing: border-box;
 }
 
+/* ---- Main page: La Salle-style sections ---- */
+.ls-hero {
+  background: var(--purple);
+  color: #ffffff;
+  padding: 96px 24px;
+}
+.ls-kicker {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  color: rgb(255 255 255 / 70%);
+  margin: 0;
+}
+.ls-kicker-red {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--red);
+  margin: 0;
+}
+.ls-title {
+  font-weight: 300;
+  line-height: 1.25;
+  font-size: clamp(34px, 5vw, 54px);
+  letter-spacing: -0.01em;
+  color: #ffffff;
+  margin: 16px 0 0;
+}
+.ls-sub {
+  font-size: 1.125rem;
+  color: rgb(255 255 255 / 85%);
+  margin: 14px 0 0;
+}
+.ls-motto {
+  max-width: 620px;
+  font-size: 1rem;
+  line-height: 1.8;
+  color: rgb(255 255 255 / 90%);
+  margin: 22px 0 0;
+}
+.ls-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 30px;
+  padding: 0 26px;
+  background: var(--red);
+  color: #ffffff;
+  border-radius: 0.25rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+.ls-btn:hover { background: var(--lasalle-red-dark); }
+.ls-section {
+  padding: 72px 24px;
+  background: var(--surface);
+}
+.ls-section.ls-gray { background: var(--cream); }
+.ls-heading {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: 10px 0 0;
+}
+.ls-section-sub { color: var(--muted); margin: 10px 0 0; }
+.ls-grid-3 {
+  display: grid;
+  gap: 22px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  margin-top: 34px;
+}
+.ls-grid-2 {
+  display: grid;
+  gap: 40px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  align-items: start;
+}
+.ls-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--red);
+  padding: 26px;
+  border-radius: 0;
+}
+.ls-card h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+.ls-card p {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.75;
+  margin: 10px 0 0;
+}
+.ls-text {
+  color: var(--muted);
+  line-height: 1.8;
+  margin: 16px 0 0;
+}
+.ls-panel {
+  background: var(--purple);
+  color: #ffffff;
+  padding: 32px;
+  border-radius: 0;
+}
+.ls-panel-name {
+  font-size: 1.5rem;
+  font-weight: 400;
+  margin: 14px 0 0;
+}
+.ls-panel-role {
+  font-size: 0.85rem;
+  color: rgb(255 255 255 / 70%);
+  margin: 4px 0 0;
+}
+.ls-panel-text {
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: rgb(255 255 255 / 90%);
+  margin: 18px 0 0;
+}
+.ls-captain {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 26px;
+  border-radius: 0;
+}
+.ls-captain h3 {
+  font-size: 1.6rem;
+  font-weight: 400;
+  color: var(--ink);
+  margin: 8px 0 0;
+}
+.ls-captain-role {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--red);
+  margin: 0;
+}
+.ls-quote {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.75;
+  margin: 14px 0 0;
+}
+.ls-captain-note {
+  color: var(--muted);
+  font-size: 0.9rem;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+  margin: 16px 0 0;
+}
+/* dark mode for the La Salle sections */
+.dark-mode .ls-hero { background: #292d38; }
+.dark-mode .ls-card,
+.dark-mode .ls-captain { background: #2b303b; border-color: #454b59; }
+.dark-mode .ls-heading { color: #eef0f4; }
+
 html {
   scroll-behavior: smooth;
 }
