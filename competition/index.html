@@ -93,6 +93,67 @@
           font-size: 0.95rem;
           color: var(--muted);
         }
+        /* ---- engaging combo + timer feedback ---- */
+        #sprintStats {
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+        .combo-badge {
+          display: inline-flex;
+          align-items: center;
+          padding: 2px 10px;
+          background: var(--purple);
+          color: #ffffff;
+          border-radius: 0.25rem;
+          font-weight: 700;
+          font-size: 0.85rem;
+          font-variant-numeric: tabular-nums;
+          transition: background 0.2s ease;
+        }
+        .combo-badge.level-hot { background: var(--red); }
+        .combo-badge.none { display: none; }
+        .combo-badge.pop { animation: comboPop 0.45s cubic-bezier(0.22, 1.61, 0.36, 1); }
+        @keyframes comboPop {
+          0% { transform: scale(1); }
+          40% { transform: scale(1.28); }
+          100% { transform: scale(1); }
+        }
+        .float-marks {
+          position: absolute;
+          left: 100%;
+          margin-left: 4px;
+          color: #2e7d32;
+          font-weight: 700;
+          font-size: 0.95rem;
+          animation: floatUp 0.95s ease-out forwards;
+          pointer-events: none;
+        }
+        @keyframes floatUp {
+          0% { opacity: 0; transform: translateY(6px); }
+          25% { opacity: 1; }
+          100% { opacity: 0; transform: translateY(-18px); }
+        }
+        /* timer urgency: amber at 20s, red + pulse at 10s */
+        .quiz-timer-container.warn .quiz-timer-text { color: #b45309; }
+        .quiz-timer-container.warn .quiz-timer-circle .progress { stroke: #d97706; }
+        .quiz-timer-container.danger .quiz-timer-text { color: var(--red); }
+        .quiz-timer-container.danger .quiz-timer-circle .progress { stroke: var(--red); }
+        .quiz-timer-container.danger .quiz-timer-circle { animation: timerPulse 1s ease-in-out infinite; }
+        @keyframes timerPulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.07); }
+        }
+        .quiz-start-note {
+          margin-top: 0.75rem;
+          padding: 0.8rem 1rem;
+          background: var(--cream);
+          border: 1px solid var(--border);
+          border-radius: 0.25rem;
+          font-size: 0.9rem;
+          color: var(--muted);
+        }
 
         /* ---- Question & options ---- */
         .quiz-question {
@@ -567,13 +628,13 @@
                   <div class="quiz-progress-track"><div class="quiz-progress-dot" id="progressDot"></div></div>
                   <div class="quiz-progress-label" id="progressLabel">1/1062</div>
                 </div>
-                <div class="quiz-timer-container">
+                <div class="quiz-timer-container" id="timerContainer">
                   <div class="quiz-timer-circle">
                     <svg viewBox="0 0 80 80"><circle class="bg" cx="40" cy="40" r="36"></circle><circle class="progress" id="timerCircle" cx="40" cy="40" r="36"></circle></svg>
                     <div class="quiz-timer-text"><span id="currentTimeText">1:00</span></div>
                   </div>
                   <div class="quiz-timer-meta">
-                    <span id="sprintStats" hidden>得分 <b id="marksText">0</b> · 連擊 <b id="streakText">0</b></span>
+                    <span id="sprintStats" hidden>得分 <b id="marksText">0</b><span class="combo-badge none" id="comboBadge">連擊 ×<span id="streakText">0</span></span></span>
                     <span id="elapsedMeta">已用時間</span>
                   </div>
                 </div>
@@ -671,9 +732,10 @@
             </label>
             <label class="quiz-start-option">
               <input type="radio" name="gameMode" id="modeInfiniteToggle" />
-              <span>無限模式 <span class="quiz-start-count">第九屆紫荊杯＋長征閱讀材料</span></span>
+              <span>無限模式 <span class="quiz-start-count">第九屆紫荊杯＋長征閱讀材料 · 無需選擇題庫</span></span>
             </label>
           </div>
+          <div class="quiz-start-note hidden" id="infiniteNote">無限模式使用固定題庫：第九屆紫荊杯＋長征閱讀材料。</div>
           <div class="quiz-start-banks" id="bankSection">
             <p class="quiz-start-banks-label">60秒挑戰題庫（可選多個）：</p>
             <div class="quiz-start-options">
@@ -859,6 +921,7 @@
             sprintTimeLeft--;
             $("currentTimeText").textContent = fmt(Math.max(sprintTimeLeft, 0));
             updateSprintCircle();
+            updateSprintUrgency();
             if (sprintTimeLeft <= 0) {
               finish();
             }
@@ -882,11 +945,32 @@
           }, 1000);
         }
 
-        function updateSprintStats() {
+        function updateSprintStats(gained) {
           const marksEl = $("marksText");
           const streakEl = $("streakText");
           if (marksEl) marksEl.textContent = marks;
+          const badge = $("comboBadge");
           if (streakEl) streakEl.textContent = streak;
+          if (!badge) return;
+          badge.classList.toggle("none", streak === 0);
+          badge.classList.toggle("level-hot", streak >= 4);
+          if (gained > 0) {
+            badge.classList.remove("pop");
+            void badge.offsetWidth;
+            badge.classList.add("pop");
+            const float = document.createElement("span");
+            float.className = "float-marks";
+            float.textContent = "+" + gained;
+            $("sprintStats").appendChild(float);
+            setTimeout(() => float.remove(), 950);
+          }
+        }
+
+        function updateSprintUrgency() {
+          const container = $("timerContainer");
+          if (!container) return;
+          container.classList.toggle("warn", sprintTimeLeft <= 20 && sprintTimeLeft > 10);
+          container.classList.toggle("danger", sprintTimeLeft <= 10);
         }
 
         function render() {
@@ -966,12 +1050,14 @@
           selections[idx] = choiceIdx;
           if (isCorrect) {
             streak++;
-            marks += Math.min(streak * 10, 100);
+            const gained = Math.min(streak * 10, 100);
+            marks += gained;
             if (streak > maxStreak) maxStreak = streak;
+            updateSprintStats(gained);
           } else {
             streak = 0;
+            updateSprintStats(0);
           }
-          updateSprintStats();
           render();
           // auto-advance to the next question
           if (advanceTimerId) clearTimeout(advanceTimerId);
@@ -1150,6 +1236,7 @@
         function updateModeUI() {
           const sprint = $("modeSprintToggle").checked;
           $("bankSection").classList.toggle("hidden", !sprint);
+          $("infiniteNote").classList.toggle("hidden", sprint);
         }
         $("modeSprintToggle").addEventListener("change", updateModeUI);
         $("modeInfiniteToggle").addEventListener("change", updateModeUI);
