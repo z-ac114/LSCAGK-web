@@ -315,7 +315,7 @@ button {
   color: rgb(233 217 232 / 80%);
 }
 .text-purple {
-  color: var(--purple);
+  color: var(--ink);
 }
 .text-red {
   color: var(--red);
@@ -829,7 +829,7 @@ footer.bg-purple-deep.px-4.py-8::after {
 }
 
 .dark-mode .text-purple {
-  color: #e7c9ee;
+  color: #eef0f4;
 }
 
 .dark-mode .hero-panel {

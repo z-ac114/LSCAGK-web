@@ -104,7 +104,7 @@
           display: inline-flex;
           align-items: center;
           padding: 2px 10px;
-          background: var(--purple);
+          background: var(--red);
           color: #ffffff;
           border-radius: 0.25rem;
           font-weight: 700;
@@ -112,7 +112,7 @@
           font-variant-numeric: tabular-nums;
           transition: background 0.2s ease;
         }
-        .combo-badge.level-hot { background: var(--red); }
+        .combo-badge.level-hot { background: var(--lasalle-red-dark); }
         .combo-badge.none { display: none; }
         .combo-badge.pop { animation: comboPop 0.45s cubic-bezier(0.22, 1.61, 0.36, 1); }
         @keyframes comboPop {
@@ -186,13 +186,13 @@
         .quiz-option:hover { border-color: var(--purple); }
         .quiz-option input {
           margin-top: 0.3rem;
-          accent-color: var(--purple);
+          accent-color: var(--red);
           flex: none;
         }
         .quiz-option.selected {
           background: var(--surface);
-          border-color: var(--purple);
-          box-shadow: inset 3px 0 0 var(--purple);
+          border-color: var(--red);
+          box-shadow: inset 3px 0 0 var(--red);
         }
         /* sprint instant feedback: green = your correct pick, red = your wrong pick */
         .quiz-option.correct {
@@ -223,8 +223,8 @@
           justify-content: center;
           min-height: 2.75rem;
           padding: 0 1.5rem;
-          background: var(--purple);
-          color: var(--cream);
+          background: var(--red);
+          color: #ffffff;
           border: none;
           border-radius: 0.25rem;
           font-size: 0.95rem;
@@ -351,9 +351,9 @@
         }
         .review-filter:hover { border-color: var(--purple); }
         .review-filter.active {
-          background: var(--purple);
-          border-color: var(--purple-deep);
-          color: var(--cream);
+          background: var(--red);
+          border-color: var(--lasalle-red-dark);
+          color: #ffffff;
         }
         .review-scroll {
           display: flex;
@@ -422,8 +422,8 @@
         }
         .dark-mode .rv-ok { color: #7dc98a; }
         .dark-mode .review-filter.active {
-          background: #63359b;
-          border-color: #7a4bb3;
+          background: var(--red);
+          border-color: var(--lasalle-red-dark);
         }
 
         .quiz-results-actions {
@@ -519,7 +519,7 @@
         .quiz-start-option input {
           width: 1.1rem;
           height: 1.1rem;
-          accent-color: var(--purple);
+          accent-color: var(--red);
           cursor: pointer;
           flex: none;
         }
@@ -536,7 +536,8 @@
         }
         .dark-mode .quiz-option:hover,
         .dark-mode .quiz-option.selected {
-          border-color: #a87fd6;
+          border-color: var(--red);
+          box-shadow: inset 3px 0 0 var(--red);
         }
         .dark-mode .quiz-option.correct {
           background: #1e3a26;
@@ -573,7 +574,7 @@
           color: #e7c9ee;
         }
         .dark-mode .quiz-btn {
-          background: #63359b;
+          background: var(--red);
         }
         .dark-mode .quiz-btn:hover {
           background: #7a4bb3;
@@ -728,16 +729,16 @@
           <div class="quiz-start-options">
             <label class="quiz-start-option">
               <input type="radio" name="gameMode" id="modeSprintToggle" checked />
-              <span>60秒挑戰 <span class="quiz-start-count">連擊計分 · 上限 100</span></span>
+              <span>60秒挑戰 <span class="quiz-start-count">連擊計分 · 上限 100 · 無需選擇題庫</span></span>
             </label>
             <label class="quiz-start-option">
               <input type="radio" name="gameMode" id="modeInfiniteToggle" />
-              <span>無限模式 <span class="quiz-start-count">第九屆紫荊杯＋長征閱讀材料 · 無需選擇題庫</span></span>
+              <span>無限模式 <span class="quiz-start-count">可選題庫</span></span>
             </label>
           </div>
-          <div class="quiz-start-note hidden" id="infiniteNote">無限模式使用固定題庫：第九屆紫荊杯＋長征閱讀材料。</div>
+          <div class="quiz-start-note hidden" id="infiniteNote">60秒挑戰使用固定題庫：第九屆紫荊杯＋長征閱讀材料。</div>
           <div class="quiz-start-banks" id="bankSection">
-            <p class="quiz-start-banks-label">60秒挑戰題庫（可選多個）：</p>
+            <p class="quiz-start-banks-label">無限模式題庫（可選多個）：</p>
             <div class="quiz-start-options">
               <label class="quiz-start-option">
                 <input type="checkbox" id="bankNormalToggle" checked />
@@ -1235,8 +1236,9 @@
         // mode selector: the 60s mode picks banks; the infinite mode is fixed (zijing9 + longtrek)
         function updateModeUI() {
           const sprint = $("modeSprintToggle").checked;
-          $("bankSection").classList.toggle("hidden", !sprint);
-          $("infiniteNote").classList.toggle("hidden", sprint);
+          // combo mode uses a fixed pool (no bank selection); the infinite mode picks banks
+          $("bankSection").classList.toggle("hidden", sprint);
+          $("infiniteNote").classList.toggle("hidden", !sprint);
         }
         $("modeSprintToggle").addEventListener("change", updateModeUI);
         $("modeInfiniteToggle").addEventListener("change", updateModeUI);
@@ -1245,6 +1247,14 @@
         function startQuiz() {
           gameMode = $("modeSprintToggle").checked ? "sprint" : "infinite";
           if (gameMode === "sprint") {
+            // fixed pool: 第九屆紫荊杯 + 長征閱讀材料, single-choice only
+            if (!buildQuestions(false, false, true, false, true, true)) {
+              showToast("題庫載入失敗，請重新整理頁面");
+              return;
+            }
+            currentMode = "sprint";
+            sprintBanksLabel = "zijing9+longtrek";
+          } else {
             const useNormal = $("bankNormalToggle").checked && !$("bankNormalToggle").disabled;
             const useSpring = $("bankSpringToggle").checked && !$("bankSpringToggle").disabled;
             const useZijing9 = $("bankZijing9Toggle").checked && !$("bankZijing9Toggle").disabled;
@@ -1254,7 +1264,7 @@
               showToast("請選擇至少一個題庫");
               return;
             }
-            if (!buildQuestions(useNormal, useSpring, useZijing9, useNational, useLongtrek, true)) {
+            if (!buildQuestions(useNormal, useSpring, useZijing9, useNational, useLongtrek)) {
               showToast("題庫載入失敗，請重新整理頁面");
               return;
             }
@@ -1264,14 +1274,7 @@
             if (useZijing9) active.push("zijing9");
             if (useNational) active.push("national");
             if (useLongtrek) active.push("longtrek");
-            currentMode = "sprint";
-            sprintBanksLabel = active.join("+");
-          } else {
-            if (!buildQuestions(false, false, true, false, true)) {
-              showToast("題庫載入失敗，請重新整理頁面");
-              return;
-            }
-            currentMode = "zijing9+longtrek";
+            currentMode = active.length === 2 && useNormal && useSpring ? "both" : active.join("+");
           }
           idx = 0;
           selections = new Array(QUESTIONS.length).fill(null);

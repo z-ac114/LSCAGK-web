@@ -86,7 +86,7 @@
     }
     .leaderboard-score {
       font-weight: 700;
-      color: var(--purple);
+      color: var(--red);
       text-align: right;
       font-variant-numeric: tabular-nums;
     }
@@ -191,9 +191,11 @@
     }
 
     /* ---- Dark mode readability fixes ---- */
-    .dark-mode .leaderboard-title,
+    .dark-mode .leaderboard-title {
+      color: #eef0f4;
+    }
     .dark-mode .leaderboard-score {
-      color: #e7c9ee;
+      color: #f28779;
     }
     .dark-mode .leaderboard-item.top {
       background: var(--red);
@@ -264,9 +266,9 @@
     }
     .review-filter:hover { border-color: var(--purple); }
     .review-filter.active {
-      background: var(--purple);
-      border-color: var(--purple-deep);
-      color: var(--cream);
+      background: var(--red);
+      border-color: var(--lasalle-red-dark);
+      color: #ffffff;
     }
     .sq-list {
       display: flex;
@@ -287,8 +289,8 @@
       background: #2b303b;
     }
     .dark-mode .review-filter.active {
-      background: #63359b;
-      border-color: #7a4bb3;
+      background: var(--red);
+      border-color: var(--lasalle-red-dark);
     }
     .sq-badge {
       flex: none;
