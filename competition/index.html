@@ -533,11 +533,12 @@
                 </div>
                 <div class="quiz-timer-container">
                   <div class="quiz-timer-circle">
-                    <svg viewBox="0 0 80 80"><circle class="bg" cx="40" cy="40" r="36"></circle></svg>
-                    <div class="quiz-timer-text"><span id="currentTimeText">0:00</span></div>
+                    <svg viewBox="0 0 80 80"><circle class="bg" cx="40" cy="40" r="36"></circle><circle class="progress" id="timerCircle" cx="40" cy="40" r="36"></circle></svg>
+                    <div class="quiz-timer-text"><span id="currentTimeText">1:00</span></div>
                   </div>
                   <div class="quiz-timer-meta">
-                    <span>已用時間</span>
+                    <span id="sprintStats" hidden>得分 <b id="marksText">0</b> · 連擊 <b id="streakText">0</b></span>
+                    <span id="elapsedMeta">已用時間</span>
                   </div>
                 </div>
                 <div class="quiz-question" id="questionText"></div>
@@ -625,29 +626,42 @@
       <div class="quiz-modal" id="startModal">
         <div class="quiz-modal-content">
           <div class="quiz-modal-header">
-            <span class="quiz-modal-title">選擇題庫</span>
+            <span class="quiz-modal-title">選擇模式</span>
           </div>
           <div class="quiz-start-options">
             <label class="quiz-start-option">
-              <input type="checkbox" id="bankNormalToggle" checked />
-              <span>第八屆紫荊杯 <span class="quiz-start-count" id="bankNormalCount"></span></span>
+              <input type="radio" name="gameMode" id="modeSprintToggle" checked />
+              <span>60秒挑戰 <span class="quiz-start-count">連擊計分 · 上限 100</span></span>
             </label>
             <label class="quiz-start-option">
-              <input type="checkbox" id="bankSpringToggle" />
-              <span>春季題庫 <span class="quiz-start-count" id="bankSpringCount"></span></span>
+              <input type="radio" name="gameMode" id="modeInfiniteToggle" />
+              <span>無限模式 <span class="quiz-start-count">第九屆紫荊杯＋長征閱讀材料</span></span>
             </label>
-            <label class="quiz-start-option">
-              <input type="checkbox" id="bankZijing9Toggle" />
-              <span>第九屆紫荊杯 <span class="quiz-start-count" id="bankZijing9Count"></span></span>
-            </label>
-            <label class="quiz-start-option">
-              <input type="checkbox" id="bankNationalToggle" />
-              <span>國情知識問答比賽 <span class="quiz-start-count" id="bankNationalCount"></span></span>
-            </label>
-            <label class="quiz-start-option">
-              <input type="checkbox" id="bankLongtrekToggle" />
-              <span>長征閱讀材料 <span class="quiz-start-count" id="bankLongtrekCount"></span></span>
-            </label>
+          </div>
+          <div class="quiz-start-banks" id="bankSection">
+            <p class="quiz-start-banks-label">60秒挑戰題庫（可選多個）：</p>
+            <div class="quiz-start-options">
+              <label class="quiz-start-option">
+                <input type="checkbox" id="bankNormalToggle" checked />
+                <span>第八屆紫荊杯 <span class="quiz-start-count" id="bankNormalCount"></span></span>
+              </label>
+              <label class="quiz-start-option">
+                <input type="checkbox" id="bankSpringToggle" />
+                <span>春季題庫 <span class="quiz-start-count" id="bankSpringCount"></span></span>
+              </label>
+              <label class="quiz-start-option">
+                <input type="checkbox" id="bankZijing9Toggle" />
+                <span>第九屆紫荊杯 <span class="quiz-start-count" id="bankZijing9Count"></span></span>
+              </label>
+              <label class="quiz-start-option">
+                <input type="checkbox" id="bankNationalToggle" />
+                <span>國情知識問答比賽 <span class="quiz-start-count" id="bankNationalCount"></span></span>
+              </label>
+              <label class="quiz-start-option">
+                <input type="checkbox" id="bankLongtrekToggle" />
+                <span>長征閱讀材料 <span class="quiz-start-count" id="bankLongtrekCount"></span></span>
+              </label>
+            </div>
           </div>
           <div class="quiz-modal-footer">
             <button class="quiz-btn" id="startQuizBtn">開始比賽</button>
@@ -688,7 +702,7 @@
           return (typeof window[varName] !== "undefined" && Array.isArray(window[varName])) ? window[varName] : [];
         }
 
-        function buildQuestions(useNormal, useSpring, useZijing9, useNational, useLongtrek) {
+        function buildQuestions(useNormal, useSpring, useZijing9, useNational, useLongtrek, singleOnly) {
           // merge selected banks into this run's pool, dropping exact duplicate questions
           let base = [];
           const seen = new Set();
@@ -715,6 +729,7 @@
           }
           const SHUFFLED_BANK = base
             .filter((item) => Array.isArray(item.options) && item.options.length >= 2)
+            .filter((item) => !singleOnly || item.multi !== true)
             .sort(() => Math.random() - 0.5);
           QUESTIONS = SHUFFLED_BANK.map((item) => {
           const isMulti = item.multi === true;
@@ -760,6 +775,22 @@
         let elapsedId = null;
         let runDetails = [];
 
+        // game modes: "sprint" (60s combo) | "infinite"
+        let gameMode = "sprint";
+        let sprintState = [];
+        let streak = 0;
+        let marks = 0;
+        let maxStreak = 0;
+        let sprintTimerId = null;
+        let sprintTimeLeft = 60;
+        let advanceTimerId = null;
+        let sprintBanksLabel = "";
+        let finalCorrect = 0;
+        let finalAnswered = 0;
+        let finalTotal = 0;
+        let finalMarks = 0;
+        const SPRINT_SECONDS = 60;
+
         const $ = (id) => document.getElementById(id);
 
         function fmt(sec) {
@@ -768,19 +799,58 @@
           return m + ":" + String(s).padStart(2, "0");
         }
 
+        function stopAllTimers() {
+          if (elapsedId) {
+            clearInterval(elapsedId);
+            elapsedId = null;
+          }
+          if (sprintTimerId) {
+            clearInterval(sprintTimerId);
+            sprintTimerId = null;
+          }
+          if (advanceTimerId) {
+            clearTimeout(advanceTimerId);
+            advanceTimerId = null;
+          }
+        }
+
+        function startSprintTimer() {
+          stopAllTimers();
+          sprintTimeLeft = SPRINT_SECONDS;
+          $("currentTimeText").textContent = fmt(sprintTimeLeft);
+          updateSprintCircle();
+          sprintTimerId = setInterval(() => {
+            sprintTimeLeft--;
+            $("currentTimeText").textContent = fmt(Math.max(sprintTimeLeft, 0));
+            updateSprintCircle();
+            if (sprintTimeLeft <= 0) {
+              finish();
+            }
+          }, 1000);
+        }
+
+        function updateSprintCircle() {
+          const circle = $("timerCircle");
+          if (!circle) return;
+          const radius = parseFloat(circle.getAttribute("r")) || 36;
+          const circ = 2 * Math.PI * radius;
+          circle.style.strokeDasharray = circ;
+          circle.style.strokeDashoffset = circ - (sprintTimeLeft / SPRINT_SECONDS) * circ;
+        }
+
         function startElapsedTimer() {
-          stopElapsedTimer();
+          stopAllTimers();
           $("currentTimeText").textContent = "0:00";
           elapsedId = setInterval(() => {
             $("currentTimeText").textContent = fmt(Math.round((Date.now() - runStartTime) / 1000));
           }, 1000);
         }
 
-        function stopElapsedTimer() {
-          if (elapsedId) {
-            clearInterval(elapsedId);
-            elapsedId = null;
-          }
+        function updateSprintStats() {
+          const marksEl = $("marksText");
+          const streakEl = $("streakText");
+          if (marksEl) marksEl.textContent = marks;
+          if (streakEl) streakEl.textContent = streak;
         }
 
         function render() {
@@ -791,6 +861,7 @@
 
           const list = $("optionsList");
           list.innerHTML = "";
+          const feedback = gameMode === "sprint" ? sprintState[idx] : null;
           item.options.forEach((opt, i) => {
             const label = document.createElement("label");
             label.className = "quiz-option" + (item.isMulti ? " checkbox" : "");
@@ -800,11 +871,19 @@
             } else {
               label.classList.toggle("selected", selections[idx] === i);
             }
-            
+
             const input = document.createElement("input");
             input.type = item.isMulti ? "checkbox" : "radio";
             input.name = "q" + idx;
-            if (item.isMulti) {
+            if (feedback) {
+              // sprint: question locked — show the outcome
+              input.disabled = true;
+              const picked = item.isMulti
+                ? (selections[idx] && selections[idx].includes(i))
+                : selections[idx] === i;
+              if (picked) label.classList.add(feedback === "correct" ? "correct" : "wrong");
+              else if (i === item.correctIndex) label.classList.add("correct-answer");
+            } else if (item.isMulti) {
               input.checked = selections[idx] && selections[idx].includes(i);
               input.addEventListener("change", () => {
                 if (!selections[idx]) selections[idx] = [];
@@ -812,6 +891,9 @@
                 else selections[idx] = selections[idx].filter(val => val !== i);
                 render();
               });
+            } else if (gameMode === "sprint") {
+              input.checked = selections[idx] === i;
+              input.addEventListener("change", () => sprintAnswer(i));
             } else {
               input.checked = selections[idx] === i;
               input.addEventListener("change", () => {
@@ -840,6 +922,33 @@
           setTimeout(() => t.classList.remove("show"), 1400);
         }
 
+        function sprintAnswer(choiceIdx) {
+          if (finished || sprintState[idx]) return;
+          const item = QUESTIONS[idx];
+          const isCorrect = choiceIdx === item.correctIndex;
+          sprintState[idx] = isCorrect ? "correct" : "wrong";
+          selections[idx] = choiceIdx;
+          if (isCorrect) {
+            streak++;
+            marks += Math.min(streak * 10, 100);
+            if (streak > maxStreak) maxStreak = streak;
+          } else {
+            streak = 0;
+          }
+          updateSprintStats();
+          render();
+          // auto-advance to the next question
+          if (advanceTimerId) clearTimeout(advanceTimerId);
+          advanceTimerId = setTimeout(() => {
+            advanceTimerId = null;
+            if (finished) return;
+            if (idx < QUESTIONS.length - 1) {
+              idx++;
+              render();
+            }
+          }, 900);
+        }
+
         function describeAnswer(item, sel) {
           if (sel === null || sel === undefined) return "未作答";
           if (Array.isArray(sel)) {
@@ -851,9 +960,10 @@
         function finish() {
           if (finished) return;
           finished = true;
-          stopElapsedTimer();
+          stopAllTimers();
 
           let correctCount = 0;
+          let answeredCount = 0;
           runDetails = [];
           QUESTIONS.forEach((item, i) => {
             const sel = selections[i];
@@ -868,6 +978,7 @@
             }
 
             if (isCorrect) correctCount++;
+            if (wasAnswered) answeredCount++;
 
             runDetails.push({
               q: item.q,
@@ -879,13 +990,29 @@
 
           const wrongCount = runDetails.filter((d) => !d.ok && d.ua != null).length;
           const unansweredCount = runDetails.filter((d) => d.ua == null).length;
-          const pct = Math.round((correctCount / QUESTIONS.length) * 100);
-          $("scoreBig").textContent = correctCount + " / " + QUESTIONS.length;
-          $("scoreSub").textContent = "答題完成！正確率 " + pct + "%";
-          $("reviewSummary").innerHTML =
-            "共 " + QUESTIONS.length + " 題 · <span class='rv-ok'>答對 " + correctCount +
-            "</span> · <span class='rv-wrong'>答錯 " + wrongCount +
-            "</span> · <span class='rv-un'>未答 " + unansweredCount + "</span>";
+
+          finalCorrect = correctCount;
+          finalAnswered = answeredCount;
+          finalTotal = QUESTIONS.length;
+          finalMarks = marks;
+
+          if (gameMode === "sprint") {
+            $("scoreBig").textContent = marks + " 分";
+            $("scoreSub").textContent =
+              "答對 " + correctCount + " 題 · 最高連擊 " + maxStreak + " · 共答 " + answeredCount + " 題";
+            $("reviewSummary").innerHTML =
+              "共答 " + answeredCount + " 題 · <span class='rv-ok'>答對 " + correctCount +
+              "</span> · <span class='rv-wrong'>答錯 " + wrongCount +
+              "</span> · 得分 " + marks;
+          } else {
+            const pct = Math.round((correctCount / QUESTIONS.length) * 100);
+            $("scoreBig").textContent = correctCount + " / " + QUESTIONS.length;
+            $("scoreSub").textContent = "答題完成！正確率 " + pct + "%";
+            $("reviewSummary").innerHTML =
+              "共 " + QUESTIONS.length + " 題 · <span class='rv-ok'>答對 " + correctCount +
+              "</span> · <span class='rv-wrong'>答錯 " + wrongCount +
+              "</span> · <span class='rv-un'>未答 " + unansweredCount + "</span>";
+          }
           renderReview();
 
           $("quizView").classList.add("hidden");
@@ -984,37 +1111,69 @@
         gateWithPassword("bankLongtrekToggle", "長征閱讀材料");
         // 第九屆紫荊杯 needs no password
 
+        // mode selector: the 60s mode picks banks; the infinite mode is fixed (zijing9 + longtrek)
+        function updateModeUI() {
+          const sprint = $("modeSprintToggle").checked;
+          $("bankSection").classList.toggle("hidden", !sprint);
+        }
+        $("modeSprintToggle").addEventListener("change", updateModeUI);
+        $("modeInfiniteToggle").addEventListener("change", updateModeUI);
+        updateModeUI();
+
         function startQuiz() {
-          const useNormal = $("bankNormalToggle").checked && !$("bankNormalToggle").disabled;
-          const useSpring = $("bankSpringToggle").checked && !$("bankSpringToggle").disabled;
-          const useZijing9 = $("bankZijing9Toggle").checked && !$("bankZijing9Toggle").disabled;
-          const useNational = $("bankNationalToggle").checked && !$("bankNationalToggle").disabled;
-          const useLongtrek = $("bankLongtrekToggle").checked && !$("bankLongtrekToggle").disabled;
-          if (!useNormal && !useSpring && !useZijing9 && !useNational && !useLongtrek) {
-            showToast("請選擇至少一個題庫");
-            return;
-          }
-          if (!buildQuestions(useNormal, useSpring, useZijing9, useNational, useLongtrek)) {
-            showToast("題庫載入失敗，請重新整理頁面");
-            return;
+          gameMode = $("modeSprintToggle").checked ? "sprint" : "infinite";
+          if (gameMode === "sprint") {
+            const useNormal = $("bankNormalToggle").checked && !$("bankNormalToggle").disabled;
+            const useSpring = $("bankSpringToggle").checked && !$("bankSpringToggle").disabled;
+            const useZijing9 = $("bankZijing9Toggle").checked && !$("bankZijing9Toggle").disabled;
+            const useNational = $("bankNationalToggle").checked && !$("bankNationalToggle").disabled;
+            const useLongtrek = $("bankLongtrekToggle").checked && !$("bankLongtrekToggle").disabled;
+            if (!useNormal && !useSpring && !useZijing9 && !useNational && !useLongtrek) {
+              showToast("請選擇至少一個題庫");
+              return;
+            }
+            if (!buildQuestions(useNormal, useSpring, useZijing9, useNational, useLongtrek, true)) {
+              showToast("題庫載入失敗，請重新整理頁面");
+              return;
+            }
+            const active = [];
+            if (useNormal) active.push("normal");
+            if (useSpring) active.push("spring");
+            if (useZijing9) active.push("zijing9");
+            if (useNational) active.push("national");
+            if (useLongtrek) active.push("longtrek");
+            currentMode = "sprint";
+            sprintBanksLabel = active.join("+");
+          } else {
+            if (!buildQuestions(false, false, true, false, true)) {
+              showToast("題庫載入失敗，請重新整理頁面");
+              return;
+            }
+            currentMode = "zijing9+longtrek";
           }
           idx = 0;
           selections = new Array(QUESTIONS.length).fill(null);
+          sprintState = new Array(QUESTIONS.length).fill(null);
           saved = new Set();
           finished = false;
+          streak = 0;
+          marks = 0;
+          maxStreak = 0;
           runStartTime = Date.now();
-          const active = [];
-          if (useNormal) active.push("normal");
-          if (useSpring) active.push("spring");
-          if (useZijing9) active.push("zijing9");
-          if (useNational) active.push("national");
-          if (useLongtrek) active.push("longtrek");
-          currentMode = active.length === 2 && useNormal && useSpring ? "both" : active.join("+");
+          updateSprintStats();
+          const sprint = gameMode === "sprint";
+          $("sprintStats").hidden = !sprint;
+          $("elapsedMeta").hidden = sprint;
+          $("progressLabel").textContent = "1/" + QUESTIONS.length;
           $("quizView").classList.remove("hidden");
           $("resultsView").classList.remove("active");
           $("startModal").classList.remove("active");
           render();
-          startElapsedTimer();
+          if (sprint) {
+            startSprintTimer();
+          } else {
+            startElapsedTimer();
+          }
         }
 
         $("startQuizBtn").addEventListener("click", startQuiz);
@@ -1059,7 +1218,9 @@
           // number keys select the matching option (1-9, 0 = 10th)
           const keyIdx = e.key >= "1" && e.key <= "9" ? Number(e.key) - 1 : e.key === "0" ? 9 : -1;
           if (keyIdx >= 0 && keyIdx < item.options.length) {
-            if (item.isMulti) {
+            if (gameMode === "sprint") {
+              sprintAnswer(keyIdx);
+            } else if (item.isMulti) {
               if (!selections[idx]) selections[idx] = [];
               const pos = selections[idx].indexOf(keyIdx);
               if (pos >= 0) selections[idx].splice(pos, 1);
@@ -1075,6 +1236,11 @@
           // space = next question (does not finish on the last question)
           if (e.key === " ") {
             e.preventDefault();
+            if (gameMode === "sprint" && advanceTimerId) {
+              // skip the feedback delay and advance immediately
+              clearTimeout(advanceTimerId);
+              advanceTimerId = null;
+            }
             if (idx < QUESTIONS.length - 1) {
               idx++;
               render();
@@ -1201,14 +1367,18 @@
             alert("請輸入名字");
             return;
           }
-          const score = $("scoreBig").textContent;
-          const [correct] = score.split(" / ").map(Number);
+          const isSprint = gameMode === "sprint";
+          const score = isSprint ? finalMarks : finalCorrect;
+          const total = isSprint ? finalAnswered : finalTotal;
+          const accuracy = isSprint
+            ? Number((finalCorrect / Math.max(finalAnswered, 1)).toFixed(4))
+            : Number((finalCorrect / Math.max(finalTotal, 1)).toFixed(4));
           const timeTaken = Math.round((Date.now() - runStartTime) / 1000);
           const payload = {
             name,
-            score: correct,
-            total: QUESTIONS.length,
-            accuracy: Number((correct / QUESTIONS.length).toFixed(4)),
+            score,
+            total,
+            accuracy,
             time_taken: timeTaken,
             mode: currentMode,
             details: runDetails
