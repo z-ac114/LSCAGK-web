@@ -1201,21 +1201,32 @@
             ["bankNationalCount", "NATIONAL_QUESTION_BANK", "bankNationalToggle"],
             ["bankLongtrekCount", "LONG_TREK_QUESTION_BANK", "bankLongtrekToggle"],
           ];
+          // defeat browser form restoration on reload: reset the toggles to the defaults
+          $("bankNormalToggle").checked = true;
           for (const [countId, varName, toggleId] of entries) {
+            if (toggleId !== "bankNormalToggle") $(toggleId).checked = false;
             const bank = bankOrEmpty(varName);
             $(countId).textContent = bank.length ? "（" + countUsable(bank) + " 題）" : "（未載入）";
             if (!bank.length) $(toggleId).disabled = true;
           }
+          // and the mode radios: always start on the 60s mode
+          $("modeSprintToggle").checked = true;
+          $("modeInfiniteToggle").checked = false;
         }
         updateBankCounts();
 
         // gated banks: one correct entry unlocks all for this page session; 第九屆紫荊杯 is free
         const BANK_PASSWORD = "agk2627";
         let bankPasswordUnlocked = false;
+        let userTouchedMode = false;
+        $("modeSprintToggle").addEventListener("change", () => { userTouchedMode = true; });
+        $("modeInfiniteToggle").addEventListener("change", () => { userTouchedMode = true; });
         function gateWithPassword(toggleId, label) {
           $(toggleId).addEventListener("change", () => {
             const toggle = $(toggleId);
             if (toggle.checked) {
+              // ignore changes fired by browser form restoration (before any user interaction)
+              if (!userTouchedMode) { toggle.checked = false; return; }
               if (bankPasswordUnlocked) return;
               const password = window.prompt("請輸入密碼以使用" + label + "：");
               if (password === null) {

@@ -54,9 +54,9 @@
       gap: 0.9rem;
       align-items: center;
       padding: 0 1rem 0.6rem;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       font-weight: 700;
-      color: var(--muted);
+      color: var(--ink);
     }
     .leaderboard-head span:nth-child(n + 3) { text-align: right; }
     .leaderboard-head.head-infinite span:nth-child(3) { text-align: left; }
@@ -66,15 +66,16 @@
       grid-template-columns: 2.2rem minmax(0, 1fr) minmax(0, 11rem) 5rem 3.5rem 4rem 5.5rem;
     }
     .leaderboard-cat {
-      font-size: 0.8rem;
-      color: var(--muted);
+      font-size: 0.85rem;
+      color: #4a4f58;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
     .leaderboard-rank {
       font-weight: 700;
-      color: var(--muted);
+      font-size: 1.02rem;
+      color: #4a4f58;
       font-variant-numeric: tabular-nums;
     }
     .leaderboard-name {
@@ -91,8 +92,8 @@
       font-variant-numeric: tabular-nums;
     }
     .leaderboard-meta {
-      font-size: 0.8rem;
-      color: var(--muted);
+      font-size: 0.88rem;
+      color: #4a4f58;
       text-align: right;
       font-variant-numeric: tabular-nums;
     }
@@ -113,6 +114,37 @@
     .leaderboard-list.hidden,
     .shared-questions.hidden {
       display: none;
+    }
+    .board-pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      margin-top: 0.75rem;
+    }
+    .page-btn {
+      display: inline-flex;
+      align-items: center;
+      min-height: 2.2rem;
+      padding: 0 1.1rem;
+      background: var(--surface);
+      color: var(--ink);
+      border: 1px solid var(--border);
+      border-radius: 0.25rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.15s ease;
+    }
+    .page-btn:hover:not(:disabled) { border-color: var(--red); }
+    .page-btn:disabled { color: #c3c3c3; cursor: not-allowed; }
+    .page-indicator {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
     }
 
     /* ---- Board toggle bar ---- */
@@ -145,6 +177,12 @@
       border-color: var(--lasalle-red-dark);
       color: #ffffff;
     }
+    .dark-mode .leaderboard-meta,
+    .dark-mode .leaderboard-rank,
+    .dark-mode .leaderboard-cat {
+      color: #c5cad4;
+    }
+    .dark-mode .page-btn:disabled { color: #6a7180; }
     .dark-mode .lb-tab {
       background: #2b303b;
     }
@@ -388,13 +426,19 @@
         console.warn("Supabase 初始化失敗，排行榜暫不可用。", e);
       }
 
-      async function renderList(listId, rows, opts) {
+      const PAGE_SIZE = 10;
+      const boardPages = {};
+
+      function renderPage(listId, opts) {
+        const state = boardPages[listId];
         const list = document.getElementById(listId);
-        if (!rows || rows.length === 0) {
+        if (!state || !state.rows || state.rows.length === 0) {
           list.innerHTML = '<div class="leaderboard-empty">暫無成績記錄</div>';
           return;
         }
         const infinite = opts && opts.infinite;
+        const start = state.page * PAGE_SIZE;
+        const slice = state.rows.slice(start, start + PAGE_SIZE);
         const head = infinite ? `
           <div class="leaderboard-head head-infinite">
             <span>排名</span><span>姓名</span><span>類別</span><span>答對</span><span>準確率</span><span>用時</span><span>日期</span>
@@ -404,16 +448,17 @@
             <span>排名</span><span>姓名</span><span>得分</span><span>準確率</span><span>用時</span><span>日期</span>
           </div>
         `;
-        list.innerHTML = head + rows.map((r, i) => {
-          const scoreText = infinite ? `${r.score} / ${r.total}` : `${r.score}`;
+        const body = slice.map((r, i) => {
+          const rank = start + i + 1; // global rank across pages
+          const scoreText = infinite ? `${r.score} / ${r.total}` : `${r.score} 分`;
           const accText = r.accuracy != null ? `${Math.round(r.accuracy * 100)}%` : "";
           const timeText = r.time_taken != null ? `${r.time_taken}s` : "—";
           const dateText = r.created_at ? new Date(r.created_at).toLocaleDateString() : "";
-          const isTop = i < 3;
+          const isTop = rank <= 3;
           const cat = infinite ? `<span class="leaderboard-cat">${esc(modeLabel(r.mode))}</span>` : "";
           return `
             <div class="leaderboard-item ${infinite ? 'item-infinite' : ''} ${isTop ? 'top' : ''}">
-              <span class="leaderboard-rank">${i + 1}</span>
+              <span class="leaderboard-rank">${rank}</span>
               <span class="leaderboard-name">${esc(r.name)}</span>
               ${cat}
               <span class="leaderboard-score">${scoreText}</span>
@@ -423,6 +468,14 @@
             </div>
           `;
         }).join("");
+        const maxPage = Math.ceil(state.rows.length / PAGE_SIZE);
+        const controls = maxPage > 1 ? `
+          <div class="board-pagination">
+            <button type="button" class="page-btn" data-board="${listId}" data-dir="-1" ${state.page === 0 ? "disabled" : ""}>上一頁</button>
+            <span class="page-indicator">${state.page + 1} / ${maxPage}</span>
+            <button type="button" class="page-btn" data-board="${listId}" data-dir="1" ${state.page >= maxPage - 1 ? "disabled" : ""}>下一頁</button>
+          </div>` : "";
+        list.innerHTML = head + body + controls;
       }
 
       // infinite mode: all question-bank runs in one list, with the category column
@@ -441,7 +494,8 @@
           return;
         }
         const rows = (data || []).filter((r) => r.mode !== "sprint");
-        await renderList(listId, rows, { infinite: true });
+        boardPages[listId] = { rows, page: 0 };
+        renderPage(listId, { infinite: true });
       }
 
       // 60s sprint mode: its own leaderboard
@@ -460,14 +514,15 @@
           document.getElementById(listId).innerHTML = '<div class="leaderboard-empty">暫無成績記錄</div>';
           return;
         }
-        await renderList(listId, data);
+        boardPages[listId] = { rows: data, page: 0 };
+        renderPage(listId);
       }
 
       function modeLabel(mode) {
-        const names = { normal: "第八屆紫荊杯", spring: "春季題庫", zijing9: "第九屆紫荊杯", national: "國情知識問答比賽", longtrek: "長征閱讀材料" };
-        if (mode === "both") return "第八屆紫荊杯＋春季題庫";
+        const short = { normal: "第八屆", spring: "春季", zijing9: "第九屆", national: "國情", longtrek: "長征" };
+        if (mode === "both") return "第八屆＋春季";
         if (mode === "sprint") return "60秒挑戰";
-        return (mode || "").split("+").map((m) => names[m] || m).join("＋");
+        return (mode || "").split("+").map((m) => short[m] || m).join("＋");
       }
 
       async function renderSharedEntry() {
@@ -493,14 +548,15 @@
           if (!countError && typeof count === "number") rank = count + 1;
         } catch (e) { /* rank is optional */ }
 
-        const scoreText = `${data.score} / ${data.total}`;
+        const isSprint = data.mode === "sprint";
+        const scoreText = isSprint ? `${data.score} 分` : `${data.score} / ${data.total}`;
         const timeText = data.time_taken != null ? `${data.time_taken}s` : "—";
         const dateText = data.created_at ? new Date(data.created_at).toLocaleDateString() : "";
         const el = document.getElementById("sharedEntry");
         el.innerHTML = `
           <div class="shared-name">${esc(data.name)}</div>
           <div class="shared-score">${scoreText}</div>
-          <div class="shared-meta">${modeLabel(data.mode)} · 用時 ${timeText} · ${dateText}</div>
+          <div class="shared-meta">${modeLabel(data.mode)} · ${isSprint ? `答對 ${data.total} 題` : `共答 ${data.total} 題`} · 用時 ${timeText} · ${dateText}</div>
           ${rank !== null ? `<div class="shared-rank">排名 第 ${rank} 位</div>` : ""}
         `;
         el.classList.remove("hidden");
@@ -562,6 +618,21 @@
         qWrap.innerHTML = html;
         qWrap.classList.remove("hidden");
       }
+
+      ["listInfinite", "listSprint"].forEach((id) => {
+        document.getElementById(id).addEventListener("click", (e) => {
+          const btn = e.target && e.target.closest ? e.target.closest(".page-btn") : null;
+          if (!btn || btn.dataset.board !== id) return;
+          const state = boardPages[id];
+          if (!state) return;
+          const maxPage = Math.ceil(state.rows.length / PAGE_SIZE) - 1;
+          const next = Math.min(Math.max(state.page + Number(btn.dataset.dir), 0), maxPage);
+          if (next !== state.page) {
+            state.page = next;
+            renderPage(id, { infinite: id === "listInfinite" });
+          }
+        });
+      });
 
       document.getElementById("sharedQuestions").addEventListener("click", (e) => {
         const btn = e.target && e.target.closest ? e.target.closest(".review-filter") : null;
