@@ -38,7 +38,8 @@
     }
     .leaderboard-item {
       display: grid;
-      grid-template-columns: 2.2rem minmax(0, 1fr) 7.5rem 3.5rem 4rem 5.5rem;
+      grid-template-columns: 2.2rem minmax(0, 15rem) 9rem 4.5rem 5rem 6.5rem;
+      justify-content: space-between;
       gap: 0.9rem;
       align-items: center;
       padding: 0.9rem 1rem;
@@ -50,7 +51,8 @@
     .leaderboard-item:hover { transform: translateX(5px); }
     .leaderboard-head {
       display: grid;
-      grid-template-columns: 2.2rem minmax(0, 1fr) 7.5rem 3.5rem 4rem 5.5rem;
+      grid-template-columns: 2.2rem minmax(0, 15rem) 9rem 4.5rem 5rem 6.5rem;
+      justify-content: space-between;
       gap: 0.9rem;
       align-items: center;
       padding: 0 1rem 0.6rem;
@@ -63,7 +65,7 @@
     /* infinite list: 7 columns with the category column */
     .leaderboard-item.item-infinite,
     .leaderboard-head.head-infinite {
-      grid-template-columns: 2.2rem minmax(0, 1fr) minmax(0, 5rem) 5rem 3.5rem 4rem 5.5rem;
+      grid-template-columns: 2.2rem minmax(0, 13rem) minmax(0, 6rem) 5rem 4rem 4.5rem 6rem;
     }
     .leaderboard-cat {
       font-size: 1.05rem;
@@ -114,8 +116,8 @@
       font-variant-numeric: tabular-nums;
     }
     .leaderboard-item.top {
-      background: var(--red);
-      border-color: var(--lasalle-red-dark);
+      background: #e0524a;
+      border-color: #c74340;
     }
     .leaderboard-item.top .leaderboard-rank,
     .leaderboard-item.top .leaderboard-name,
@@ -189,8 +191,8 @@
     }
     .lb-tab:hover { border-color: var(--red); }
     .lb-tab.active {
-      background: var(--red);
-      border-color: var(--lasalle-red-dark);
+      background: #e0524a;
+      border-color: #c74340;
       color: #ffffff;
     }
     .dark-mode .leaderboard-meta,
@@ -203,8 +205,8 @@
       background: #2b303b;
     }
     .dark-mode .lb-tab.active {
-      background: var(--red);
-      border-color: var(--lasalle-red-dark);
+      background: #e0524a;
+      border-color: #c74340;
     }
     .shared-entry {
       margin-bottom: 1.5rem;
@@ -252,8 +254,8 @@
       color: #f28779;
     }
     .dark-mode .leaderboard-item.top {
-      background: var(--red);
-      border-color: var(--lasalle-red-dark);
+      background: #e0524a;
+      border-color: #c74340;
     }
     .dark-mode .shared-entry {
       border-color: #a87fd6;
@@ -320,8 +322,8 @@
     }
     .review-filter:hover { border-color: var(--purple); }
     .review-filter.active {
-      background: var(--red);
-      border-color: var(--lasalle-red-dark);
+      background: #e0524a;
+      border-color: #c74340;
       color: #ffffff;
     }
     .sq-list {
@@ -343,8 +345,8 @@
       background: #2b303b;
     }
     .dark-mode .review-filter.active {
-      background: var(--red);
-      border-color: var(--lasalle-red-dark);
+      background: #e0524a;
+      border-color: #c74340;
     }
     .sq-badge {
       flex: none;
@@ -392,8 +394,8 @@
       color: #f28779;
     }
     .dark-mode .leaderboard-item.top {
-      background: var(--red);
-      border-color: var(--lasalle-red-dark);
+      background: #e0524a;
+      border-color: #c74340;
     }
   </style>
   </head>
@@ -546,7 +548,7 @@
       function modeIcon(mode) {
         if (mode === "both") return "⑧❀";
         if (mode === "sprint") return "⏱";
-        return (mode || "").split("+").map((m) => BANK_ICONS[m] || m).join("＋");
+        return (mode || "").split("+").map((m) => BANK_ICONS[m] || m).join("");
       }
 
       async function renderSharedEntry() {
