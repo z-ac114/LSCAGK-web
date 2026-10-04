@@ -1239,8 +1239,9 @@
         // mode UI: the 60s mode = fixed pool (no selection); the infinite mode = pick banks
         function updateModeUI() {
           const sprint = $("modeSprintToggle").checked;
-          $("bankSection").classList.toggle("hidden", !sprint ? false : true);
-          $("modeNote").classList.toggle("hidden", !sprint ? true : false);
+          // the 60s mode: banks hidden + the fixed-pool note; the infinite mode: banks shown
+          $("bankSection").classList.toggle("hidden", sprint);
+          $("modeNote").classList.toggle("hidden", !sprint);
         }
         $("modeSprintToggle").addEventListener("change", updateModeUI);
         $("modeInfiniteToggle").addEventListener("change", updateModeUI);
