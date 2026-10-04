@@ -12,7 +12,7 @@
     <title>排行榜 | AGK 學術時事及常識問答隊</title>
   <style>
     .leaderboard-container {
-      max-width: 860px;
+      max-width: 1000px;
       margin: 0 auto;
       padding: 2rem 1rem;
     }
@@ -63,14 +63,30 @@
     /* infinite list: 7 columns with the category column */
     .leaderboard-item.item-infinite,
     .leaderboard-head.head-infinite {
-      grid-template-columns: 2.2rem minmax(0, 1fr) minmax(0, 11rem) 5rem 3.5rem 4rem 5.5rem;
+      grid-template-columns: 2.2rem minmax(0, 1fr) minmax(0, 5rem) 5rem 3.5rem 4rem 5.5rem;
     }
     .leaderboard-cat {
-      font-size: 0.85rem;
-      color: #4a4f58;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      font-size: 1.05rem;
+      color: var(--ink);
+      letter-spacing: 0.08em;
       white-space: nowrap;
+      position: relative;
+      cursor: help;
+    }
+    .leaderboard-cat:hover::after {
+      content: attr(data-full);
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 0;
+      background: var(--ink);
+      color: #ffffff;
+      padding: 4px 10px;
+      border-radius: 0.25rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      white-space: nowrap;
+      z-index: 60;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
     }
     .leaderboard-rank {
       font-weight: 700;
@@ -455,7 +471,7 @@
           const timeText = r.time_taken != null ? `${r.time_taken}s` : "—";
           const dateText = r.created_at ? new Date(r.created_at).toLocaleDateString() : "";
           const isTop = rank <= 3;
-          const cat = infinite ? `<span class="leaderboard-cat">${esc(modeLabel(r.mode))}</span>` : "";
+          const cat = infinite ? `<span class="leaderboard-cat" data-full="${esc(modeLabel(r.mode))}" title="${esc(modeLabel(r.mode))}">${modeIcon(r.mode)}</span>` : "";
           return `
             <div class="leaderboard-item ${infinite ? 'item-infinite' : ''} ${isTop ? 'top' : ''}">
               <span class="leaderboard-rank">${rank}</span>
@@ -519,10 +535,18 @@
       }
 
       function modeLabel(mode) {
-        const short = { normal: "第八屆", spring: "春季", zijing9: "第九屆", national: "國情", longtrek: "長征" };
-        if (mode === "both") return "第八屆＋春季";
+        const names = { normal: "第八屆紫荊杯", spring: "春季題庫", zijing9: "第九屆紫荊杯", national: "國情知識問答比賽", longtrek: "長征閱讀材料" };
+        if (mode === "both") return "第八屆紫荊杯＋春季題庫";
         if (mode === "sprint") return "60秒挑戰";
-        return (mode || "").split("+").map((m) => short[m] || m).join("＋");
+        return (mode || "").split("+").map((m) => names[m] || m).join("＋");
+      }
+
+      // compact bank icons for the category column (hover shows the full name)
+      const BANK_ICONS = { normal: "⑧", spring: "❀", zijing9: "⑨", national: "⚲", longtrek: "⚑" };
+      function modeIcon(mode) {
+        if (mode === "both") return "⑧❀";
+        if (mode === "sprint") return "⏱";
+        return (mode || "").split("+").map((m) => BANK_ICONS[m] || m).join("＋");
       }
 
       async function renderSharedEntry() {
