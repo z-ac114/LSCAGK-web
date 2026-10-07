@@ -760,6 +760,10 @@
                 <input type="checkbox" id="bankLongtrekToggle" />
                 <span>長征閱讀材料 <span class="quiz-start-count" id="bankLongtrekCount"></span></span>
               </label>
+              <label class="quiz-start-option">
+                <input type="checkbox" id="bankLongtrek2Toggle" />
+                <span>長征閱讀材料（二） <span class="quiz-start-count" id="bankLongtrek2Count"></span></span>
+              </label>
             </div>
           </div>
           <div class="quiz-modal-footer">
@@ -801,7 +805,7 @@
           return (typeof window[varName] !== "undefined" && Array.isArray(window[varName])) ? window[varName] : [];
         }
 
-        function buildQuestions(useNormal, useSpring, useZijing9, useNational, useLongtrek, singleOnly) {
+        function buildQuestions(useNormal, useSpring, useZijing9, useNational, useLongtrek, singleOnly, useLongtrek2) {
           // merge selected banks into this run's pool, dropping exact duplicate questions
           let base = [];
           const seen = new Set();
@@ -811,6 +815,7 @@
           if (useZijing9) banks.push(bankOrEmpty("ZIJING9_QUESTION_BANK"));
           if (useNational) banks.push(bankOrEmpty("NATIONAL_QUESTION_BANK"));
           if (useLongtrek) banks.push(bankOrEmpty("LONG_TREK_QUESTION_BANK"));
+          if (useLongtrek2) banks.push(bankOrEmpty("LONG_TREK2_QUESTION_BANK"));
           for (const b of banks) {
             for (const q of b) {
               if (!seen.has(q.q)) {
@@ -1200,6 +1205,7 @@
             ["bankZijing9Count", "ZIJING9_QUESTION_BANK", "bankZijing9Toggle"],
             ["bankNationalCount", "NATIONAL_QUESTION_BANK", "bankNationalToggle"],
             ["bankLongtrekCount", "LONG_TREK_QUESTION_BANK", "bankLongtrekToggle"],
+            ["bankLongtrek2Count", "LONG_TREK2_QUESTION_BANK", "bankLongtrek2Toggle"],
           ];
           // defeat browser form restoration on reload: reset the toggles to the defaults
           $("bankNormalToggle").checked = true;
@@ -1275,11 +1281,12 @@
             const useZijing9 = $("bankZijing9Toggle").checked && !$("bankZijing9Toggle").disabled;
             const useNational = $("bankNationalToggle").checked && !$("bankNationalToggle").disabled;
             const useLongtrek = $("bankLongtrekToggle").checked && !$("bankLongtrekToggle").disabled;
-            if (!useNormal && !useSpring && !useZijing9 && !useNational && !useLongtrek) {
+            const useLongtrek2 = $("bankLongtrek2Toggle").checked && !$("bankLongtrek2Toggle").disabled;
+            if (!useNormal && !useSpring && !useZijing9 && !useNational && !useLongtrek && !useLongtrek2) {
               showToast("請選擇至少一個題庫");
               return;
             }
-            if (!buildQuestions(useNormal, useSpring, useZijing9, useNational, useLongtrek)) {
+            if (!buildQuestions(useNormal, useSpring, useZijing9, useNational, useLongtrek, false, useLongtrek2)) {
               showToast("題庫載入失敗，請重新整理頁面");
               return;
             }
@@ -1289,6 +1296,7 @@
             if (useZijing9) active.push("zijing9");
             if (useNational) active.push("national");
             if (useLongtrek) active.push("longtrek");
+            if (useLongtrek2) active.push("longtrek2");
             currentMode = active.length === 2 && useNormal && useSpring ? "both" : active.join("+");
           }
           started = true;
@@ -1424,17 +1432,19 @@
             }
           });
 
-          if (wrongItems.length === 0) {
-            showToast("沒有錯題可匯出");
+          const freshPdf = filterFreshWrong(wrongItems);
+          if (freshPdf.length === 0) {
+            showToast("沒有新錯題（之前的錯題都已匯出過）");
             return;
           }
+          const wrongItemsFresh = freshPdf;
 
           const win = window.open("", "_blank", "width=800,height=900");
           if (!win) {
             alert("請允許彈出視窗以匯出 PDF。");
             return;
           }
-          const itemsHtml = wrongItems.map((it) => `
+          const itemsHtml = wrongItemsFresh.map((it) => `
             <div class="item">
               <p class="q">${it.n}. ${esc(it.q)}</p>
               <p class="a">答：${esc(it.a)}</p>
@@ -1468,13 +1478,35 @@
     <span class="stamp">訓練時間：${runDate}</span>
   </div>
   <h1>錯題複習</h1>
-  <p class="meta">共 ${wrongItems.length} 題 · 使用瀏覽器列印對話框可另存為 PDF</p>
+  <p class="meta">共 ${wrongItemsFresh.length} 題 · 使用瀏覽器列印對話框可另存為 PDF</p>
   ${itemsHtml}
   <script>window.onload = function () { window.print(); };<\/script>
 </body>
 </html>`);
           win.document.close();
         });
+
+        // already-exported wrong questions (persists across runs so exports never stack)
+        function getExportedKeys() {
+          try {
+            return new Set(JSON.parse(localStorage.getItem("exportedWrongKeys") || "[]"));
+          } catch (e) {
+            return new Set();
+          }
+        }
+        function saveExportedKeys(keys) {
+          localStorage.setItem("exportedWrongKeys", JSON.stringify([...keys]));
+        }
+        function filterFreshWrong(wrongItems) {
+          const exportedKeys = getExportedKeys();
+          const fresh = wrongItems.filter((it) => {
+            const key = it.q + "|" + JSON.stringify(it.a);
+            return !exportedKeys.has(key);
+          });
+          for (const it of fresh) exportedKeys.add(it.q + "|" + JSON.stringify(it.a));
+          saveExportedKeys(exportedKeys);
+          return fresh;
+        }
 
         $("exportWrongBtn").addEventListener("click", () => {
           // Build wrong questions in database.js format
@@ -1504,7 +1536,13 @@
             }
           });
 
-          const blob = new Blob([JSON.stringify(wrongItems, null, 2)], { type: 'application/json' });
+          const fresh = filterFreshWrong(wrongItems);
+          if (fresh.length === 0) {
+            showToast("沒有新錯題（之前的錯題都已匯出過）");
+            return;
+          }
+
+          const blob = new Blob([JSON.stringify(fresh, null, 2)], { type: 'application/json' });
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
