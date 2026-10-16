@@ -641,7 +641,7 @@
                 <div class="quiz-timer-container" id="timerContainer">
                   <div class="quiz-timer-circle">
                     <svg viewBox="0 0 80 80"><circle class="bg" cx="40" cy="40" r="36"></circle><circle class="progress" id="timerCircle" cx="40" cy="40" r="36"></circle></svg>
-                    <div class="quiz-timer-text"><span id="currentTimeText">1:00</span></div>
+                    <div class="quiz-timer-text"><span id="currentTimeText">3:00</span></div>
                   </div>
                   <div class="quiz-timer-meta">
                     <span id="sprintStats" hidden>得分 <b id="marksText">0</b><span class="combo-badge none" id="comboBadge">連擊 ×<span id="streakText">0</span></span></span>
@@ -734,48 +734,9 @@
       <div class="quiz-modal" id="startModal">
         <div class="quiz-modal-content">
           <div class="quiz-modal-header">
-            <span class="quiz-modal-title">選擇模式</span>
+            <span class="quiz-modal-title">比賽模式</span>
           </div>
-          <div class="quiz-start-options">
-            <label class="quiz-start-option">
-              <input type="radio" name="gameMode" id="modeSprintToggle" checked />
-              <span>60秒挑戰 <span class="quiz-start-count">連擊計分 · 上限 100 · 固定題庫</span></span>
-            </label>
-            <label class="quiz-start-option">
-              <input type="radio" name="gameMode" id="modeInfiniteToggle" />
-              <span>無限模式 <span class="quiz-start-count">可選題庫</span></span>
-            </label>
-          </div>
-          <div class="quiz-start-note hidden" id="modeNote">60秒挑戰使用固定題庫：第九屆紫荊杯＋長征閱讀材料（單選題），無需選擇。</div>
-          <div class="quiz-start-banks hidden" id="bankSection">
-            <p class="quiz-start-banks-label">無限模式題庫（可選多個）：</p>
-            <div class="quiz-start-options">
-              <label class="quiz-start-option">
-                <input type="checkbox" id="bankNormalToggle" checked />
-                <span>第八屆紫荊杯 <span class="quiz-start-count" id="bankNormalCount"></span></span>
-              </label>
-              <label class="quiz-start-option">
-                <input type="checkbox" id="bankSpringToggle" />
-                <span>春季題庫 <span class="quiz-start-count" id="bankSpringCount"></span></span>
-              </label>
-              <label class="quiz-start-option">
-                <input type="checkbox" id="bankZijing9Toggle" />
-                <span>第九屆紫荊杯 <span class="quiz-start-count" id="bankZijing9Count"></span></span>
-              </label>
-              <label class="quiz-start-option">
-                <input type="checkbox" id="bankNationalToggle" />
-                <span>國情知識問答比賽 <span class="quiz-start-count" id="bankNationalCount"></span></span>
-              </label>
-              <label class="quiz-start-option">
-                <input type="checkbox" id="bankLongtrekToggle" />
-                <span>長征閱讀材料 <span class="quiz-start-count" id="bankLongtrekCount"></span></span>
-              </label>
-              <label class="quiz-start-option">
-                <input type="checkbox" id="bankLongtrek2Toggle" />
-                <span>長征閱讀材料（二） <span class="quiz-start-count" id="bankLongtrek2Count"></span></span>
-              </label>
-            </div>
-          </div>
+          <div class="quiz-start-note" id="modeNote">3分鐘挑戰（連擊計分 · 上限 100）使用固定題庫：第九屆紫荊杯（單選題），無需選擇。</div>
           <div class="quiz-modal-footer">
             <button class="quiz-btn" id="startQuizBtn">開始比賽</button>
           </div>
@@ -783,18 +744,8 @@
       </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="/competition/questions.js"></script>
-    <script src="questions.js"></script>
-    <script src="/competition/spring.js"></script>
-    <script src="spring.js"></script>
     <script src="/competition/zijing9.js"></script>
     <script src="zijing9.js"></script>
-    <script src="/competition/national.js"></script>
-    <script src="national.js"></script>
-    <script src="/competition/longtrek.js"></script>
-    <script src="longtrek.js"></script>
-    <script src="/competition/longtrek2.js"></script>
-    <script src="longtrek2.js"></script>
       <script>
         const LETTERS = ["A", "B", "C", "D", "E", "F"];
         const SUPABASE_URL = "https://oajvxavzsomymqunpgxx.supabase.co";
@@ -879,7 +830,7 @@
           return true;
         }
 
-        if (!buildQuestions(true, false)) {
+        if (!buildQuestions(false, false, true, false, false, true)) {
           // error already shown
         }
 
@@ -892,21 +843,21 @@
         let elapsedId = null;
         let runDetails = [];
 
-        // game modes: "sprint" (60s combo) | "infinite"
+        // game mode: "sprint" (3-min combo) — the only enabled mode
         let gameMode = "sprint";
         let sprintState = [];
         let streak = 0;
         let marks = 0;
         let maxStreak = 0;
         let sprintTimerId = null;
-        let sprintTimeLeft = 60;
+        let sprintTimeLeft = 180;
         let advanceTimerId = null;
         let sprintBanksLabel = "";
         let finalCorrect = 0;
         let finalAnswered = 0;
         let finalTotal = 0;
         let finalMarks = 0;
-        const SPRINT_SECONDS = 60;
+        const SPRINT_SECONDS = 180;
 
         const $ = (id) => document.getElementById(id);
 
@@ -1216,111 +1167,17 @@
           renderReview();
         });
 
-        // ---- bank counts + password gates (used by the infinite mode) ----
-        const countUsable = (bank) =>
-          (Array.isArray(bank) ? bank : []).filter((q) => Array.isArray(q.options) && q.options.length >= 2).length;
-
-        function updateBankCounts() {
-          const entries = [
-            ["bankNormalCount", "QUESTION_BANK", "bankNormalToggle"],
-            ["bankSpringCount", "SPRING_QUESTION_BANK", "bankSpringToggle"],
-            ["bankZijing9Count", "ZIJING9_QUESTION_BANK", "bankZijing9Toggle"],
-            ["bankNationalCount", "NATIONAL_QUESTION_BANK", "bankNationalToggle"],
-            ["bankLongtrekCount", "LONG_TREK_QUESTION_BANK", "bankLongtrekToggle"],
-            ["bankLongtrek2Count", "LONG_TREK2_QUESTION_BANK", "bankLongtrek2Toggle"],
-          ];
-          // defeat browser form restoration on reload: reset the toggles to the defaults
-          $("bankNormalToggle").checked = true;
-          for (const [countId, varName, toggleId] of entries) {
-            if (toggleId !== "bankNormalToggle") $(toggleId).checked = false;
-            const bank = bankOrEmpty(varName);
-            $(countId).textContent = bank.length ? "（" + countUsable(bank) + " 題）" : "（未載入）";
-            if (!bank.length) $(toggleId).disabled = true;
-          }
-          // and the mode radios: always start on the 60s mode
-          $("modeSprintToggle").checked = true;
-          $("modeInfiniteToggle").checked = false;
-        }
-        updateBankCounts();
-
-        // gated banks: one correct entry unlocks all for this page session; 第九屆紫荊杯 is free
-        const BANK_PASSWORD = "agk2627";
-        let bankPasswordUnlocked = false;
-        let userTouchedMode = false;
-        $("modeSprintToggle").addEventListener("change", () => { userTouchedMode = true; });
-        $("modeInfiniteToggle").addEventListener("change", () => { userTouchedMode = true; });
-        function gateWithPassword(toggleId, label) {
-          $(toggleId).addEventListener("change", () => {
-            const toggle = $(toggleId);
-            if (toggle.checked) {
-              // ignore changes fired by browser form restoration (before any user interaction)
-              if (!userTouchedMode) { toggle.checked = false; return; }
-              if (bankPasswordUnlocked) return;
-              const password = window.prompt("請輸入密碼以使用" + label + "：");
-              if (password === null) {
-                toggle.checked = false;
-                return;
-              }
-              if (password !== BANK_PASSWORD) {
-                toggle.checked = false;
-                window.alert("密碼不正確。");
-                return;
-              }
-              bankPasswordUnlocked = true;
-            }
-          });
-        }
-        gateWithPassword("bankSpringToggle", "春季題庫");
-        gateWithPassword("bankNationalToggle", "國情知識問答比賽");
-        // 第九屆紫荊杯 and 長征閱讀材料 need no password
-
-        // mode UI: the 60s mode = fixed pool (no selection); the infinite mode = pick banks
-        function updateModeUI() {
-          const sprint = $("modeSprintToggle").checked;
-          // the 60s mode: banks hidden + the fixed-pool note; the infinite mode: banks shown
-          $("bankSection").classList.toggle("hidden", sprint);
-          $("modeNote").classList.toggle("hidden", !sprint);
-        }
-        $("modeSprintToggle").addEventListener("change", updateModeUI);
-        $("modeInfiniteToggle").addEventListener("change", updateModeUI);
-        updateModeUI();
-
         // quiz cannot be interacted with before 開始比賽
         let started = false;
 
         function startQuiz() {
-          gameMode = $("modeSprintToggle").checked ? "sprint" : "infinite";
-          if (gameMode === "sprint") {
-            // fixed pool: 第九屆紫荊杯 + 長征閱讀材料, single-choice only
-            if (!buildQuestions(false, false, true, false, true, true)) {
-              showToast("題庫載入失敗，請重新整理頁面");
-              return;
-            }
-            currentMode = "sprint";
-          } else {
-            const useNormal = $("bankNormalToggle").checked && !$("bankNormalToggle").disabled;
-            const useSpring = $("bankSpringToggle").checked && !$("bankSpringToggle").disabled;
-            const useZijing9 = $("bankZijing9Toggle").checked && !$("bankZijing9Toggle").disabled;
-            const useNational = $("bankNationalToggle").checked && !$("bankNationalToggle").disabled;
-            const useLongtrek = $("bankLongtrekToggle").checked && !$("bankLongtrekToggle").disabled;
-            const useLongtrek2 = $("bankLongtrek2Toggle").checked && !$("bankLongtrek2Toggle").disabled;
-            if (!useNormal && !useSpring && !useZijing9 && !useNational && !useLongtrek && !useLongtrek2) {
-              showToast("請選擇至少一個題庫");
-              return;
-            }
-            if (!buildQuestions(useNormal, useSpring, useZijing9, useNational, useLongtrek, false, useLongtrek2)) {
-              showToast("題庫載入失敗，請重新整理頁面");
-              return;
-            }
-            const active = [];
-            if (useNormal) active.push("normal");
-            if (useSpring) active.push("spring");
-            if (useZijing9) active.push("zijing9");
-            if (useNational) active.push("national");
-            if (useLongtrek) active.push("longtrek");
-            if (useLongtrek2) active.push("longtrek2");
-            currentMode = active.length === 2 && useNormal && useSpring ? "both" : active.join("+");
+          gameMode = "sprint";
+          // fixed pool: 第九屆紫荊杯 only, single-choice
+          if (!buildQuestions(false, false, true, false, false, true)) {
+            showToast("題庫載入失敗，請重新整理頁面");
+            return;
           }
+          currentMode = "sprint";
           started = true;
           idx = 0;
           selections = new Array(QUESTIONS.length).fill(null);
@@ -1332,19 +1189,14 @@
           maxStreak = 0;
           runStartTime = Date.now();
           updateSprintStats();
-          const sprint = gameMode === "sprint";
-          $("sprintStats").hidden = !sprint;
-          $("elapsedMeta").hidden = sprint;
+          $("sprintStats").hidden = false;
+          $("elapsedMeta").hidden = true;
           $("progressLabel").textContent = "1/" + QUESTIONS.length;
           $("quizView").classList.remove("hidden");
           $("resultsView").classList.remove("active");
           $("startModal").classList.remove("active");
           render();
-          if (sprint) {
-            startSprintTimer();
-          } else {
-            startElapsedTimer();
-          }
+          startSprintTimer();
         }
 
         $("startQuizBtn").addEventListener("click", startQuiz);

@@ -419,7 +419,7 @@
 
           <div class="lb-tabs" id="lbTabs">
             <button type="button" class="lb-tab active" data-board="listInfinite">無限模式</button>
-            <button type="button" class="lb-tab" data-board="listSprint">60秒挑戰</button>
+            <button type="button" class="lb-tab" data-board="listSprint">3分鐘挑戰</button>
           </div>
 
           <div class="leaderboard-card">
@@ -516,7 +516,7 @@
         renderPage(listId, { infinite: true });
       }
 
-      // 60s sprint mode: its own leaderboard
+      // sprint mode (3 min): its own leaderboard
       async function renderSprint(listId) {
         if (!supabaseClient) {
           document.getElementById(listId).innerHTML = '<div class="leaderboard-empty">排行榜暫不可用（Supabase 未載入），請重新整理。</div>';
@@ -539,7 +539,7 @@
       function modeLabel(mode) {
         const names = { normal: "第八屆紫荊杯", spring: "春季題庫", zijing9: "第九屆紫荊杯", national: "國情知識問答比賽", longtrek: "長征閱讀材料" };
         if (mode === "both") return "第八屆紫荊杯＋春季題庫";
-        if (mode === "sprint") return "60秒挑戰";
+        if (mode === "sprint") return "3分鐘挑戰";
         return (mode || "").split("+").map((m) => names[m] || m).join("＋");
       }
 
