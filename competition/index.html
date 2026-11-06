@@ -63,7 +63,7 @@
       }
       .lobby-rules li:first-child { border-top: 1px solid var(--border); }
       .lobby-rules b { display: block; color: var(--ink); font-size: 1rem; }
-      .lobby-rules span {
+      .lobby-rules div > span {
         display: block;
         margin-top: 0.15rem;
         color: var(--muted);
@@ -71,6 +71,43 @@
         line-height: 1.6;
       }
       .lobby-actions { margin-top: 1.75rem; }
+      /* mode picker */
+      .mode-picker {
+        margin-top: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+      }
+      .mode-card {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 1rem 1.1rem;
+        background: var(--cream);
+        border: 1px solid var(--border);
+        border-radius: 0.375rem;
+        cursor: pointer;
+        font: inherit;
+        color: var(--ink);
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+      }
+      .mode-card:hover { border-color: var(--purple); }
+      .mode-card.active {
+        background: var(--surface);
+        border-color: var(--red);
+        box-shadow: inset 3px 0 0 var(--red);
+      }
+      .mode-card b { display: block; font-size: 1rem; }
+      .mode-card span {
+        display: block;
+        margin-top: 0.15rem;
+        font-size: 0.9rem;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+      .dark-mode .mode-card { background: var(--surface); }
       .lobby-kbd {
         display: none;
         margin: 1.25rem 0 0;
@@ -441,6 +478,7 @@
       .review-summary { font-size: 0.95rem; color: var(--ink); padding-bottom: 0.75rem; }
       .rv-ok { color: #2e7d32; font-weight: 700; }
       .rv-wrong { color: var(--red); font-weight: 700; }
+      .rv-un { color: var(--muted); font-weight: 700; }
       .review-filters {
         display: flex;
         gap: 0.5rem;
@@ -608,15 +646,19 @@
               <!-- Lobby -->
               <div id="lobbyView">
                 <p class="lobby-kicker">COMPETITION MODE</p>
-                <h2 class="lobby-title">三分鐘練習賽</h2>
-                <p class="lobby-sub">限時 3 分鐘，連擊計分，即時批改。</p>
+                <h2 class="lobby-title">競賽模式</h2>
+                <p class="lobby-sub">選擇模式開始練習，即時批改。</p>
+                <div class="mode-picker" id="modePicker">
+                  <button type="button" class="mode-card active" data-mode="sprint" aria-pressed="true">
+                    <b>三分鐘練習賽</b>
+                    <span>限時 3 分鐘，連續答對得「連擊數 × 10」分（單題上限 100），答錯即中斷連擊。</span>
+                  </button>
+                  <button type="button" class="mode-card" data-mode="endless" aria-pressed="false">
+                    <b>無限練習</b>
+                    <span>不限時，逐題作答直到完成全部題目，中途可隨時交卷。</span>
+                  </button>
+                </div>
                 <ul class="lobby-rules">
-                  <li>
-                    <div><b>限時 3 分鐘</b><span>時間一到自動結算，中途可隨時交卷提早結束。</span></div>
-                  </li>
-                  <li>
-                    <div><b>連擊計分</b><span>連續答對得「連擊數 × 10」分，單題上限 100 分；答錯即中斷連擊。</span></div>
-                  </li>
                   <li>
                     <div><b>題目隨機</b><span>第九屆紫荊杯題庫（<span id="lobbyCount">–</span> 題，單選），題序與選項每次練習均隨機。</span></div>
                   </li>
@@ -638,6 +680,8 @@
                       </div>
                       <div class="timer-side">
                         <span id="sprintStats" hidden>得分 <b id="marksText">0</b><span class="combo-badge none" id="comboBadge">連擊 ×<span id="streakText">0</span></span></span>
+                        <span id="endlessStats" hidden>答對 <b id="endlessCorrect">0</b> · 已答 <b id="endlessAnswered">0</b></span>
+                        <span class="timer-side-label" id="timerLabel" hidden>已用時間</span>
                       </div>
                     </div>
                     <div class="quiz-progress">
@@ -850,6 +894,7 @@
         var idx = 0;
         var started = false;
         var finished = false;
+        var gameMode = "sprint"; // "sprint"（限時）| "endless"（無限練習）
         var selections = [];
         var sprintState = [];
         var streak = 0;
@@ -857,9 +902,9 @@
         var maxStreak = 0;
         var sprintTimerId = null;
         var advanceTimerId = null;
+        var elapsedId = null;
         var sprintTimeLeft = SPRINT_SECONDS;
         var runStartTime = 0;
-        var currentMode = "sprint";
         var runDetails = [];
         var finalCorrect = 0;
         var finalAnswered = 0;
@@ -874,6 +919,7 @@
 
         function stopAllTimers() {
           if (sprintTimerId) { clearInterval(sprintTimerId); sprintTimerId = null; }
+          if (elapsedId) { clearInterval(elapsedId); elapsedId = null; }
           if (advanceTimerId) { clearTimeout(advanceTimerId); advanceTimerId = null; }
         }
 
@@ -892,6 +938,25 @@
           }, 1000);
         }
 
+        function startElapsedTimer() {
+          stopAllTimers();
+          $("currentTimeText").textContent = "0:00";
+          setTimerCircleFull();
+          updateSprintUrgency();
+          elapsedId = setInterval(function () {
+            $("currentTimeText").textContent = fmt(Math.round((Date.now() - runStartTime) / 1000));
+          }, 1000);
+        }
+
+        function setTimerCircleFull() {
+          var circle = $("timerCircle");
+          if (!circle) return;
+          var radius = parseFloat(circle.getAttribute("r")) || 32;
+          var circ = 2 * Math.PI * radius;
+          circle.style.strokeDasharray = circ;
+          circle.style.strokeDashoffset = 0;
+        }
+
         function updateSprintCircle() {
           var circle = $("timerCircle");
           if (!circle) return;
@@ -904,8 +969,10 @@
         function updateSprintUrgency() {
           var container = $("timerContainer");
           if (!container) return;
-          container.classList.toggle("warn", sprintTimeLeft <= 20 && sprintTimeLeft > 10);
-          container.classList.toggle("danger", sprintTimeLeft <= 10);
+          var showWarn = gameMode === "sprint" && sprintTimeLeft <= 20 && sprintTimeLeft > 10;
+          var showDanger = gameMode === "sprint" && sprintTimeLeft <= 10;
+          container.classList.toggle("warn", showWarn);
+          container.classList.toggle("danger", showDanger);
         }
 
         function updateSprintStats(gained) {
@@ -927,6 +994,21 @@
             $("sprintStats").appendChild(float);
             setTimeout(function () { float.remove(); }, 950);
           }
+        }
+
+        function updateEndlessStats() {
+          var c = 0;
+          var a = 0;
+          for (var i = 0; i < sprintState.length; i++) {
+            if (sprintState[i] != null) {
+              a++;
+              if (sprintState[i] === "correct") c++;
+            }
+          }
+          var cEl = $("endlessCorrect");
+          var aEl = $("endlessAnswered");
+          if (cEl) cEl.textContent = c;
+          if (aEl) aEl.textContent = a;
         }
 
         /* ===================== 畫面渲染 ===================== */
@@ -977,6 +1059,8 @@
 
           $("prevBtn").disabled = idx === 0;
           $("nextBtn").disabled = finished;
+          $("nextBtn").textContent =
+            gameMode === "endless" && idx === QUESTIONS.length - 1 ? "完 成" : "下一題";
         }
 
         function showToast(msg) {
@@ -993,15 +1077,19 @@
           var isCorrect = choiceIdx === item.correctIndex;
           sprintState[idx] = isCorrect ? "correct" : "wrong";
           selections[idx] = choiceIdx;
-          if (isCorrect) {
-            streak++;
-            var gained = Math.min(streak * 10, 100);
-            marks += gained;
-            if (streak > maxStreak) maxStreak = streak;
-            updateSprintStats(gained);
+          if (gameMode === "sprint") {
+            if (isCorrect) {
+              streak++;
+              var gained = Math.min(streak * 10, 100);
+              marks += gained;
+              if (streak > maxStreak) maxStreak = streak;
+              updateSprintStats(gained);
+            } else {
+              streak = 0;
+              updateSprintStats(0);
+            }
           } else {
-            streak = 0;
-            updateSprintStats(0);
+            updateEndlessStats();
           }
           render();
           // 自動跳到下一題
@@ -1046,18 +1134,30 @@
           });
 
           var wrongCount = runDetails.filter(function (d) { return !d.ok && d.ua != null; }).length;
+          var unansweredCount = QUESTIONS.length - answeredCount;
           finalCorrect = correctCount;
           finalAnswered = answeredCount;
           finalMarks = marks;
 
-          var usedTime = Math.min(Math.round((Date.now() - runStartTime) / 1000), SPRINT_SECONDS);
-          $("scoreBig").textContent = marks + " 分";
-          $("scoreSub").textContent =
-            "答對 " + correctCount + " 題 · 最高連擊 " + maxStreak + " · 共答 " + answeredCount + " 題 · 用時 " + fmt(usedTime);
-          $("reviewSummary").innerHTML =
-            "共答 " + answeredCount + " 題 · <span class='rv-ok'>答對 " + correctCount +
-            "</span> · <span class='rv-wrong'>答錯 " + wrongCount +
-            "</span> · 得分 " + marks;
+          var usedTime = Math.round((Date.now() - runStartTime) / 1000);
+          if (gameMode === "sprint") {
+            $("scoreBig").textContent = marks + " 分";
+            $("scoreSub").textContent =
+              "答對 " + correctCount + " 題 · 最高連擊 " + maxStreak + " · 共答 " + answeredCount + " 題 · 用時 " + fmt(Math.min(usedTime, SPRINT_SECONDS));
+            $("reviewSummary").innerHTML =
+              "共答 " + answeredCount + " 題 · <span class='rv-ok'>答對 " + correctCount +
+              "</span> · <span class='rv-wrong'>答錯 " + wrongCount +
+              "</span> · 得分 " + marks;
+          } else {
+            var pct = Math.round((correctCount / Math.max(QUESTIONS.length, 1)) * 100);
+            $("scoreBig").textContent = correctCount + " / " + QUESTIONS.length;
+            $("scoreSub").textContent =
+              "正確率 " + pct + "% · 用時 " + fmt(usedTime) + " · 共答 " + answeredCount + " 題";
+            $("reviewSummary").innerHTML =
+              "共 " + QUESTIONS.length + " 題 · <span class='rv-ok'>答對 " + correctCount +
+              "</span> · <span class='rv-wrong'>答錯 " + wrongCount +
+              "</span> · <span class='rv-un'>未答 " + unansweredCount + "</span>";
+          }
           renderReview();
 
           $("quizView").classList.add("hidden");
@@ -1104,13 +1204,24 @@
           renderReview();
         });
 
+        /* ===================== 模式選擇 ===================== */
+        $("modePicker").addEventListener("click", function (e) {
+          var btn = e.target && e.target.closest ? e.target.closest(".mode-card") : null;
+          if (!btn || btn.classList.contains("active")) return;
+          gameMode = btn.dataset.mode === "endless" ? "endless" : "sprint";
+          document.querySelectorAll("#modePicker .mode-card").forEach(function (c) {
+            var active = c === btn;
+            c.classList.toggle("active", active);
+            c.setAttribute("aria-pressed", active ? "true" : "false");
+          });
+        });
+
         /* ===================== 開始比賽 ===================== */
         function startQuiz() {
           if (!buildQuestions()) {
             showToast("題庫載入失敗，請重新整理頁面");
             return;
           }
-          currentMode = "sprint";
           started = true;
           finished = false;
           idx = 0;
@@ -1120,14 +1231,27 @@
           marks = 0;
           maxStreak = 0;
           runStartTime = Date.now();
-          updateSprintStats(0);
-          $("sprintStats").hidden = false;
           $("progressLabel").textContent = "1/" + QUESTIONS.length;
+          if (gameMode === "sprint") {
+            $("sprintStats").hidden = false;
+            $("endlessStats").hidden = true;
+            $("timerLabel").hidden = true;
+            updateSprintStats(0);
+          } else {
+            $("sprintStats").hidden = true;
+            $("endlessStats").hidden = false;
+            $("timerLabel").hidden = false;
+            updateEndlessStats();
+          }
           $("lobbyView").classList.add("hidden");
           $("resultsView").classList.add("hidden");
           $("quizView").classList.remove("hidden");
           render();
-          startSprintTimer();
+          if (gameMode === "sprint") {
+            startSprintTimer();
+          } else {
+            startElapsedTimer();
+          }
           window.scrollTo(0, 0);
         }
 
@@ -1151,7 +1275,16 @@
 
         $("submitBtn").addEventListener("click", function () {
           if (finished) return;
-          if (!window.confirm("確定要交卷結束本次比賽？")) return;
+          var msg;
+          if (gameMode === "endless") {
+            var unanswered = sprintState.filter(function (s) { return s == null; }).length;
+            msg = unanswered > 0
+              ? "還有 " + unanswered + " 題未作答，確定交卷？"
+              : "確定交卷結束本次練習？";
+          } else {
+            msg = "確定要交卷結束本次比賽？";
+          }
+          if (!window.confirm(msg)) return;
           finish();
         });
 
@@ -1285,9 +1418,12 @@
             alert("請輸入名字");
             return;
           }
-          var score = finalMarks;
-          var total = finalAnswered;
-          var accuracy = Number((finalCorrect / Math.max(finalAnswered, 1)).toFixed(4));
+          var isSprint = gameMode === "sprint";
+          var score = isSprint ? finalMarks : finalCorrect;
+          var total = isSprint ? finalAnswered : QUESTIONS.length;
+          var accuracy = isSprint
+            ? Number((finalCorrect / Math.max(finalAnswered, 1)).toFixed(4))
+            : Number((finalCorrect / Math.max(QUESTIONS.length, 1)).toFixed(4));
           var timeTaken = Math.round((Date.now() - runStartTime) / 1000);
           var payload = {
             name: name,
@@ -1295,7 +1431,7 @@
             total: total,
             accuracy: accuracy,
             time_taken: timeTaken,
-            mode: currentMode,
+            mode: gameMode,
             details: runDetails
           };
           if (!supabaseClient) {
