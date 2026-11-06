@@ -62,18 +62,6 @@
         border-bottom: 1px solid var(--border);
       }
       .lobby-rules li:first-child { border-top: 1px solid var(--border); }
-      .rule-ico {
-        flex: none;
-        width: 2.5rem;
-        height: 2.5rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        background: var(--rose-soft);
-        font-size: 1.1rem;
-      }
-      .dark-mode .rule-ico { background: #3a2b33; }
       .lobby-rules b { display: block; color: var(--ink); font-size: 1rem; }
       .lobby-rules span {
         display: block;
@@ -620,19 +608,16 @@
               <!-- Lobby -->
               <div id="lobbyView">
                 <p class="lobby-kicker">COMPETITION MODE</p>
-                <h2 class="lobby-title">三分鐘衝刺賽</h2>
+                <h2 class="lobby-title">三分鐘練習賽</h2>
                 <p class="lobby-sub">限時 3 分鐘，連擊計分，即時批改。</p>
                 <ul class="lobby-rules">
                   <li>
-                    <span class="rule-ico" aria-hidden="true">⏱</span>
                     <div><b>限時 3 分鐘</b><span>時間一到自動結算，中途可隨時交卷提早結束。</span></div>
                   </li>
                   <li>
-                    <span class="rule-ico" aria-hidden="true">🔥</span>
                     <div><b>連擊計分</b><span>連續答對得「連擊數 × 10」分，單題上限 100 分；答錯即中斷連擊。</span></div>
                   </li>
                   <li>
-                    <span class="rule-ico" aria-hidden="true">🎲</span>
                     <div><b>題目隨機</b><span>第九屆紫荊杯題庫（<span id="lobbyCount">–</span> 題，單選），題序與選項每次練習均隨機。</span></div>
                   </li>
                 </ul>
@@ -823,7 +808,7 @@
             for (var i = 0; i < bank.length; i++) {
               var item = bank[i];
               if (!item || !Array.isArray(item.options) || item.options.length < 2) continue;
-              if (item.multi === true) continue; // 衝刺賽只出單選題
+              if (item.multi === true) continue; // 練習賽只出單選題
               var correctIdx = resolveCorrect(item);
               if (correctIdx < 0) {
                 console.warn("[競賽模擬] 已跳過無法對應正確答案的題目：", item.q);
