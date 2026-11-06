@@ -71,6 +71,17 @@
         line-height: 1.6;
       }
       .lobby-actions { margin-top: 1.75rem; }
+      .lobby-error {
+        margin-top: 1rem;
+        padding: 0.8rem 1rem;
+        background: var(--rose-soft);
+        border: 1px solid var(--red);
+        border-radius: 0.25rem;
+        color: var(--ink);
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+      .dark-mode .lobby-error { background: #3a221f; }
       /* mode picker */
       .mode-picker {
         margin-top: 1.5rem;
@@ -666,6 +677,9 @@
                 <div class="lobby-actions">
                   <button type="button" class="btn-primary btn-block" id="startQuizBtn">開始比賽</button>
                 </div>
+                <div class="lobby-error hidden" id="lobbyError">
+                  題庫載入失敗，請檢查網絡後重新整理頁面（Ctrl+Shift+R）。
+                </div>
                 <p class="lobby-kbd">桌面版提示：數字鍵 1–4 選擇選項 · 空格鍵下一題 · Backspace 返回上一題</p>
               </div>
 
@@ -778,7 +792,7 @@
     <div class="quiz-toast" id="toast" role="status"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="zijing9.js"></script>
+    <script src="/competition/zijing9.js"></script>
     <script>
       (function () {
         "use strict";
@@ -1218,6 +1232,19 @@
 
         /* ===================== 開始比賽 ===================== */
         function startQuiz() {
+          if (!bankLoaded()) {
+            // 題庫尚未就緒：先嘗試動態載入，成功後自動開始
+            showToast("題庫載入中，請稍候…");
+            ensureBank(function (ok) {
+              if (ok) {
+                refreshLobby();
+                startQuiz();
+              } else {
+                showToast("題庫載入失敗，請重新整理頁面");
+              }
+            });
+            return;
+          }
           if (!buildQuestions()) {
             showToast("題庫載入失敗，請重新整理頁面");
             return;
@@ -1479,13 +1506,35 @@
         });
 
         /* ===================== 初始化 ===================== */
-        if (buildQuestions()) {
-          $("lobbyCount").textContent = String(QUESTIONS.length);
-        } else {
-          $("lobbyCount").textContent = "0";
-          $("questionText").textContent = "題庫載入失敗，請重新整理頁面（Ctrl+Shift+R）。";
-          console.error("題庫載入失敗：ZIJING9_QUESTION_BANK 未載入或內容為空。");
+        function bankLoaded() {
+          return bankOrEmpty("ZIJING9_QUESTION_BANK").length > 0;
         }
+        // 保險機制：若靜態 <script> 因任何原因（路徑、快取）未載入題庫，
+        // 動態再嘗試一次以絕對路徑載入。
+        function ensureBank(done) {
+          if (bankLoaded()) { done(true); return; }
+          var s = document.createElement("script");
+          s.src = "/competition/zijing9.js";
+          s.onload = function () { done(bankLoaded()); };
+          s.onerror = function () { done(false); };
+          document.head.appendChild(s);
+        }
+        function refreshLobby() {
+          if (buildQuestions()) {
+            $("lobbyCount").textContent = String(QUESTIONS.length);
+            $("lobbyError").classList.add("hidden");
+            $("startQuizBtn").disabled = false;
+          } else {
+            $("lobbyCount").textContent = "0";
+            $("lobbyError").classList.remove("hidden");
+            $("startQuizBtn").disabled = true;
+            console.error("題庫載入失敗：ZIJING9_QUESTION_BANK 未載入或內容為空。");
+          }
+        }
+        refreshLobby();
+        ensureBank(function () {
+          refreshLobby();
+        });
       })();
     </script>
   </body>
