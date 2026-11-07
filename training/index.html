@@ -9,15 +9,296 @@
     <link rel="icon" type="image/png" href="../assets/agk-icon.png" />
     <script src="../theme.js"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700;900&display=swap" />
-    <title>訓練資料 | AGK 學術時事及常識問答隊</title>
-    <meta name="description" content="AGK 學術時事及常識問答隊的訓練方向與學習資料。" />
+    <title>資源庫 | AGK 學術時事及常識問答隊</title>
+    <meta name="description" content="AGK 資源庫：集中存放筆記、歷屆試題與溫習資料，密碼保護，可在網頁內直接閱覽。" />
+    <style>
+      /* ---- 資源庫 ---- */
+      .res-section-title {
+        display: flex;
+        align-items: baseline;
+        gap: 0.75rem;
+        font-family: "Noto Serif TC", "Songti TC", serif;
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--purple);
+        margin: 0;
+      }
+      .dark-mode .res-section-title {
+        color: #e7c9ee;
+      }
+      .res-section-note {
+        color: var(--muted);
+        font-size: 0.88rem;
+        margin: 0.2rem 0 0;
+      }
+      .res-grid {
+        display: grid;
+        gap: 1.25rem;
+        grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+        margin-top: 1.4rem;
+      }
+      .res-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+        width: 100%;
+        padding: 1.4rem 1.4rem 1.3rem;
+        text-align: left;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        cursor: pointer;
+        font: inherit;
+        color: var(--ink);
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+      }
+      @media (hover: hover) {
+        .res-card:hover {
+          transform: translateY(-4px);
+          box-shadow: var(--shadow-lg);
+          border-color: var(--plum-soft);
+        }
+      }
+      .res-card:focus-visible {
+        outline: 3px solid var(--school-gold);
+        outline-offset: 2px;
+      }
+      .res-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.6rem;
+      }
+      .res-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        background: var(--rose-soft);
+        color: var(--lasalle-red-dark);
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+      }
+      .dark-mode .res-badge {
+        background: rgb(224 82 74 / 14%);
+        color: #f28779;
+      }
+      .res-badge.extra {
+        background: var(--gold-soft, #efe4c8);
+        color: #7a5c14;
+      }
+      .dark-mode .res-badge.extra {
+        background: rgb(226 187 98 / 16%);
+        color: #e2bb62;
+      }
+      .res-lock {
+        color: var(--muted);
+        opacity: 0.75;
+      }
+      .res-title {
+        font-family: "Noto Serif TC", "Songti TC", serif;
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--purple);
+        margin: 0;
+        line-height: 1.45;
+      }
+      .dark-mode .res-title {
+        color: #e7c9ee;
+      }
+      .res-desc {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+        line-height: 1.7;
+      }
+      .res-meta {
+        margin-top: auto;
+        padding-top: 0.65rem;
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 0.9rem;
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+      .res-hint {
+        margin-top: 1.5rem;
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+      .res-hint svg {
+        vertical-align: -2px;
+        margin-right: 4px;
+      }
+
+      /* ---- Drive 式懸停預覽（只於桌面裝置） ---- */
+      .res-preview {
+        position: fixed;
+        z-index: 95;
+        width: 284px;
+        padding: 0.8rem;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: var(--shadow-lg);
+        opacity: 0;
+        transform: translateY(4px);
+        transition: opacity 160ms ease, transform 160ms ease;
+        pointer-events: none;
+        display: none;
+      }
+      .res-preview.show {
+        display: block;
+      }
+      .res-preview.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .res-preview-img {
+        display: block;
+        width: 100%;
+        height: 300px;
+        object-fit: contain;
+        object-position: top center;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #f6f5f8;
+      }
+      .dark-mode .res-preview-img {
+        background: #262230;
+      }
+      .res-preview-title {
+        margin: 0.6rem 0 0;
+        font-family: "Noto Serif TC", "Songti TC", serif;
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: var(--purple);
+        line-height: 1.4;
+      }
+      .dark-mode .res-preview-title {
+        color: #e7c9ee;
+      }
+      .res-preview-meta {
+        margin-top: 0.25rem;
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+      @media (hover: none) {
+        .res-preview {
+          display: none !important;
+        }
+      }
+
+      /* ---- 閱覽器（全頁覆蓋） ---- */
+      .viewer {
+        position: fixed;
+        inset: 0;
+        z-index: 120;
+        display: none;
+        flex-direction: column;
+        background: rgb(20 14 30 / 72%);
+        -webkit-backdrop-filter: blur(6px);
+        backdrop-filter: blur(6px);
+        padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+      }
+      .viewer.open {
+        display: flex;
+      }
+      .viewer-sheet {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        background: var(--surface);
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 24px 80px rgb(0 0 0 / 40%);
+      }
+      .viewer-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.65rem 0.9rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface);
+      }
+      .viewer-title {
+        flex: 1;
+        min-width: 0;
+        font-family: "Noto Serif TC", "Songti TC", serif;
+        font-weight: 700;
+        color: var(--purple);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 0.95rem;
+      }
+      .dark-mode .viewer-title {
+        color: #e7c9ee;
+      }
+      .viewer-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 2.4rem;
+        padding: 0 0.95rem;
+        border-radius: 9999px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--ink);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        transition: border-color 150ms ease, background 150ms ease;
+        text-decoration: none;
+      }
+      .viewer-btn:hover {
+        border-color: var(--purple);
+      }
+      .viewer-btn.primary {
+        background: var(--red);
+        border-color: var(--red);
+        color: #ffffff;
+      }
+      .viewer-btn.primary:hover {
+        background: var(--lasalle-red-dark);
+        border-color: var(--lasalle-red-dark);
+      }
+      .viewer-frame {
+        flex: 1;
+        min-height: 0;
+        width: 100%;
+        border: 0;
+        background: #525659;
+      }
+      @media (max-width: 640px) {
+        .viewer {
+          padding: 0.5rem;
+        }
+        .viewer-btn span.label {
+          display: none;
+        }
+        .viewer-btn {
+          padding: 0 0.75rem;
+        }
+      }
+    </style>
   </head>
   <body>
     <div class="flex min-h-screen flex-col bg-cream text-ink">
       <header class="sticky top-0 z-50 bg-purple text-cream">
         <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <a class="flex min-h-11 items-center gap-2 font-serif text-lg font-semibold tracking-wide" href="/"><img class="brand-icon" src="../assets/agk-icon.png" width="36" height="36" alt="" aria-hidden="true" /><span>AGK <span class="hidden font-sans text-sm font-normal text-plum-soft sm:inline">學術時事及常識問答隊</span></span></a>
-          <nav class="hidden items-center gap-1 md:flex"><a class="min-h-11 rounded-full px-3 py-2 text-sm transition-colors text-cream/90 hover:bg-purple-deep" href="/">隊伍簡介</a><a class="min-h-11 rounded-full px-3 py-2 text-sm transition-colors bg-red text-cream active" href="/training" data-status="active" aria-current="page">訓練資料</a><a class="min-h-11 rounded-full px-3 py-2 text-sm transition-colors text-cream/90 hover:bg-purple-deep" href="/competition/">競賽模擬</a><a class="min-h-11 rounded-full px-3 py-2 text-sm transition-colors text-cream/90 hover:bg-purple-deep" href="/leaderboard/">排行榜</a><a class="min-h-11 rounded-full px-3 py-2 text-sm transition-colors text-cream/90 hover:bg-purple-deep" href="/news">最新消息</a><a class="min-h-11 rounded-full px-3 py-2 text-sm transition-colors text-cream/90 hover:bg-purple-deep" href="/awards">得獎詳情</a><a class="min-h-11 rounded-full px-3 py-2 text-sm transition-colors text-cream/90 hover:bg-purple-deep" href="/contact">聯絡我們</a></nav>
+          <nav class="hidden items-center gap-1 md:flex"><a class="min-h-11 rounded-full px-3 py-2 text-sm transition-colors text-cream/90 hover:bg-purple-deep" href="/">隊伍簡介</a><a class="min-h-11 rounded-full px-3 py-2 text-sm transition-colors bg-red text-cream active" href="/training" data-status="active" aria-current="page">資源庫</a><a class="min-h-11 rounded-full px-3 py-2 text-sm transition-colors text-cream/90 hover:bg-purple-deep" href="/competition/">競賽模擬</a><a class="min-h-11 rounded-full px-3 py-2 text-sm transition-colors text-cream/90 hover:bg-purple-deep" href="/leaderboard/">排行榜</a><a class="min-h-11 rounded-full px-3 py-2 text-sm transition-colors text-cream/90 hover:bg-purple-deep" href="/news">最新消息</a><a class="min-h-11 rounded-full px-3 py-2 text-sm transition-colors text-cream/90 hover:bg-purple-deep" href="/awards">得獎詳情</a><a class="min-h-11 rounded-full px-3 py-2 text-sm transition-colors text-cream/90 hover:bg-purple-deep" href="/contact">聯絡我們</a></nav>
           <button type="button" class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md md:hidden" aria-expanded="false" aria-label="開啟選單"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-menu size-6" aria-hidden="true"><path d="M4 12h16"></path><path d="M4 18h16"></path><path d="M4 6h16"></path></svg></button>
         </div>
         <div class="stripes h-3 w-full" aria-hidden="true"></div>
@@ -25,30 +306,26 @@
       <main class="flex-1">
         <section class="bg-purple px-4 py-16 text-cream sm:px-6 sm:py-20">
           <div class="mx-auto max-w-3xl text-center">
-            <p class="text-sm tracking-[0.2em] text-plum-soft">TRAINING MATERIALS</p>
-            <h1 class="mt-3 font-serif text-4xl font-bold sm:text-5xl">訓練資料</h1>
-            <p class="mt-4 text-lg text-plum-soft">把知識整理成可以理解、聯想與應用的能力。</p>
+            <p class="text-sm tracking-[0.2em] text-plum-soft">RESOURCES</p>
+            <h1 class="mt-3 font-serif text-4xl font-bold sm:text-5xl">資源庫</h1>
+            <p class="mt-4 text-lg text-plum-soft">筆記與參考資料集中存放，密碼保護，網頁內直接閱覽。</p>
           </div>
         </section>
         <div class="stripes h-3 w-full" aria-hidden="true"></div>
-        <section class="bg-cream px-4 py-16 sm:px-6">
-          <div class="mx-auto max-w-6xl">
-            <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              <article class="rounded-xl border border-border bg-surface p-6 shadow-sm"><p class="text-sm font-semibold text-red">01 · 歷史</p><h2 class="mt-3 font-serif text-2xl text-purple">古今史料分析</h2><p class="mt-3 leading-relaxed text-muted">從歷史事件中學習經驗與教訓，培養批判性思維與歷史視野。</p></article>
-              <article class="rounded-xl border border-border bg-surface p-6 shadow-sm"><p class="text-sm font-semibold text-red">02 · 常識</p><h2 class="mt-3 font-serif text-2xl text-purple">跨科常識地圖</h2><p class="mt-3 leading-relaxed text-muted">連結科學、歷史、地理、藝術與生活知識，建立靈活的聯想網絡，減少知識孤島。</p></article>
-              <article class="rounded-xl border border-border bg-surface p-6 shadow-sm"><p class="text-sm font-semibold text-red">03 · 賽場</p><h2 class="mt-3 font-serif text-2xl text-purple">模擬賽及友賽</h2><p class="mt-3 leading-relaxed text-muted">透過快問快答與模擬賽練習聽題、答題，賽後再針對節奏與失誤逐項整理。</p></article>
-            </div>
-          </div>
-        </section>
-        <div class="stripes h-3 w-full" aria-hidden="true"></div>
-        <section class="bg-cream px-4 py-16 sm:px-6">
+        <section class="bg-cream px-4 py-14 sm:px-6 sm:py-16">
           <div class="mx-auto max-w-5xl">
-            <article class="rounded-xl border border-border bg-surface p-6 shadow-sm sm:p-8">
-              <p class="text-sm font-semibold tracking-wide text-red">學習資源</p>
-              <h2 class="mt-2 font-serif text-3xl text-purple">歷屆試題</h2>
-              <p class="mt-3 max-w-2xl leading-relaxed text-muted">整理歷屆試題及相關練習，方便隊員重溫題型與訓練答題節奏。</p>
-              <a id="past-papers-link" class="mt-5 inline-flex min-h-11 items-center rounded-full bg-red px-5 py-3 text-sm font-semibold text-cream" href="/assets/mock1.pdf" target="_blank" rel="noopener noreferrer">開啟歷屆試題 PDF</a>
-            </article>
+            <h2 class="res-section-title">隊伍資源</h2>
+            <p class="res-section-note">競賽參考資料與練習資源。</p>
+            <div class="res-grid" id="resGrid"></div>
+
+            <h2 class="res-section-title" style="margin-top: 3rem;">延伸資料</h2>
+            <p class="res-section-note">非隊伍相關的個人研習資料。</p>
+            <div class="res-grid" id="resGridExtra"></div>
+
+            <p class="res-hint">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              所有資料受密碼保護 · 桌面裝置可懸停預覽首頁 · 開啟後可於本頁直接閱覽、另開視窗或下載
+            </p>
           </div>
         </section>
       </main>
@@ -65,7 +342,7 @@
             <p class="text-sm font-semibold text-cream">導覽</p>
             <ul class="mt-3 space-y-2 text-sm">
               <li><a href="/" class="text-cream">隊伍簡介</a></li>
-              <li><a href="/training">訓練資料</a></li>
+              <li><a href="/training">資源庫</a></li>
               <li><a href="/competition/">競賽模擬</a></li>
               <li><a href="/leaderboard/">排行榜</a></li>
               <li><a href="/news">最新消息</a></li>
@@ -85,5 +362,265 @@
         </p>
       </footer>
     </div>
+
+    <!-- 懸停預覽（Drive 式） -->
+    <div class="res-preview" id="resPreview" aria-hidden="true">
+      <img class="res-preview-img" id="previewImg" alt="" />
+      <p class="res-preview-title" id="previewTitle"></p>
+      <p class="res-preview-meta" id="previewMeta"></p>
+    </div>
+
+    <!-- PDF 閱覽器 -->
+    <div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-label="資料閱覽器">
+      <div class="viewer-sheet">
+        <div class="viewer-bar">
+          <span class="viewer-title" id="viewerTitle"></span>
+          <a class="viewer-btn" id="viewerNewTab" href="#" target="_blank" rel="noopener noreferrer" title="在新視窗開啟">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            <span class="label">新視窗</span>
+          </a>
+          <a class="viewer-btn" id="viewerDownload" href="#" download title="下載">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span class="label">下載</span>
+          </a>
+          <button type="button" class="viewer-btn primary" id="viewerClose">關閉</button>
+        </div>
+        <iframe class="viewer-frame" id="viewerFrame" title="PDF 閱覽" src="about:blank"></iframe>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        "use strict";
+
+        /* ===================== 資源清單 =====================
+           新增 PDF：
+           1. 把檔案放入 /assets/
+           2.（建議）用 macOS 產生首頁縮圖：
+              qlmanage -t -s 720 -o assets/thumbs "assets/你的檔案.pdf"
+              並改名為簡短英文名，例如 assets/thumbs/my-notes.png
+           3. 在下面加一項（extra: true 會歸入「延伸資料」） */
+        var RESOURCES = [
+          {
+            title: "全港學界國家安全常識挑戰賽 2026-27 參考資料",
+            desc: "310 題 · 16 個分類，涵蓋憲法、基本法、國安法與總體國家安全觀。",
+            file: "/assets/國家安全挑戰賽(2627)-v1.pdf",
+            tag: "競賽資料",
+            date: "2026-11-02",
+            size: "4.3 MB",
+            pages: "25 頁",
+            thumb: "/assets/thumbs/ns-v1.png"
+          },
+          {
+            title: "第二十六屆基本法問答比賽參考資料",
+            desc: "190 題 · 7 個分類，基本法及國民常識網上問答比賽溫習材料。",
+            file: "/assets/第二十六屆基本法問答比賽參考資料-v6.pdf",
+            tag: "競賽資料",
+            date: "2026-11-02",
+            size: "2.5 MB",
+            pages: "16 頁",
+            thumb: "/assets/thumbs/blq-v6.png"
+          },
+          {
+            title: "第五屆「全民國情」知識大賽參考資料",
+            desc: "2066 題 · 9 個分類，全民國情知識大賽完整溫習材料。",
+            file: "/assets/第五屆「全民國情」參考資料-v22.pdf",
+            tag: "競賽資料",
+            date: "2026-11-07",
+            size: "20.5 MB",
+            pages: "141 頁",
+            thumb: "/assets/thumbs/kuoqing-v22.png"
+          },
+          {
+            title: "化學筆記：氧化還原與電解",
+            desc: "Redox & Electrolysis 個人研習筆記（11 個章節）。",
+            file: "/assets/Chemistry Notes (Redox & Electrolysis)-v1.pdf",
+            tag: "化學",
+            date: "2026-11-03",
+            size: "1.3 MB",
+            pages: "15 頁",
+            thumb: "/assets/thumbs/chem-v1.png",
+            extra: true
+          }
+        ];
+
+        var PASSWORD = "agk2627";
+        var SESSION_KEY = "agkResourcesUnlocked";
+
+        var $ = function (id) { return document.getElementById(id); };
+        var grid = $("resGrid");
+        var gridExtra = $("resGridExtra");
+        var viewer = $("viewer");
+        var preview = $("resPreview");
+        var hideTimer = null;
+        var showTimer = null;
+        var lastFocus = null;
+
+        function unlocked() {
+          try {
+            return sessionStorage.getItem(SESSION_KEY) === "1";
+          } catch (e) {
+            return false;
+          }
+        }
+
+        function requestUnlock() {
+          if (unlocked()) return true;
+          var input = window.prompt("此資源受密碼保護，請輸入密碼：");
+          if (input === null) return false;
+          if (input === PASSWORD) {
+            try { sessionStorage.setItem(SESSION_KEY, "1"); } catch (e) { /* 私密模式 */ }
+            return true;
+          }
+          window.alert("密碼不正確。");
+          return false;
+        }
+
+        function openViewer(item) {
+          $("viewerTitle").textContent = item.title;
+          $("viewerNewTab").href = item.file;
+          $("viewerDownload").href = item.file;
+          // #view=FitH：進入時縮放至適寬；原生瀏覽器 PDF 檢視器負責渲染（快速、零依賴）
+          $("viewerFrame").src = item.file + "#view=FitH";
+          lastFocus = document.activeElement;
+          viewer.classList.add("open");
+          document.body.style.overflow = "hidden";
+          hidePreview();
+          $("viewerClose").focus();
+        }
+
+        function closeViewer() {
+          viewer.classList.remove("open");
+          $("viewerFrame").src = "about:blank";
+          document.body.style.overflow = "";
+          if (lastFocus && lastFocus.focus) lastFocus.focus();
+        }
+
+        /* ===================== Drive 式懸停預覽 ===================== */
+        var canHover = window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+        function showPreview(item, card) {
+          var img = $("previewImg");
+          if (!img.getAttribute("src") || img.dataset.file !== item.file) {
+            img.src = item.thumb;
+            img.dataset.file = item.file;
+          }
+          img.alt = item.title + " 首頁預覽";
+          $("previewTitle").textContent = item.title;
+          $("previewMeta").textContent = item.pages + " · " + item.size + " · " + item.date;
+          preview.classList.add("show");
+          // 定位：先放卡片旁，再依面板實際尺寸夾回視窗內
+          preview.style.left = "0px";
+          preview.style.top = "0px";
+          var rect = card.getBoundingClientRect();
+          var pw = preview.offsetWidth;
+          var ph = preview.offsetHeight;
+          var vw = window.innerWidth;
+          var vh = window.innerHeight;
+          var left = rect.right + 14;
+          if (left + pw > vw - 10) left = rect.left - pw - 14;
+          if (left < 10) left = Math.min(Math.max(10, vw - pw - 10), Math.max(10, rect.left));
+          var top = rect.top + rect.height / 2 - ph / 2;
+          top = Math.min(Math.max(10, top), vh - ph - 10);
+          preview.style.left = left + "px";
+          preview.style.top = top + "px";
+          requestAnimationFrame(function () {
+            preview.classList.add("visible");
+          });
+        }
+
+        function hidePreview() {
+          if (showTimer) { clearTimeout(showTimer); showTimer = null; }
+          preview.classList.remove("visible");
+          preview.classList.remove("show");
+        }
+
+        function bindPreview(card, item) {
+          card.addEventListener("mouseenter", function () {
+            if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+            if (showTimer) clearTimeout(showTimer);
+            showTimer = setTimeout(function () {
+              if (!viewer.classList.contains("open")) showPreview(item, card);
+            }, 300);
+          });
+          card.addEventListener("mouseleave", function () {
+            if (showTimer) { clearTimeout(showTimer); showTimer = null; }
+            hideTimer = setTimeout(hidePreview, 80);
+          });
+        }
+
+        /* ===================== 渲染 ===================== */
+        function esc(s) {
+          return String(s == null ? "" : s)
+            .replace(/&/g, "&" + "amp;")
+            .replace(/</g, "&" + "lt;")
+            .replace(/>/g, "&" + "gt;")
+            .replace(/"/g, "&" + "quot;");
+        }
+
+        function cardHtml(item, index) {
+          var badgeClass = item.extra ? "res-badge extra" : "res-badge";
+          return (
+            '<button type="button" class="res-card" data-index="' + index + '" data-extra="' + (item.extra ? "1" : "0") + '" aria-label="開啟「' + esc(item.title) + '（需密碼）">' +
+              '<div class="res-top">' +
+                '<span class="' + badgeClass + '">PDF · ' + esc(item.tag) + "</span>" +
+                '<span class="res-lock" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></span>' +
+              "</div>" +
+              '<h3 class="res-title">' + esc(item.title) + "</h3>" +
+              '<p class="res-desc">' + esc(item.desc) + "</p>" +
+              '<div class="res-meta"><span>' + esc(item.pages) + "</span><span>" + esc(item.size) + "</span><span>" + esc(item.date) + "</span></div>" +
+            "</button>"
+          );
+        }
+
+        function render() {
+          var mainHtml = "";
+          var extraHtml = "";
+          RESOURCES.forEach(function (item, i) {
+            if (item.extra) extraHtml += cardHtml(item, i);
+            else mainHtml += cardHtml(item, i);
+          });
+          grid.innerHTML = mainHtml;
+          gridExtra.innerHTML = extraHtml;
+        }
+
+        function onGridClick(e) {
+          var card = e.target && e.target.closest ? e.target.closest(".res-card") : null;
+          if (!card) return;
+          var index = Number(card.dataset.index);
+          var item = RESOURCES[index];
+          if (!item) return;
+          if (requestUnlock()) openViewer(item);
+        }
+
+        grid.addEventListener("click", onGridClick);
+        gridExtra.addEventListener("click", onGridClick);
+
+        if (canHover) {
+          [grid, gridExtra].forEach(function (g) {
+            g.addEventListener("mouseover", function (e) {
+              var card = e.target && e.target.closest ? e.target.closest(".res-card") : null;
+              if (!card) return;
+              var item = RESOURCES[Number(card.dataset.index)];
+              if (item) bindPreview(card, item);
+            });
+          });
+          document.addEventListener("scroll", hidePreview, { passive: true });
+          document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") hidePreview();
+          });
+        }
+
+        $("viewerClose").addEventListener("click", closeViewer);
+        viewer.addEventListener("click", function (e) {
+          if (e.target === viewer) closeViewer();
+        });
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && viewer.classList.contains("open")) closeViewer();
+        });
+
+        render();
+      })();
+    </script>
   </body>
 </html>

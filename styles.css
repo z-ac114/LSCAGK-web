@@ -73,7 +73,7 @@ body {
   margin: 0;
   background: var(--cream);
   color: var(--ink);
-  font-family: "Noto Sans TC", -apple-system, "Segoe UI", sans-serif;
+  font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", -apple-system, "Segoe UI", sans-serif;
   line-height: 1.5;
   transition: background-color 240ms ease, color 240ms ease;
   text-rendering: optimizeLegibility;
@@ -109,10 +109,10 @@ button {
 
 /* ===================== Utilities ===================== */
 .font-sans {
-  font-family: "Noto Sans TC", -apple-system, "Segoe UI", sans-serif;
+  font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", -apple-system, "Segoe UI", sans-serif;
 }
 .font-serif {
-  font-family: "Noto Serif TC", serif;
+  font-family: "Noto Serif TC", "Songti TC", serif;
 }
 .font-normal {
   font-weight: 400;
@@ -370,6 +370,10 @@ button {
   padding-top: calc(var(--space-unit) * 12);
   padding-bottom: calc(var(--space-unit) * 12);
 }
+.py-14 {
+  padding-top: calc(var(--space-unit) * 14);
+  padding-bottom: calc(var(--space-unit) * 14);
+}
 .py-16 {
   padding-top: calc(var(--space-unit) * 16);
   padding-bottom: calc(var(--space-unit) * 16);
@@ -626,6 +630,7 @@ header.bg-purple .bg-red {
   margin: 0;
 }
 .ls-title {
+  font-family: "Noto Serif TC", "Songti TC", serif;
   font-weight: 900;
   line-height: 1.14;
   letter-spacing: 0.01em;
@@ -706,10 +711,12 @@ header.bg-purple .bg-red {
   box-shadow: var(--shadow-sm);
   transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
 }
-.ls-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--plum-soft);
+@media (hover: hover) {
+  .ls-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--plum-soft);
+  }
 }
 .ls-card h3 {
   font-family: "Noto Serif TC", serif;
@@ -762,9 +769,11 @@ header.bg-purple .bg-red {
   box-shadow: var(--shadow-sm);
   transition: transform 200ms ease, box-shadow 200ms ease;
 }
-.ls-captain:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
+@media (hover: hover) {
+  .ls-captain:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+  }
 }
 .ls-captain h3 {
   font-family: "Noto Serif TC", serif;
