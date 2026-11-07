@@ -671,7 +671,7 @@
                 </div>
                 <ul class="lobby-rules">
                   <li>
-                    <div><b>題目隨機</b><span>第九屆紫荊杯題庫（<span id="lobbyCount">–</span> 題，單選），題序與選項每次練習均隨機。</span></div>
+                    <div><b>題目隨機</b><span>全港學界國家安全常識挑戰賽題庫（<span id="lobbyCount">–</span> 題，單選），題序與選項每次練習均隨機，一次過完整練習全部題目。</span></div>
                   </li>
                 </ul>
                 <div class="lobby-actions">
@@ -699,7 +699,7 @@
                       </div>
                     </div>
                     <div class="quiz-progress">
-                      <span class="quiz-progress-label" id="progressLabel">1/300</span>
+                      <span class="quiz-progress-label" id="progressLabel">1/310</span>
                     </div>
                   </div>
                   <div class="quiz-progress-track"><div class="quiz-progress-dot" id="progressDot"></div></div>
@@ -792,7 +792,7 @@
     <div class="quiz-toast" id="toast" role="status"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="/competition/zijing9.js"></script>
+    <script src="/competition/nschallenge.js"></script>
     <script>
       (function () {
         "use strict";
@@ -855,7 +855,7 @@
           return item.multi === true ? hits : (hits.length === 1 ? hits[0] : -1);
         }
 
-        var BANK_SOURCES = ["ZIJING9_QUESTION_BANK"];
+        var BANK_SOURCES = ["NS_QUESTION_BANK"];
         var QUESTIONS = [];
 
         function buildQuestions() {
@@ -1507,14 +1507,14 @@
 
         /* ===================== 初始化 ===================== */
         function bankLoaded() {
-          return bankOrEmpty("ZIJING9_QUESTION_BANK").length > 0;
+          return bankOrEmpty("NS_QUESTION_BANK").length > 0;
         }
         // 保險機制：若靜態 <script> 因任何原因（路徑、快取）未載入題庫，
         // 動態再嘗試一次以絕對路徑載入。
         function ensureBank(done) {
           if (bankLoaded()) { done(true); return; }
           var s = document.createElement("script");
-          s.src = "/competition/zijing9.js";
+          s.src = "/competition/nschallenge.js";
           s.onload = function () { done(bankLoaded()); };
           s.onerror = function () { done(false); };
           document.head.appendChild(s);
@@ -1528,7 +1528,7 @@
             $("lobbyCount").textContent = "0";
             $("lobbyError").classList.remove("hidden");
             $("startQuizBtn").disabled = true;
-            console.error("題庫載入失敗：ZIJING9_QUESTION_BANK 未載入或內容為空。");
+            console.error("題庫載入失敗：NS_QUESTION_BANK 未載入或內容為空。");
           }
         }
         refreshLobby();
