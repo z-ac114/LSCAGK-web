@@ -1,3 +1,17 @@
+/* =====================================================================
+   AGK 學術時事及常識問答隊 — 「答案卷」設計系統 / Answer-Sheet Modernist
+   生成依據（seed, 64 字元 = 8×8 格）：
+   jheGloE3zHxEqo2dY1KyWk6iDSllewpvYFylXo1syO31yILEx65ZXvXMXIewA0qN
+   · 64 = 8×8 → 模組網格、八格點陣（seed 指紋）
+   · e/x/y 各 6 次 → 「三拍」節奏：三刻度 kicker、三重規線
+   · 唯一雙字母 l（lle）→ 雙線 DNA（紅 + 金）
+   · 27 個相異字元 = 3³ → 三欄卡片、三色刻度
+   · ASCII 65 = "A"（AGK）位於第 49 = 7² 格 → 金色用於「座標/索引」
+   · 無字母 u → 全站直角（半徑 0），印刷質感
+   核心色不變：紫 #542884 · 紅 #d42522 · 金 #c69a3a · 米白 #f4f4f4 · 墨 #3e3e3e
+   ===================================================================== */
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap");
+
 :root {
   --cream: #f4f4f4;
   --ink: #3e3e3e;
@@ -12,14 +26,26 @@
   --space-unit: 0.25rem;
   --school-gold: #c69a3a;
   --lasalle-red-dark: #ae0906;
+  /* seed 衍生（僅透明度與深淺變化，色相不變） */
+  --purple-06: rgb(84 40 132 / 6%);
+  --purple-10: rgb(84 40 132 / 10%);
+  --purple-16: rgb(84 40 132 / 16%);
+  --red-08: rgb(212 37 34 / 8%);
+  --red-14: rgb(212 37 34 / 14%);
+  --gold-14: rgb(198 154 58 / 14%);
+  --gold-soft: #efe4c8;
+  --grid-line: rgb(84 40 132 / 4.5%);
+  --footer-bg: #2b1745;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --radius-sheet: 0px;
 }
 
 /* ---- Scroll reveal (only when JS is active) ---- */
 .js .reveal {
   opacity: 0;
-  transform: translateY(28px);
-  transition: opacity 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
-    transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
+  transform: translateY(16px);
+  transition: opacity 0.6s cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
   transition-delay: var(--reveal-delay, 0ms);
   will-change: opacity, transform;
 }
@@ -39,169 +65,6 @@
   box-sizing: border-box;
 }
 
-/* ---- Main page: La Salle-style sections ---- */
-.ls-hero {
-  background: var(--purple);
-  color: #ffffff;
-  padding: 96px 24px;
-}
-.ls-kicker {
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.22em;
-  color: rgb(255 255 255 / 70%);
-  margin: 0;
-}
-.ls-kicker-red {
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  color: var(--red);
-  margin: 0;
-}
-.ls-title {
-  font-weight: 300;
-  line-height: 1.25;
-  font-size: clamp(34px, 5vw, 54px);
-  letter-spacing: -0.01em;
-  color: #ffffff;
-  margin: 16px 0 0;
-}
-.ls-sub {
-  font-size: 1.125rem;
-  color: rgb(255 255 255 / 85%);
-  margin: 14px 0 0;
-}
-.ls-motto {
-  max-width: 620px;
-  font-size: 1rem;
-  line-height: 1.8;
-  color: rgb(255 255 255 / 90%);
-  margin: 22px 0 0;
-}
-.ls-btn {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  margin-top: 30px;
-  padding: 0 26px;
-  background: var(--red);
-  color: #ffffff;
-  border-radius: 0.25rem;
-  font-size: 0.9rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-}
-.ls-btn:hover { background: var(--lasalle-red-dark); }
-.ls-section {
-  padding: 72px 24px;
-  background: var(--surface);
-}
-.ls-section.ls-gray { background: var(--cream); }
-.ls-heading {
-  font-size: 30px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--ink);
-  margin: 10px 0 0;
-}
-.ls-section-sub { color: var(--muted); margin: 10px 0 0; }
-.ls-grid-3 {
-  display: grid;
-  gap: 22px;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  margin-top: 34px;
-}
-.ls-grid-2 {
-  display: grid;
-  gap: 40px;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  align-items: start;
-}
-.ls-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-top: 3px solid var(--red);
-  padding: 26px;
-  border-radius: 0;
-}
-.ls-card h3 {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--ink);
-  margin: 0;
-}
-.ls-card p {
-  color: var(--muted);
-  font-size: 0.95rem;
-  line-height: 1.75;
-  margin: 10px 0 0;
-}
-.ls-text {
-  color: var(--muted);
-  line-height: 1.8;
-  margin: 16px 0 0;
-}
-.ls-panel {
-  background: var(--purple);
-  color: #ffffff;
-  padding: 32px;
-  border-radius: 0;
-}
-.ls-panel-name {
-  font-size: 1.5rem;
-  font-weight: 400;
-  margin: 14px 0 0;
-}
-.ls-panel-role {
-  font-size: 0.85rem;
-  color: rgb(255 255 255 / 70%);
-  margin: 4px 0 0;
-}
-.ls-panel-text {
-  font-size: 0.95rem;
-  line-height: 1.75;
-  color: rgb(255 255 255 / 90%);
-  margin: 18px 0 0;
-}
-.ls-captain {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  padding: 26px;
-  border-radius: 0;
-}
-.ls-captain h3 {
-  font-size: 1.6rem;
-  font-weight: 400;
-  color: var(--ink);
-  margin: 8px 0 0;
-}
-.ls-captain-role {
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: var(--red);
-  margin: 0;
-}
-.ls-quote {
-  color: var(--muted);
-  font-size: 0.95rem;
-  line-height: 1.75;
-  margin: 14px 0 0;
-}
-.ls-captain-note {
-  color: var(--muted);
-  font-size: 0.9rem;
-  border-top: 1px solid var(--border);
-  padding-top: 14px;
-  margin: 16px 0 0;
-}
-/* dark mode for the La Salle sections */
-.dark-mode .ls-hero { background: #292d38; }
-.dark-mode .ls-card,
-.dark-mode .ls-captain { background: #2b303b; border-color: #454b59; }
-.dark-mode .ls-heading { color: #eef0f4; }
-
 html {
   scroll-behavior: smooth;
 }
@@ -214,11 +77,23 @@ html {
 
 body {
   margin: 0;
-  background: var(--cream);
+  background-color: var(--cream);
   color: var(--ink);
   font-family: "Noto Sans TC", "Lato", sans-serif;
   line-height: 1.5;
   transition: background-color 240ms ease, color 240ms ease;
+}
+
+::selection {
+  background: var(--purple);
+  color: #ffffff;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
 }
 
 a {
@@ -235,6 +110,7 @@ button {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ===================== Utilities ===================== */
 .font-sans {
   font-family: "Noto Sans TC", "Lato", sans-serif;
 }
@@ -315,7 +191,7 @@ button {
   color: rgb(233 217 232 / 80%);
 }
 .text-purple {
-  color: var(--ink);
+  color: var(--purple);
 }
 .text-red {
   color: var(--red);
@@ -324,7 +200,11 @@ button {
   color: var(--rose-soft);
 }
 .bg-cream {
+  /* 答案卷紙面：8px 底格（seed 8×8） */
   background-color: var(--cream);
+  background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 8px 8px;
 }
 .bg-purple {
   background-color: var(--purple);
@@ -352,16 +232,16 @@ button {
   border-top: 1px solid currentColor;
 }
 .shadow-sm {
-  box-shadow: 0 2px 10px rgb(45 36 48 / 7%);
+  box-shadow: 0 1px 0 rgb(84 40 132 / 4%), 0 6px 18px rgb(45 36 48 / 6%);
 }
 .rounded-md {
-  border-radius: 0.375rem;
+  border-radius: var(--radius-sheet);
 }
 .rounded-xl {
-  border-radius: 0.375rem;
+  border-radius: var(--radius-sheet);
 }
 .rounded-full {
-  border-radius: 9999px;
+  border-radius: var(--radius-sheet);
 }
 
 .flex {
@@ -421,6 +301,9 @@ button {
 .space-y-2 > :not([hidden]) ~ :not([hidden]) {
   margin-top: calc(var(--space-unit) * 2);
 }
+.space-y-5 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: calc(var(--space-unit) * 5);
+}
 .mx-auto {
   margin-left: auto;
   margin-right: auto;
@@ -436,6 +319,9 @@ button {
 }
 .mt-4 {
   margin-top: calc(var(--space-unit) * 4);
+}
+.mt-5 {
+  margin-top: calc(var(--space-unit) * 5);
 }
 .mt-6 {
   margin-top: calc(var(--space-unit) * 6);
@@ -463,6 +349,10 @@ button {
   padding-left: calc(var(--space-unit) * 4);
   padding-right: calc(var(--space-unit) * 4);
 }
+.px-5 {
+  padding-left: calc(var(--space-unit) * 5);
+  padding-right: calc(var(--space-unit) * 5);
+}
 .px-6 {
   padding-left: calc(var(--space-unit) * 6);
   padding-right: calc(var(--space-unit) * 6);
@@ -479,6 +369,10 @@ button {
   padding-top: calc(var(--space-unit) * 4);
   padding-bottom: calc(var(--space-unit) * 4);
 }
+.py-10 {
+  padding-top: calc(var(--space-unit) * 10);
+  padding-bottom: calc(var(--space-unit) * 10);
+}
 .py-12 {
   padding-top: calc(var(--space-unit) * 12);
   padding-bottom: calc(var(--space-unit) * 12);
@@ -486,6 +380,9 @@ button {
 .py-16 {
   padding-top: calc(var(--space-unit) * 16);
   padding-bottom: calc(var(--space-unit) * 16);
+}
+.pt-5 {
+  padding-top: calc(var(--space-unit) * 5);
 }
 
 .min-h-screen {
@@ -533,6 +430,12 @@ button {
 .max-w-3xl {
   max-width: 48rem;
 }
+.max-w-4xl {
+  max-width: 56rem;
+}
+.max-w-5xl {
+  max-width: 64rem;
+}
 .max-w-6xl {
   max-width: 72rem;
 }
@@ -557,8 +460,13 @@ button {
 .grid-cols-1 {
   grid-template-columns: repeat(1, minmax(0, 1fr));
 }
+
+/* ---- 三重規線（triple rule）：紅 2px + 淡紫 1px + 金 1px ---- */
 .stripes {
-  background: var(--red) center / 100% 2px no-repeat;
+  background:
+    linear-gradient(var(--red) 0 0) top / 100% 2px no-repeat,
+    linear-gradient(var(--plum-soft) 0 0) center / 100% 1px no-repeat,
+    linear-gradient(var(--school-gold) 0 0) bottom / 100% 1px no-repeat;
 }
 .active {
   cursor: default;
@@ -584,9 +492,20 @@ button {
     padding-left: calc(var(--space-unit) * 6);
     padding-right: calc(var(--space-unit) * 6);
   }
+  .sm\:py-14 {
+    padding-top: calc(var(--space-unit) * 14);
+    padding-bottom: calc(var(--space-unit) * 14);
+  }
+  .sm\:py-20 {
+    padding-top: calc(var(--space-unit) * 20);
+    padding-bottom: calc(var(--space-unit) * 20);
+  }
   .sm\:py-24 {
     padding-top: calc(var(--space-unit) * 24);
     padding-bottom: calc(var(--space-unit) * 24);
+  }
+  .sm\:p-8 {
+    padding: calc(var(--space-unit) * 8);
   }
   .sm\:text-5xl {
     font-size: 3rem;
@@ -614,15 +533,10 @@ button {
   }
 }
 
-/* Element-inspired editorial layout */
-body {
-  background: #f2f3f5;
-  color: #222733;
-}
-
+/* ===================== Header ===================== */
 header.bg-purple {
-  background: #ffffff;
-  border-bottom: 1px solid #e8e9ed;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
   color: var(--ink);
 }
 
@@ -632,35 +546,35 @@ header.bg-purple .text-cream\/90 {
 }
 
 header.bg-purple .text-plum-soft {
-  color: #7c7c7c;
+  color: var(--muted);
 }
 
-header.bg-purple .hover\:bg-purple-deep:hover {
-  background: #f4f4f4;
+header.bg-purple nav a {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  border-radius: var(--radius-sheet);
+  position: relative;
+}
+
+header.bg-purple nav a:not([aria-current="page"]):hover {
+  background: var(--purple-06);
+  color: var(--purple);
 }
 
 header.bg-purple nav a:not([aria-current="page"]):hover {
   color: var(--lasalle-red-dark);
 }
 
-header.bg-purple nav a {
-  border-radius: 0;
-}
-
 header.bg-purple .bg-red {
   color: #ffffff;
 }
 
-.stripes {
-  background: var(--red) center / 100% 2px no-repeat;
-}
-
-main > section.bg-purple {
-  background: var(--purple);
-}
-
-main > section.bg-cream {
-  background: #f2f3f5;
+header.bg-purple .stripes {
+  background:
+    linear-gradient(var(--red) 0 0) top / 100% 2px no-repeat,
+    linear-gradient(var(--plum-soft) 0 0) center / 100% 1px no-repeat,
+    linear-gradient(var(--school-gold) 0 0) bottom / 100% 1px no-repeat;
 }
 
 .brand-icon {
@@ -669,18 +583,356 @@ main > section.bg-cream {
   width: 2.25rem;
 }
 
+/* ===================== Main page: La Salle sections ===================== */
+.ls-hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--purple);
+  color: #ffffff;
+  padding: 96px 24px;
+}
+/* seed 指紋：8×8 點陣 */
+.ls-hero::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 4%;
+  width: 248px;
+  height: 248px;
+  transform: translateY(-50%);
+  background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2096%2096%22%3E%3Ccircle%20cx%3D%226%22%20cy%3D%226%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%226%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%226%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%226%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2254%22%20cy%3D%226%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2266%22%20cy%3D%226%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2278%22%20cy%3D%226%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%226%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.95%22/%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2218%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2218%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2218%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%2218%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2254%22%20cy%3D%2218%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2266%22%20cy%3D%2218%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2278%22%20cy%3D%2218%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.95%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2218%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2230%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2230%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.95%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%2230%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2254%22%20cy%3D%2230%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2266%22%20cy%3D%2230%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2278%22%20cy%3D%2230%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.95%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2230%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2242%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2242%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2242%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%2242%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2254%22%20cy%3D%2242%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2266%22%20cy%3D%2242%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2278%22%20cy%3D%2242%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2242%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2254%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2254%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2254%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%2254%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2254%22%20cy%3D%2254%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2266%22%20cy%3D%2254%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2278%22%20cy%3D%2254%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.95%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2254%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2266%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2266%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2266%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.95%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%2266%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.95%22/%3E%3Ccircle%20cx%3D%2254%22%20cy%3D%2266%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2266%22%20cy%3D%2266%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2278%22%20cy%3D%2266%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2266%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2278%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2278%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.95%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2278%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.95%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%2278%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2254%22%20cy%3D%2278%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2266%22%20cy%3D%2278%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2278%22%20cy%3D%2278%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2278%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2290%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2290%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2290%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%2290%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2254%22%20cy%3D%2290%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2266%22%20cy%3D%2290%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.95%22/%3E%3Ccircle%20cx%3D%2278%22%20cy%3D%2290%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2290%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3C/svg%3E") center / contain no-repeat;
+  opacity: 0.9;
+  pointer-events: none;
+}
+@media (max-width: 900px) {
+  .ls-hero::before {
+    width: 150px;
+    height: 150px;
+    opacity: 0.5;
+  }
+}
+.ls-kicker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  color: rgb(255 255 255 / 70%);
+  margin: 0;
+}
+/* 三拍刻度：紫·紅·金（e/x/y ×6） */
+.ls-kicker::before {
+  content: "";
+  flex: none;
+  width: 6px;
+  height: 6px;
+  background: var(--school-gold);
+  box-shadow: -10px 0 0 var(--red), -20px 0 0 rgb(235 225 240 / 55%);
+}
+.ls-kicker-red {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--red);
+  margin: 0;
+}
+.ls-kicker-red::before {
+  content: "";
+  flex: none;
+  width: 6px;
+  height: 6px;
+  background: var(--red);
+  box-shadow: 10px 0 0 var(--school-gold), 20px 0 0 var(--purple-16);
+}
+.ls-kicker-red.text-center {
+  justify-content: center;
+}
+.ls-title {
+  font-weight: 300;
+  line-height: 1.25;
+  font-size: clamp(34px, 5vw, 54px);
+  letter-spacing: -0.01em;
+  color: #ffffff;
+  margin: 16px 0 0;
+}
+.ls-title::after {
+  content: "";
+  display: block;
+  width: 64px;
+  height: 3px;
+  margin-top: 20px;
+  background: var(--school-gold);
+}
+.ls-sub {
+  font-size: 1.125rem;
+  color: rgb(255 255 255 / 85%);
+  margin: 14px 0 0;
+}
+.ls-motto {
+  max-width: 620px;
+  font-size: 1rem;
+  line-height: 1.8;
+  color: rgb(255 255 255 / 90%);
+  margin: 22px 0 0;
+}
+.ls-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 30px;
+  padding: 0 26px;
+  background: var(--red);
+  color: #ffffff;
+  border-radius: var(--radius-sheet);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  border: 1px solid var(--red);
+  transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
+}
+.ls-btn:hover {
+  background: var(--lasalle-red-dark);
+  border-color: var(--lasalle-red-dark);
+  transform: translate(0, -1px);
+}
+.ls-section {
+  position: relative;
+  padding: 72px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.ls-section.ls-gray {
+  background-color: var(--cream);
+  background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 8px 8px;
+}
+.ls-heading {
+  font-family: "Noto Serif TC", serif;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--purple);
+  margin: 10px 0 0;
+}
+.ls-section-sub {
+  color: var(--muted);
+  margin: 10px 0 0;
+}
+.ls-grid-3 {
+  display: grid;
+  gap: 22px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  margin-top: 34px;
+}
+.ls-grid-2 {
+  display: grid;
+  gap: 40px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  align-items: start;
+}
+.ls-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--red);
+  padding: 26px;
+  border-radius: var(--radius-sheet);
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+/* 對位角標（registration mark） */
+.ls-card::after {
+  content: "";
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 10px;
+  height: 10px;
+  border-right: 1px solid var(--purple-16);
+  border-bottom: 1px solid var(--purple-16);
+  pointer-events: none;
+}
+.ls-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--purple-16);
+  box-shadow: 0 10px 24px rgb(45 36 48 / 7%);
+}
+.ls-card h3 {
+  font-family: "Noto Serif TC", serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+.ls-card p {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.75;
+  margin: 10px 0 0;
+}
+.ls-text {
+  color: var(--muted);
+  line-height: 1.8;
+  margin: 16px 0 0;
+}
+.ls-panel {
+  position: relative;
+  background: var(--purple);
+  color: #ffffff;
+  padding: 32px;
+  border-radius: var(--radius-sheet);
+  border-top: 2px solid var(--school-gold);
+}
+.ls-panel-name {
+  font-family: "Noto Serif TC", serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  margin: 14px 0 0;
+}
+.ls-panel-role {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: rgb(255 255 255 / 70%);
+  margin: 4px 0 0;
+}
+.ls-panel-text {
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: rgb(255 255 255 / 90%);
+  margin: 18px 0 0;
+}
+.ls-captain {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--red);
+  padding: 26px;
+  border-radius: var(--radius-sheet);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+.ls-captain:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgb(45 36 48 / 7%);
+}
+.ls-captain h3 {
+  font-family: "Noto Serif TC", serif;
+  font-size: 1.6rem;
+  font-weight: 400;
+  color: var(--purple);
+  margin: 8px 0 0;
+}
+.ls-captain-role {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--red);
+  margin: 0;
+}
+.ls-quote {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.75;
+  margin: 14px 0 0;
+}
+.ls-captain-note {
+  color: var(--muted);
+  font-size: 0.9rem;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+  margin: 16px 0 0;
+}
+/* dark mode for the La Salle sections */
+.dark-mode .ls-hero {
+  background: #292d38;
+}
+.dark-mode .ls-card,
+.dark-mode .ls-captain {
+  background: #2b303b;
+  border-color: #454b59;
+}
+.dark-mode .ls-heading {
+  color: #e7c9ee;
+}
+
+
+/* dark mode：seed 指紋改用暗色版本 */
+.dark-mode .ls-hero::before,
+.dark-mode main > section.bg-purple::before {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2096%2096%22%3E%3Ccircle%20cx%3D%226%22%20cy%3D%226%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%226%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%226%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%226%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.7%22/%3E%3Ccircle%20cx%3D%2254%22%20cy%3D%226%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2266%22%20cy%3D%226%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2278%22%20cy%3D%226%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.7%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%226%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.9%22/%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2218%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2218%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.7%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2218%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%2218%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.7%22/%3E%3Ccircle%20cx%3D%2254%22%20cy%3D%2218%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2266%22%20cy%3D%2218%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2278%22%20cy%3D%2218%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.9%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2218%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2230%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.7%22/%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2230%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.9%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.7%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%2230%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2254%22%20cy%3D%2230%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.7%22/%3E%3Ccircle%20cx%3D%2266%22%20cy%3D%2230%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2278%22%20cy%3D%2230%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.9%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2230%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2242%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.7%22/%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2242%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.7%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2242%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%2242%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2254%22%20cy%3D%2242%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2266%22%20cy%3D%2242%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2278%22%20cy%3D%2242%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2242%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2254%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.7%22/%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2254%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.7%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2254%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%2254%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2254%22%20cy%3D%2254%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.7%22/%3E%3Ccircle%20cx%3D%2266%22%20cy%3D%2254%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2278%22%20cy%3D%2254%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.9%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2254%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2266%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2266%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.7%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2266%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.9%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%2266%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.9%22/%3E%3Ccircle%20cx%3D%2254%22%20cy%3D%2266%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2266%22%20cy%3D%2266%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.7%22/%3E%3Ccircle%20cx%3D%2278%22%20cy%3D%2266%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.7%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2266%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.7%22/%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2278%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2278%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.9%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2278%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.9%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%2278%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.7%22/%3E%3Ccircle%20cx%3D%2254%22%20cy%3D%2278%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.7%22/%3E%3Ccircle%20cx%3D%2266%22%20cy%3D%2278%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2278%22%20cy%3D%2278%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.7%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2278%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.7%22/%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2290%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.7%22/%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2290%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.7%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2290%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%2290%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2254%22%20cy%3D%2290%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.7%22/%3E%3Ccircle%20cx%3D%2266%22%20cy%3D%2290%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.9%22/%3E%3Ccircle%20cx%3D%2278%22%20cy%3D%2290%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.3%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2290%22%20r%3D%223.1%22%20fill%3D%22%23ebe1f0%22%20opacity%3D%220.7%22/%3E%3C/svg%3E");
+}
+
+
+/* hero 品牌列（AGK 標誌 + kicker） */
+.hero-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.hero-brand-icon {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 0 rgb(0 0 0 / 18%));
+}
+@media (max-width: 720px) {
+  .hero-brand-icon {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* ===================== Subpage hero（紫底 + seed 點陣） ===================== */
+main > section.bg-purple {
+  position: relative;
+  overflow: hidden;
+  background: var(--purple);
+}
+main > section.bg-purple::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 3%;
+  width: 168px;
+  height: 168px;
+  transform: translateY(-50%);
+  background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2096%2096%22%3E%3Ccircle%20cx%3D%226%22%20cy%3D%226%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%226%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%226%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%226%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2254%22%20cy%3D%226%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2266%22%20cy%3D%226%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2278%22%20cy%3D%226%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%226%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.95%22/%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2218%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2218%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2218%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%2218%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2254%22%20cy%3D%2218%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2266%22%20cy%3D%2218%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2278%22%20cy%3D%2218%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.95%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2218%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2230%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2230%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.95%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%2230%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2254%22%20cy%3D%2230%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2266%22%20cy%3D%2230%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2278%22%20cy%3D%2230%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.95%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2230%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2242%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2242%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2242%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%2242%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2254%22%20cy%3D%2242%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2266%22%20cy%3D%2242%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2278%22%20cy%3D%2242%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2242%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2254%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2254%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2254%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%2254%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2254%22%20cy%3D%2254%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2266%22%20cy%3D%2254%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2278%22%20cy%3D%2254%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.95%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2254%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2266%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2266%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2266%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.95%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%2266%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.95%22/%3E%3Ccircle%20cx%3D%2254%22%20cy%3D%2266%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2266%22%20cy%3D%2266%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2278%22%20cy%3D%2266%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2266%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2278%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2278%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.95%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2278%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.95%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%2278%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2254%22%20cy%3D%2278%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2266%22%20cy%3D%2278%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2278%22%20cy%3D%2278%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2278%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2290%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2218%22%20cy%3D%2290%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2290%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%2290%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2254%22%20cy%3D%2290%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3Ccircle%20cx%3D%2266%22%20cy%3D%2290%22%20r%3D%223.1%22%20fill%3D%22%23d42522%22%20opacity%3D%220.95%22/%3E%3Ccircle%20cx%3D%2278%22%20cy%3D%2290%22%20r%3D%223.1%22%20fill%3D%22%233e3e3e%22%20opacity%3D%220.35%22/%3E%3Ccircle%20cx%3D%2290%22%20cy%3D%2290%22%20r%3D%223.1%22%20fill%3D%22%23542884%22%20opacity%3D%220.8%22/%3E%3C/svg%3E") center / contain no-repeat;
+  opacity: 0.55;
+  pointer-events: none;
+}
+@media (max-width: 720px) {
+  main > section.bg-purple::before {
+    width: 104px;
+    height: 104px;
+    opacity: 0.35;
+  }
+}
+main > section.bg-purple p.text-sm {
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+main > section.bg-cream {
+  background: transparent;
+}
 main > section.bg-red {
   background: var(--purple);
 }
-
 article.rounded-xl,
 main article.rounded-xl {
-  border-radius: 0;
+  border-radius: var(--radius-sheet);
   box-shadow: none;
 }
 
+/* ===================== Footer ===================== */
 footer.bg-purple-deep {
-  background: #20242e;
+  background: var(--footer-bg);
 }
 
 footer.bg-purple-deep.px-4.py-8 {
@@ -705,7 +957,7 @@ footer.bg-purple-deep.px-4.py-8::after {
 
 .simple-footer {
   align-items: center;
-  background: #20242e;
+  background: var(--footer-bg);
   border-top: 1px solid rgb(233 217 232 / 70%);
   color: var(--plum-soft);
   display: flex;
@@ -720,9 +972,12 @@ footer.bg-purple-deep.px-4.py-8::after {
   margin: 0;
 }
 
+/* ===================== Contact / shared cards ===================== */
 .profile-card-light {
+  position: relative;
   background: #eee4f3;
   border: 1px solid #dfcfe7;
+  border-top: 2px solid var(--red);
   color: var(--ink);
 }
 
@@ -733,7 +988,7 @@ footer.bg-purple-deep.px-4.py-8::after {
 }
 
 .text-card:hover {
-  border-left-color: var(--rose-soft);
+  border-left-color: var(--school-gold);
   transform: translateY(-2px);
 }
 
@@ -741,11 +996,12 @@ footer.bg-purple-deep.px-4.py-8::after {
   box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
 }
 
+/* ===================== Theme toggle（方角對位） ===================== */
 .theme-toggle {
   align-items: center;
   background: #ffffff;
   border: 1px solid #d9dce2;
-  border-radius: 999px;
+  border-radius: var(--radius-sheet);
   color: var(--purple);
   cursor: pointer;
   display: inline-flex;
@@ -781,21 +1037,25 @@ footer.bg-purple-deep.px-4.py-8::after {
 }
 
 .dark-mode body {
-  background: #20232b;
+  background-color: #1d2127;
   color: #eef0f4;
 }
 
 .dark-mode {
-  --border: #454b59;
+  --border: #3d434f;
   --ink: #eef0f4;
-  --muted: #c5cad4;
+  --muted: #b9bfc9;
   --plum-soft: #d8c9dc;
-  --surface: #2b303b;
+  --surface: #262b34;
+  --purple-06: rgb(167 127 214 / 8%);
+  --purple-16: rgb(167 127 214 / 22%);
+  --grid-line: rgb(235 225 240 / 3.5%);
+  --footer-bg: #171225;
 }
 
 .dark-mode header.bg-purple {
-  background: #292d38;
-  border-color: #424755;
+  background: #23272f;
+  border-color: #3d434f;
   color: #f3eaf5;
 }
 
@@ -805,35 +1065,43 @@ footer.bg-purple-deep.px-4.py-8::after {
   color: #f3eaf5;
 }
 
+.dark-mode header.bg-purple nav a:not([aria-current="page"]):hover {
+  background: rgb(167 127 214 / 12%);
+  color: #e7c9ee;
+}
+
 .dark-mode main > section.bg-cream {
-  background: #20232b;
+  background: transparent;
 }
 
 .dark-mode .bg-cream {
-  background: #20232b;
+  background-color: #1d2127;
+  background-image: linear-gradient(rgb(235 225 240 / 4%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(235 225 240 / 4%) 1px, transparent 1px);
+  background-size: 8px 8px;
 }
 
 .dark-mode .bg-surface,
 .dark-mode .profile-card-light {
-  background: #2b303b;
-  border-color: #454b59;
+  background: #262b34;
+  border-color: #3d434f;
   color: #eef0f4;
 }
 
 .dark-mode .text-muted {
-  color: #c5cad4;
+  color: #b9bfc9;
 }
 
 .dark-mode .award-list li {
-  color: #c5cad4;
+  color: #b9bfc9;
 }
 
 .dark-mode .text-purple {
-  color: #eef0f4;
+  color: #e7c9ee;
 }
 
 .dark-mode .hero-panel {
-  background: #2b303b;
+  background: #262b34;
   color: #eef0f4;
 }
 
@@ -843,16 +1111,16 @@ footer.bg-purple-deep.px-4.py-8::after {
 }
 
 .dark-mode .border-border {
-  border-color: #454b59;
+  border-color: #3d434f;
 }
 
 .dark-mode footer.bg-purple-deep,
 .dark-mode .simple-footer {
-  background: #171920;
+  background: #171225;
 }
 
 .dark-mode .theme-toggle {
-  background: #2b303b;
+  background: #262b34;
   border-color: #596171;
   color: #f3eaf5;
 }
@@ -887,6 +1155,7 @@ footer,
   }
 }
 
+/* ===================== Record band（排行榜頁） ===================== */
 .record-band {
   background: var(--red);
 }
@@ -918,6 +1187,7 @@ footer,
   }
 }
 
+/* ===================== Site hero / quote cards（保留元件） ===================== */
 .site-hero-content {
   display: grid;
   align-items: center;
@@ -934,6 +1204,8 @@ footer,
   background: #ffffff;
   color: var(--ink);
   padding: 2rem;
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--red);
   box-shadow: 0 14px 30px rgb(22 16 29 / 20%);
 }
 
@@ -988,6 +1260,7 @@ footer,
   padding-top: 1rem;
 }
 
+/* ===================== Award list（金 = 榮譽座標） ===================== */
 .award-list {
   border-top: 1px solid var(--border);
   margin-top: 1.25rem;
@@ -996,9 +1269,10 @@ footer,
 
 .award-list-title {
   color: var(--red);
-  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.14em;
 }
 
 .award-list ul {
@@ -1008,7 +1282,7 @@ footer,
 }
 
 .award-list li {
-  border-left: 3px solid var(--rose-soft);
+  border-left: 2px solid var(--school-gold);
   color: var(--muted);
   font-size: 0.875rem;
   line-height: 1.55;
@@ -1028,8 +1302,10 @@ footer,
   margin-top: 1.75rem;
 }
 
+/* ===================== Labels ===================== */
 .section-label {
   color: var(--red);
+  font-family: var(--font-mono);
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -1040,6 +1316,7 @@ footer,
   align-items: center;
   color: var(--school-gold);
   display: inline-flex;
+  font-family: var(--font-mono);
   font-size: 0.75rem;
   font-weight: 700;
   gap: 0.65rem;

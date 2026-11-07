@@ -27,6 +27,7 @@
       /* ---------- Lobby ---------- */
       .lobby-kicker {
         margin: 0;
+        font-family: var(--font-mono);
         font-size: 0.8rem;
         font-weight: 700;
         letter-spacing: 0.22em;
@@ -96,7 +97,8 @@
         padding: 1rem 1.1rem;
         background: var(--cream);
         border: 1px solid var(--border);
-        border-radius: 0.375rem;
+        border-left: 3px solid var(--border);
+        border-radius: var(--radius-sheet);
         cursor: pointer;
         font: inherit;
         color: var(--ink);
@@ -108,7 +110,8 @@
       .mode-card.active {
         background: var(--surface);
         border-color: var(--red);
-        box-shadow: inset 3px 0 0 var(--red);
+        border-left: 3px solid var(--red);
+        box-shadow: none;
       }
       .mode-card b { display: block; font-size: 1rem; }
       .mode-card span {
@@ -136,10 +139,11 @@
         justify-content: center;
         min-height: 3rem;
         padding: 0 1.4rem;
-        border-radius: 0.25rem;
+        border-radius: var(--radius-sheet);
         font-size: 1rem;
         font-weight: 700;
-        letter-spacing: 0.03em;
+        letter-spacing: 0.05em;
+        font-family: var(--font-mono);
         cursor: pointer;
         touch-action: manipulation;
         -webkit-tap-highlight-color: transparent;
@@ -340,7 +344,7 @@
         text-align: left;
         background: var(--cream);
         border: 1px solid var(--border);
-        border-radius: 0.375rem;
+        border-radius: var(--radius-sheet);
         cursor: pointer;
         font: inherit;
         font-size: 1rem;
@@ -365,7 +369,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 50%;
+        font-family: var(--font-mono);
+        border-radius: 0;
         background: var(--surface);
         border: 1px solid var(--border);
         font-size: 0.85rem;
@@ -506,8 +511,9 @@
         background: var(--surface);
         color: var(--ink);
         border: 1px solid var(--border);
-        border-radius: 999px;
-        font-size: 0.85rem;
+        border-radius: var(--radius-sheet);
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
         font-weight: 600;
         cursor: pointer;
         touch-action: manipulation;
