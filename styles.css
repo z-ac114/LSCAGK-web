@@ -22,7 +22,7 @@
   --red-active: #ae0906;
   --plum-soft: #ebe1f0;
   --rose-soft: #fdeceb;
-  --surface: #ffffff;
+  --surface: #fdfcf8;
   --surface-soft: #f5f0e8;
   --surface-tint: #f1ede3;
   --surface-dark: #181715;
@@ -47,6 +47,10 @@
 
 html {
   scroll-behavior: smooth;
+  background: #faf9f5;
+}
+html.dark-mode {
+  background: #181715;
 }
 
 @media (prefers-reduced-motion: reduce) {
