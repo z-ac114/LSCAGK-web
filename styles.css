@@ -1,34 +1,40 @@
 /* =====================================================================
-   LSCAGKT · 喇沙書院學術時事及常識問答隊 — 設計系統 v4
-   參考：getdesign.md「Cursor」DESIGN.md 規範
-   · 暖米白畫布（非純白）· 暖墨色標題與內文
-   · 單一品牌色（主色取自 AGK 校徽主色：紅）只作 CTA／現頁指示，用得極少
-   · 標題字重 400–500 ＋ 負字距 —— 雜誌式，不是科技轟炸式
-   · 只有髮絲線，無陰影 · 80px 段落節奏 · 8/12px 圓角
-   主色 #d42522（校徽紅）· 紫 #542884 降為次要 · 金 #c69a3a 只作榮譽
+   LSCAGKT · 喇沙書院學術時事及常識問答隊 — 設計系統 v5（Claude 風格）
+   參考：getdesign.md「Claude」DESIGN.md 規範
+   · 暖調米色畫布 #faf9f5 · 深暖墨 #141413
+   · 襯線顯示標題（字重 400、負字距）＋ 人文無襯線內文 —— 文學編排感
+   · 品牌電壓 = 校徽紅 #d42522（CTA／品牌重音），用得克制
+   · 三種表面：米色畫布 / 淺米卡 #efe9de / 深色面板 #181715
+   · 圓角層級：8px 按鈕 · 12px 卡片 · 16px 主視覺 · 96px 段落節奏
    ===================================================================== */
 
 :root {
-  --cream: #f4f4f4;
-  --canvas-soft: #f8f8f6;
-  --ink: #3e3e3e;
-  --body-text: #565349;
-  --muted: #7d7a70;
+  --cream: #faf9f5;
+  --canvas-soft: #f5f0e8;
+  --ink: #141413;
+  --body-text: #3d3d3a;
+  --muted: #6c6a64;
+  --muted-soft: #8e8b82;
   --purple: #542884;
   --purple-deep: #3d1d61;
   --red: #d42522;
   --red-active: #ae0906;
   --plum-soft: #ebe1f0;
   --rose-soft: #fdeceb;
-  --surface: #ffffff;
-  --hairline: #e6e5e0;
-  --hairline-soft: #efeee8;
+  --surface: #efe9de;
+  --surface-soft: #f5f0e8;
+  --surface-dark: #181715;
+  --surface-dark-elevated: #252320;
+  --hairline: #e6dfd8;
+  --hairline-soft: #ebe6df;
   --hairline-strong: #cfcdc4;
   --school-gold: #c69a3a;
   --space-unit: 0.25rem;
   --font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Noto Serif TC", "Songti TC", Georgia, serif;
   --radius-sm: 8px;
   --radius: 12px;
+  --radius-xl: 16px;
   --nav-h: 64px;
 }
 
@@ -49,7 +55,7 @@ html {
 body {
   margin: 0;
   background: var(--cream);
-  color: var(--ink);
+  color: var(--body-text);
   font-family: var(--font-sans);
   font-weight: 400;
   line-height: 1.5;
@@ -108,7 +114,7 @@ button {
 
 /* ===================== Utilities（全站類名契約） ===================== */
 .font-sans { font-family: var(--font-sans); }
-.font-serif { font-family: var(--font-sans); }
+.font-serif { font-family: var(--font-serif); }
 .font-normal { font-weight: 400; }
 .font-semibold { font-weight: 600; }
 .font-bold { font-weight: 700; }
@@ -383,7 +389,7 @@ button {
 /* ===================== Hero / landing ===================== */
 .ls-hero {
   position: relative;
-  padding: 96px 24px 88px;
+  padding: 96px 24px;
   background: var(--cream);
   color: var(--ink);
 }
@@ -402,12 +408,13 @@ button {
   margin: 0;
 }
 .ls-title {
-  font-weight: 500;
-  line-height: 1.16;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  line-height: 1.14;
   letter-spacing: -0.02em;
-  font-size: clamp(2.1rem, 5.4vw, 3.9rem);
+  font-size: clamp(2.2rem, 5.6vw, 4rem);
   color: var(--ink);
-  margin: 18px 0 0;
+  margin: 20px 0 0;
   max-width: 20em;
 }
 .ls-sub {
@@ -452,15 +459,15 @@ button {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 26px;
+  padding: 32px 28px;
   background: var(--surface);
   border: 1px solid var(--hairline);
   border-radius: var(--radius);
-  transition: border-color 160ms ease, background 160ms ease;
+  transition: border-color 160ms ease, transform 160ms ease;
 }
 .entry-card:hover {
-  border-color: var(--red);
-  background: var(--canvas-soft);
+  border-color: var(--hairline-strong);
+  transform: translateY(-2px);
 }
 .entry-num {
   font-size: 0.75rem;
@@ -469,8 +476,9 @@ button {
   color: var(--muted);
 }
 .entry-card h2 {
-  font-size: 1.45rem;
-  font-weight: 600;
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 400;
   letter-spacing: -0.01em;
   color: var(--ink);
   margin: 0;
@@ -503,9 +511,10 @@ button {
   border-bottom: 1px solid var(--hairline);
 }
 .ls-heading {
-  font-size: clamp(1.5rem, 2.6vw, 1.9rem);
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-family: var(--font-serif);
+  font-size: clamp(1.55rem, 2.8vw, 2rem);
+  font-weight: 400;
+  letter-spacing: -0.015em;
   color: var(--ink);
   margin: 10px 0 0;
 }
@@ -528,9 +537,9 @@ button {
 .ls-card {
   background: var(--surface);
   border: 1px solid var(--hairline);
-  padding: 26px;
+  padding: 32px 28px;
   border-radius: var(--radius);
-  transition: border-color 160ms ease;
+  transition: border-color 160ms ease, transform 160ms ease;
 }
 .ls-card:hover {
   border-color: var(--hairline-strong);
@@ -553,10 +562,22 @@ button {
   margin: 16px 0 0;
 }
 .ls-panel {
-  background: var(--ink);
-  color: var(--cream);
+  background: var(--surface-dark);
+  color: #faf9f5;
   padding: 32px;
   border-radius: var(--radius);
+}
+.panel-dark-wrap {
+  background: var(--surface-dark);
+  color: #faf9f5;
+  border-radius: var(--radius-xl);
+  padding: 40px 36px;
+}
+.panel-dark-wrap .ls-heading {
+  color: #faf9f5;
+}
+.panel-dark-wrap .muted-on-dark {
+  color: #a09d96;
 }
 .ls-panel-name {
   font-size: 1.5rem;
@@ -581,8 +602,9 @@ button {
   border-radius: var(--radius);
 }
 .ls-captain h3 {
-  font-size: 1.5rem;
-  font-weight: 500;
+  font-family: var(--font-serif);
+  font-size: 1.55rem;
+  font-weight: 400;
   color: var(--ink);
   margin: 8px 0 0;
 }
@@ -765,19 +787,20 @@ main .rounded-xl.bg-surface h2 {
 
 /* ===================== Dark mode（墨色畫布） ===================== */
 .dark-mode body {
-  background: #16140f;
-  color: #ecebe6;
+  background: #181715;
+  color: #cfccc4;
 }
 
 .dark-mode {
-  --cream: #16140f;
-  --canvas-soft: #1b1913;
-  --ink: #ecebe6;
-  --body-text: #c9c6bc;
-  --muted: #94907f;
-  --surface: #1d1b15;
-  --hairline: #2d2a22;
-  --hairline-soft: #24211a;
+  --cream: #181715;
+  --canvas-soft: #1f1d19;
+  --ink: #f0eee9;
+  --body-text: #cfccc4;
+  --muted: #8e8b82;
+  --surface: #252320;
+  --surface-dark: #11100e;
+  --hairline: #2e2b26;
+  --hairline-soft: #26241f;
   --hairline-strong: #3c382d;
   --red: #e0524a;
   --red-active: #c74340;
@@ -792,47 +815,47 @@ main .rounded-xl.bg-surface h2 {
 
 .dark-mode header.bg-purple,
 .dark-mode .site-header {
-  background: #16140f;
+  background: #181715;
   border-color: var(--hairline);
 }
 
 .dark-mode .bg-cream {
-  background-color: #16140f;
+  background-color: #181715;
 }
 
 .dark-mode .bg-surface,
 .dark-mode .profile-card-light {
   background: #1d1b15;
   border-color: var(--hairline);
-  color: #ecebe6;
+  color: var(--ink);
 }
 
 .dark-mode .text-muted {
-  color: #94907f;
+  color: var(--muted);
 }
 
 .dark-mode .award-list li {
-  color: #94907f;
+  color: var(--muted);
 }
 
 .dark-mode .text-purple {
-  color: #cbb4e4;
+  color: #d8c9dc;
 }
 
 .dark-mode .ls-heading,
 .dark-mode .ls-title {
-  color: #ecebe6;
+  color: var(--ink);
 }
 
 .dark-mode .hero-panel {
   background: #1d1b15;
-  color: #ecebe6;
+  color: var(--ink);
   border-color: var(--hairline);
 }
 
 .dark-mode .hero-panel h2,
 .dark-mode .hero-panel a {
-  color: #cbb4e4;
+  color: #d8c9dc;
 }
 
 .dark-mode .border-border {
@@ -841,13 +864,13 @@ main .rounded-xl.bg-surface h2 {
 
 .dark-mode footer.bg-purple-deep,
 .dark-mode .simple-footer {
-  background: #16140f;
+  background: #181715;
 }
 
 .dark-mode .theme-toggle {
-  background: #1d1b15;
+  background: var(--surface);
   border-color: var(--hairline-strong);
-  color: #ecebe6;
+  color: var(--ink);
 }
 
 body,
