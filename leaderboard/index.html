@@ -80,8 +80,8 @@
       position: absolute;
       bottom: calc(100% + 6px);
       left: 0;
-      background: var(--ink);
-      color: #ffffff;
+      background: #26251e;
+      color: #faf9f5;
       padding: 4px 10px;
       border-radius: 0.25rem;
       font-size: 0.8rem;
@@ -437,6 +437,23 @@
         console.warn("Supabase 初始化失敗，排行榜暫不可用。", e);
       }
 
+      /* 題庫年代：依成績建立時間顯示所用的題庫。
+         換題庫時在最上面加一項 { until: "YYYY-MM-DDTHH:mm:ss+08:00", short, full }，
+         未列 until 的一項 = 現行題庫。 */
+      const BANK_ERAS = [
+        { until: "2026-11-07T13:00:00+08:00", short: "紫荊", full: "第九屆紫荊杯題庫" },
+        { short: "國安", full: "國家安全挑戰賽題庫" }
+      ];
+
+      function bankOf(row) {
+        const t = row.created_at ? new Date(row.created_at).getTime() : 0;
+        for (var i = 0; i < BANK_ERAS.length; i++) {
+          var era = BANK_ERAS[i];
+          if (!era.until || t < new Date(era.until).getTime()) return era;
+        }
+        return BANK_ERAS[BANK_ERAS.length - 1];
+      }
+
       const PAGE_SIZE = 10;
       const boardPages = {};
 
@@ -452,7 +469,7 @@
         const slice = state.rows.slice(start, start + PAGE_SIZE);
         const head = infinite ? `
           <div class="leaderboard-head head-infinite">
-            <span>排名</span><span>姓名</span><span>類別</span><span>答對</span><span>準確率</span><span>用時</span><span>日期</span>
+            <span>排名</span><span>姓名</span><span>題庫</span><span>答對</span><span>準確率</span><span>用時</span><span>日期</span>
           </div>
         ` : `
           <div class="leaderboard-head">
@@ -466,7 +483,8 @@
           const timeText = r.time_taken != null ? `${r.time_taken}s` : "—";
           const dateText = r.created_at ? new Date(r.created_at).toLocaleDateString() : "";
           const isTop = rank <= 3;
-          const cat = infinite ? `<span class="leaderboard-cat" data-full="${esc(modeLabel(r.mode))}" title="${esc(modeLabel(r.mode))}">${modeIcon(r.mode)}</span>` : "";
+          const bank = infinite ? bankOf(r) : null;
+          const cat = bank ? `<span class="leaderboard-cat" data-full="${esc(bank.full)}" title="${esc(bank.full)}">${esc(bank.short)}</span>` : "";
           return `
             <div class="leaderboard-item ${infinite ? 'item-infinite' : ''} ${isTop ? 'top' : ''}">
               <span class="leaderboard-rank">${rank}</span>
