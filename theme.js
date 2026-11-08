@@ -40,6 +40,30 @@ function protectPastPapers() {
 
 
 
+
+function setupPageTransitions() {
+  // 原生 View Transitions（Chrome／Edge）已由 CSS @view-transition 處理
+  if (document.startViewTransition) return;
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  document.documentElement.classList.add("page-fade");
+  document.addEventListener("click", function (e) {
+    var a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
+    if (!a) return;
+    if (a.target === "_blank" || a.hasAttribute("download")) return;
+    var href = a.getAttribute("href");
+    if (!href || href.charAt(0) === "#") return;
+    var url = new URL(a.href, location.href);
+    if (url.origin !== location.origin) return;
+    if (url.pathname === location.pathname && url.search === location.search) return;
+    e.preventDefault();
+    document.documentElement.classList.add("page-fade-out");
+    setTimeout(function () { location.href = a.href; }, 120);
+  });
+  window.addEventListener("pageshow", function (e) {
+    if (e.persisted) document.documentElement.classList.remove("page-fade-out");
+  });
+}
+
 function setupReveal() {
   var reveals = document.querySelectorAll(".reveal");
   if (!reveals.length) return;
@@ -91,12 +115,14 @@ if (document.body) {
   addThemeButton();
   setupNavToggle();
   setupReveal();
+  setupPageTransitions();
   protectPastPapers();
 } else {
   document.addEventListener("DOMContentLoaded", () => {
     addThemeButton();
     setupNavToggle();
     setupReveal();
+    setupPageTransitions();
     protectPastPapers();
   });
 }

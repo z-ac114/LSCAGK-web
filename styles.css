@@ -116,6 +116,29 @@ button {
   }
 }
 
+/* ===================== 頁面轉場（順滑導航） ===================== */
+@view-transition {
+  navigation: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+}
+
+/* 無原生 View Transitions 的瀏覽器（Safari／Firefox）用淡入淡出後備 */
+@keyframes page-in {
+  from { opacity: 0; }
+}
+.page-fade body {
+  animation: page-in 220ms ease both;
+}
+.page-fade-out body {
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
 /* ===================== Utilities（全站類名契約） ===================== */
 .font-sans { font-family: var(--font-sans); }
 .font-serif { font-family: var(--font-serif); }
@@ -476,7 +499,6 @@ button {
 }
 .entry-card:hover {
   border-color: var(--hairline-strong);
-  transform: translateY(-2px);
 }
 .entry-num {
   font-size: 0.7rem;
@@ -504,10 +526,9 @@ button {
   font-size: 0.85rem;
   font-weight: 500;
   color: var(--red);
-  transition: transform 160ms ease;
 }
 .entry-card:hover .entry-arrow {
-  transform: translateX(4px);
+  color: var(--red-active);
 }
 
 /* ===================== Sections ===================== */
@@ -779,7 +800,7 @@ main .rounded-xl.bg-surface h2 {
 }
 
 .theme-toggle:hover {
-  transform: scale(1.05);
+  border-color: var(--hairline-strong);
 }
 
 .theme-icon {

@@ -38,7 +38,7 @@
     }
     .leaderboard-item {
       display: grid;
-      grid-template-columns: 2.2rem minmax(0, 15rem) 9rem 4.5rem 5rem 6.5rem;
+      grid-template-columns: 2.2rem minmax(0, 15rem) 9rem 4.5rem 6.5rem;
       justify-content: space-between;
       gap: 0.9rem;
       align-items: center;
@@ -48,10 +48,10 @@
       border: 1px solid var(--hairline);
       transition: transform 0.2s ease;
     }
-    .leaderboard-item:hover { transform: translateX(5px); }
+    .leaderboard-item:hover { border-color: var(--hairline-strong); }
     .leaderboard-head {
       display: grid;
-      grid-template-columns: 2.2rem minmax(0, 15rem) 9rem 4.5rem 5rem 6.5rem;
+      grid-template-columns: 2.2rem minmax(0, 15rem) 9rem 4.5rem 6.5rem;
       justify-content: space-between;
       gap: 0.9rem;
       align-items: center;
@@ -401,7 +401,7 @@
   </head>
   <body>
     <div class="flex min-h-screen flex-col bg-cream text-ink">
-      <header class="site-header"><div class="site-header-inner"><a class="brand" href="/"><img class="brand-icon" src="/assets/agk-icon.png" width="30" height="30" alt="LSCAGKT 校徽標誌" /><span class="brand-name">LSC<span class="accent">AGKT</span></span><span class="brand-zh">喇沙書院學術時事及常識問答隊</span></a><nav class="site-nav" id="siteNav"><a href="/training">資源庫</a><a href="/competition/">競賽模擬</a><a href="/leaderboard/" aria-current="page">排行榜</a></nav><button type="button" class="nav-toggle" aria-expanded="false" aria-label="開啟選單"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16"></path><path d="M4 18h16"></path><path d="M4 6h16"></path></svg></button></div></header>
+      <header class="site-header"><div class="site-header-inner"><a class="brand" href="/"><img class="brand-icon" src="/assets/agk-icon.png" width="30" height="30" alt="LSCAGKT 校徽標誌" /><span class="brand-name">LSC<span class="accent">AGKT</span></span><span class="brand-zh">喇沙書院學術時事及常識問答隊</span></a><nav class="site-nav" id="siteNav"><a href="/">首頁</a><a href="/training">資源庫</a><a href="/competition/">競賽模擬</a><a href="/leaderboard/" aria-current="page">排行榜</a></nav><button type="button" class="nav-toggle" aria-expanded="false" aria-label="開啟選單"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16"></path><path d="M4 18h16"></path><path d="M4 6h16"></path></svg></button></div></header>
       <main class="flex-1">
         <div class="leaderboard-container">
           <h1 class="leaderboard-title">排行榜</h1>
@@ -473,7 +473,7 @@
           </div>
         ` : `
           <div class="leaderboard-head">
-            <span>排名</span><span>姓名</span><span>得分</span><span>準確率</span><span>用時</span><span>日期</span>
+            <span>排名</span><span>姓名</span><span>得分</span><span>準確率</span><span>日期</span>
           </div>
         `;
         const body = slice.map((r, i) => {
@@ -492,7 +492,7 @@
               ${cat}
               <span class="leaderboard-score">${scoreText}</span>
               <span class="leaderboard-meta">${accText}</span>
-              <span class="leaderboard-meta">${timeText}</span>
+              ${infinite ? `<span class="leaderboard-meta">${timeText}</span>` : ""}
               <span class="leaderboard-meta">${dateText}</span>
             </div>
           `;
