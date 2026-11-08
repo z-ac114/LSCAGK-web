@@ -38,12 +38,38 @@ function protectPastPapers() {
   });
 }
 
+
+function setupNavToggle() {
+  var toggle = document.querySelector(".nav-toggle");
+  var header = document.querySelector(".site-header");
+  if (!toggle || !header) return;
+  toggle.addEventListener("click", function () {
+    var open = header.classList.toggle("menu-open");
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    toggle.setAttribute("aria-label", open ? "關閉選單" : "開啟選單");
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && header.classList.contains("menu-open")) {
+      header.classList.remove("menu-open");
+      toggle.setAttribute("aria-expanded", "false");
+    }
+  });
+  document.addEventListener("click", function (e) {
+    if (header.classList.contains("menu-open") && !e.target.closest(".site-header")) {
+      header.classList.remove("menu-open");
+      toggle.setAttribute("aria-expanded", "false");
+    }
+  });
+}
+
 if (document.body) {
   addThemeButton();
+  setupNavToggle();
   protectPastPapers();
 } else {
   document.addEventListener("DOMContentLoaded", () => {
     addThemeButton();
+    setupNavToggle();
     protectPastPapers();
   });
 }
