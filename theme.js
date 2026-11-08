@@ -39,6 +39,31 @@ function protectPastPapers() {
 }
 
 
+
+function setupReveal() {
+  var reveals = document.querySelectorAll(".reveal");
+  if (!reveals.length) return;
+  var reduced =
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduced || !("IntersectionObserver" in window)) {
+    for (var i = 0; i < reveals.length; i++) reveals[i].classList.add("visible");
+    return;
+  }
+  var observer = new IntersectionObserver(
+    function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.12, rootMargin: "0px 0px -32px 0px" }
+  );
+  for (var j = 0; j < reveals.length; j++) observer.observe(reveals[j]);
+}
+
 function setupNavToggle() {
   var toggle = document.querySelector(".nav-toggle");
   var header = document.querySelector(".site-header");
@@ -65,11 +90,13 @@ function setupNavToggle() {
 if (document.body) {
   addThemeButton();
   setupNavToggle();
+  setupReveal();
   protectPastPapers();
 } else {
   document.addEventListener("DOMContentLoaded", () => {
     addThemeButton();
     setupNavToggle();
+    setupReveal();
     protectPastPapers();
   });
 }

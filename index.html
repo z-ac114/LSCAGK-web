@@ -21,6 +21,14 @@
     />
   </head>
   <body>
+    <script>
+      /* 保險：若 reveal 觀察器因任何原因未執行，1.2 秒後強制顯示全部內容 */
+      window.setTimeout(function () {
+        document.querySelectorAll(".reveal:not(.visible)").forEach(function (el) {
+          el.classList.add("visible");
+        });
+      }, 1200);
+    </script>
     <div class="flex min-h-screen flex-col bg-cream text-ink">
       <header class="site-header">
         <div class="site-header-inner">
