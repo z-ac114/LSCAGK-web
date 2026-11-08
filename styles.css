@@ -9,8 +9,8 @@
    ===================================================================== */
 
 :root {
-  --cream: #faf9f5;
-  --canvas-soft: #f5f0e8;
+  --cream: #feffdc;
+  --canvas-soft: #fbfccc;
   --ink: rgb(20 20 19 / 92%);
   --ink-solid: #141413;
   --body-text: rgb(20 20 19 / 62%);
@@ -22,9 +22,9 @@
   --red-active: #ae0906;
   --plum-soft: #ebe1f0;
   --rose-soft: #fdeceb;
-  --surface: #fdfcf8;
-  --surface-soft: #f5f0e8;
-  --surface-tint: #f1ede3;
+  --surface: #feffdc;
+  --surface-soft: #fbfccc;
+  --surface-tint: #f8f9c6;
   --surface-dark: #181715;
   --surface-dark-elevated: #252320;
   --hairline: rgb(20 20 19 / 8%);
@@ -47,7 +47,7 @@
 
 html {
   scroll-behavior: smooth;
-  background: #faf9f5;
+  background: #feffdc;
 }
 html.dark-mode {
   background: #181715;
