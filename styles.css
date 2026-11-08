@@ -11,23 +11,25 @@
 :root {
   --cream: #faf9f5;
   --canvas-soft: #f5f0e8;
-  --ink: #141413;
-  --body-text: #3d3d3a;
-  --muted: #6c6a64;
-  --muted-soft: #8e8b82;
+  --ink: rgb(20 20 19 / 92%);
+  --ink-solid: #141413;
+  --body-text: rgb(20 20 19 / 62%);
+  --muted: rgb(20 20 19 / 45%);
+  --muted-soft: rgb(20 20 19 / 34%);
   --purple: #542884;
   --purple-deep: #3d1d61;
   --red: #d42522;
   --red-active: #ae0906;
   --plum-soft: #ebe1f0;
   --rose-soft: #fdeceb;
-  --surface: #efe9de;
+  --surface: #ffffff;
   --surface-soft: #f5f0e8;
+  --surface-tint: #f1ede3;
   --surface-dark: #181715;
   --surface-dark-elevated: #252320;
-  --hairline: #e6dfd8;
-  --hairline-soft: #ebe6df;
-  --hairline-strong: #cfcdc4;
+  --hairline: rgb(20 20 19 / 8%);
+  --hairline-soft: rgb(20 20 19 / 5%);
+  --hairline-strong: rgb(20 20 19 / 16%);
   --school-gold: #c69a3a;
   --space-unit: 0.25rem;
   --font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", -apple-system, "Segoe UI", sans-serif;
@@ -36,6 +38,7 @@
   --radius: 12px;
   --radius-xl: 16px;
   --nav-h: 64px;
+  --shadow-popover: 0 8px 24px rgb(0 0 0 / 12%), 0 2px 6px rgb(0 0 0 / 8%);
 }
 
 * {
@@ -58,7 +61,8 @@ body {
   color: var(--body-text);
   font-family: var(--font-sans);
   font-weight: 400;
-  line-height: 1.5;
+  font-size: 0.9375rem;
+  line-height: 1.6;
   transition: background-color 240ms ease, color 240ms ease;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -289,9 +293,9 @@ button {
   object-fit: contain;
 }
 .brand-name {
-  font-weight: 700;
-  font-size: 1.02rem;
-  letter-spacing: 0.04em;
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
   color: var(--ink);
 }
 .brand-name .accent {
@@ -313,11 +317,12 @@ button {
 .site-nav a {
   display: inline-flex;
   align-items: center;
-  min-height: 40px;
-  padding: 0 14px;
+  min-height: 38px;
+  padding: 0 13px;
   border-radius: var(--radius-sm);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-weight: 500;
+  letter-spacing: -0.01em;
   color: var(--body-text);
   position: relative;
   transition: color 140ms ease, background-color 140ms ease;
@@ -394,33 +399,36 @@ button {
   color: var(--ink);
 }
 .ls-kicker {
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   color: var(--red);
   margin: 0;
 }
 .ls-kicker-red {
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   font-weight: 600;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   color: var(--red);
   margin: 0;
 }
 .ls-title {
   font-family: var(--font-serif);
   font-weight: 400;
-  line-height: 1.14;
-  letter-spacing: -0.02em;
-  font-size: clamp(2.2rem, 5.6vw, 4rem);
+  line-height: 1.12;
+  letter-spacing: -0.022em;
+  font-size: clamp(2.1rem, 5.4vw, 3.75rem);
   color: var(--ink);
-  margin: 20px 0 0;
+  margin: 18px 0 0;
   max-width: 20em;
 }
 .ls-sub {
-  font-size: 1.1rem;
-  color: var(--body-text);
-  margin: 20px 0 0;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: 18px 0 0;
   max-width: 34em;
 }
 .ls-motto {
@@ -433,14 +441,15 @@ button {
 .ls-btn {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
-  margin-top: 30px;
-  padding: 0 22px;
+  min-height: 40px;
+  margin-top: 28px;
+  padding: 0 20px;
   background: var(--red);
   color: #ffffff;
   border-radius: var(--radius-sm);
-  font-size: 0.92rem;
+  font-size: 0.875rem;
   font-weight: 500;
+  letter-spacing: -0.01em;
   transition: background 140ms ease;
 }
 .ls-btn:hover {
@@ -458,8 +467,8 @@ button {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 32px 28px;
+  gap: 8px;
+  padding: 26px 24px;
   background: var(--surface);
   border: 1px solid var(--hairline);
   border-radius: var(--radius);
@@ -470,16 +479,17 @@ button {
   transform: translateY(-2px);
 }
 .entry-num {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--muted);
 }
 .entry-card h2 {
   font-family: var(--font-serif);
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: 400;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   color: var(--ink);
   margin: 0;
 }
@@ -490,8 +500,8 @@ button {
   margin: 0;
 }
 .entry-arrow {
-  margin-top: 14px;
-  font-size: 0.88rem;
+  margin-top: 12px;
+  font-size: 0.85rem;
   font-weight: 500;
   color: var(--red);
   transition: transform 160ms ease;
@@ -512,9 +522,9 @@ button {
 }
 .ls-heading {
   font-family: var(--font-serif);
-  font-size: clamp(1.55rem, 2.8vw, 2rem);
+  font-size: clamp(1.5rem, 2.6vw, 1.9rem);
   font-weight: 400;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.022em;
   color: var(--ink);
   margin: 10px 0 0;
 }
@@ -537,16 +547,17 @@ button {
 .ls-card {
   background: var(--surface);
   border: 1px solid var(--hairline);
-  padding: 32px 28px;
+  padding: 26px 24px;
   border-radius: var(--radius);
-  transition: border-color 160ms ease, transform 160ms ease;
+  transition: border-color 160ms ease;
 }
 .ls-card:hover {
   border-color: var(--hairline-strong);
 }
 .ls-card h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
   color: var(--ink);
   margin: 0;
 }
@@ -794,18 +805,22 @@ main .rounded-xl.bg-surface h2 {
 .dark-mode {
   --cream: #181715;
   --canvas-soft: #1f1d19;
-  --ink: #f0eee9;
-  --body-text: #cfccc4;
-  --muted: #8e8b82;
-  --surface: #252320;
+  --ink: rgb(250 249 245 / 94%);
+  --ink-solid: #f0eee9;
+  --body-text: rgb(250 249 245 / 62%);
+  --muted: rgb(250 249 245 / 45%);
+  --muted-soft: rgb(250 249 245 / 34%);
+  --surface: #22201c;
+  --surface-tint: #1f1d19;
   --surface-dark: #11100e;
-  --hairline: #2e2b26;
-  --hairline-soft: #26241f;
-  --hairline-strong: #3c382d;
+  --hairline: rgb(250 249 245 / 9%);
+  --hairline-soft: rgb(250 249 245 / 5%);
+  --hairline-strong: rgb(250 249 245 / 18%);
   --red: #e0524a;
   --red-active: #c74340;
   --school-gold: #e2bb62;
   --plum-soft: #b9aec9;
+  --shadow-popover: 0 8px 24px rgb(0 0 0 / 45%), 0 2px 6px rgb(0 0 0 / 30%);
 }
 
 .dark-mode ::selection {

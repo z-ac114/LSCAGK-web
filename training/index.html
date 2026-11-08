@@ -43,24 +43,22 @@
         flex-direction: column;
         gap: 0.65rem;
         width: 100%;
-        padding: 1.4rem 1.4rem 1.3rem;
+        padding: 1.3rem 1.3rem 1.2rem;
         text-align: left;
         background: var(--surface);
-        border: 1px solid var(--border);
+        border: 1px solid var(--hairline);
         border-radius: var(--radius);
-        box-shadow: var(--shadow-sm);
         cursor: pointer;
         font: inherit;
         color: var(--ink);
         touch-action: manipulation;
         -webkit-tap-highlight-color: transparent;
-        transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+        transition: transform 160ms ease, border-color 160ms ease;
       }
       @media (hover: hover) {
         .res-card:hover {
-          transform: translateY(-4px);
-          box-shadow: var(--shadow-lg);
-          border-color: var(--plum-soft);
+          transform: translateY(-2px);
+          border-color: var(--hairline-strong);
         }
       }
       .res-card:focus-visible {
@@ -121,7 +119,7 @@
       .res-meta {
         margin-top: auto;
         padding-top: 0.65rem;
-        border-top: 1px solid var(--border);
+        border-top: 1px solid var(--hairline);
         display: flex;
         gap: 0.9rem;
         color: var(--muted);
@@ -145,9 +143,9 @@
         width: 284px;
         padding: 0.8rem;
         background: var(--surface);
-        border: 1px solid var(--border);
+        border: 1px solid var(--hairline);
         border-radius: 16px;
-        box-shadow: var(--shadow-lg);
+        box-shadow: var(--shadow-popover);
         opacity: 0;
         transform: translateY(4px);
         transition: opacity 160ms ease, transform 160ms ease;
@@ -167,7 +165,7 @@
         height: 300px;
         object-fit: contain;
         object-position: top center;
-        border: 1px solid var(--border);
+        border: 1px solid var(--hairline);
         border-radius: 10px;
         background: #f6f5f8;
       }
@@ -217,16 +215,16 @@
         display: flex;
         flex-direction: column;
         background: var(--surface);
-        border-radius: 18px;
+        border-radius: 16px;
         overflow: hidden;
-        box-shadow: 0 24px 80px rgb(0 0 0 / 40%);
+        box-shadow: var(--shadow-popover);
       }
       .viewer-bar {
         display: flex;
         align-items: center;
         gap: 0.6rem;
         padding: 0.65rem 0.9rem;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid var(--hairline);
         background: var(--surface);
       }
       .viewer-title {
@@ -250,7 +248,7 @@
         min-height: 2.4rem;
         padding: 0 0.95rem;
         border-radius: 9999px;
-        border: 1px solid var(--border);
+        border: 1px solid var(--hairline);
         background: var(--surface);
         color: var(--ink);
         font-size: 0.85rem;
