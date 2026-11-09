@@ -127,6 +127,7 @@
         gap: 0.9rem;
         color: var(--muted);
         font-size: 0.8rem;
+        font-variant-numeric: tabular-nums;
       }
       .res-hint {
         margin-top: 1.5rem;
@@ -414,6 +415,7 @@
         var grid = $("resGrid");
         var gridExtra = $("resGridExtra");
         var viewer = $("viewer");
+        var currentIndex = -1;
         var preview = $("resPreview");
         var hideTimer = null;
         var showTimer = null;
@@ -439,24 +441,44 @@
           return false;
         }
 
-        function openViewer(item) {
+        function openViewer(item, card) {
           $("viewerTitle").textContent = item.title;
           $("viewerNewTab").href = item.file;
           $("viewerDownload").href = item.file;
           // #view=FitH：進入時縮放至適寬；原生瀏覽器 PDF 檢視器負責渲染（快速、零依賴）
           $("viewerFrame").src = item.file + "#view=FitH";
           lastFocus = document.activeElement;
-          viewer.classList.add("open");
-          document.body.style.overflow = "hidden";
           hidePreview();
+          document.body.style.overflow = "hidden";
+          // Shared Element Transition：閱覽器從卡片morph展開
+          if (card && document.startViewTransition) {
+            card.style.viewTransitionName = "pdf-card";
+            var vt = document.startViewTransition(function () {
+              viewer.classList.add("open");
+            });
+            vt.finished.finally(function () { card.style.viewTransitionName = ""; });
+          } else {
+            viewer.classList.add("open");
+          }
           $("viewerClose").focus();
         }
 
         function closeViewer() {
-          viewer.classList.remove("open");
-          $("viewerFrame").src = "about:blank";
-          document.body.style.overflow = "";
-          if (lastFocus && lastFocus.focus) lastFocus.focus();
+          var done = function () {
+            viewer.classList.remove("open");
+            $("viewerFrame").src = "about:blank";
+            document.body.style.overflow = "";
+            if (lastFocus && lastFocus.focus) lastFocus.focus();
+          };
+          // 反向morph：閱覽器縮回卡片
+          var openCard = document.querySelector('.res-card[data-index="' + currentIndex + '"]');
+          if (document.startViewTransition && openCard) {
+            openCard.style.viewTransitionName = "pdf-card";
+            var vt = document.startViewTransition(done);
+            vt.finished.finally(function () { openCard.style.viewTransitionName = ""; });
+          } else {
+            done();
+          }
         }
 
         /* ===================== Drive 式懸停預覽 ===================== */
@@ -524,7 +546,7 @@
         function cardHtml(item, index) {
           var badgeClass = item.extra ? "res-badge extra" : "res-badge";
           return (
-            '<button type="button" class="res-card" data-index="' + index + '" data-extra="' + (item.extra ? "1" : "0") + '" aria-label="開啟「' + esc(item.title) + '（需密碼）">' +
+            '<button type="button" class="res-card reveal" style="--reveal-delay:' + Math.min((index % 6) * 60, 300) + 'ms" data-index="' + index + '" data-extra="' + (item.extra ? "1" : "0") + '" aria-label="開啟「' + esc(item.title) + '（需密碼）">' +
               '<div class="res-top">' +
                 '<span class="' + badgeClass + '">PDF · ' + esc(item.tag) + "</span>" +
                 '<span class="res-lock" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></span>' +
@@ -553,7 +575,8 @@
           var index = Number(card.dataset.index);
           var item = RESOURCES[index];
           if (!item) return;
-          if (requestUnlock()) openViewer(item);
+          currentIndex = index;
+          if (requestUnlock()) openViewer(item, card);
         }
 
         grid.addEventListener("click", onGridClick);

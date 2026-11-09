@@ -121,6 +121,14 @@ button {
 }
 
 /* ===================== 頁面轉場（順滑導航） ===================== */
+/* PDF 閱覽器從被點擊的卡片morph展開（Shared Element Transition） */
+::view-transition-group(pdf-card) {
+  animation-duration: 320ms;
+}
+.viewer.open .viewer-sheet {
+  view-transition-name: pdf-card;
+}
+
 @view-transition {
   navigation: auto;
 }
@@ -144,6 +152,9 @@ button {
 }
 
 /* ===================== Utilities（全站類名契約） ===================== */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
 .font-sans { font-family: var(--font-sans); }
 .font-serif { font-family: var(--font-serif); }
 .font-normal { font-weight: 400; }
@@ -306,7 +317,7 @@ button {
   max-width: 72rem;
   margin: 0 auto;
   height: var(--nav-h);
-  padding: 0 20px;
+  padding: 0 max(20px, env(safe-area-inset-right)) 0 max(20px, env(safe-area-inset-left));
 }
 .brand {
   display: inline-flex;
@@ -324,6 +335,7 @@ button {
   font-size: 1rem;
   letter-spacing: 0.02em;
   color: var(--ink);
+  font-variant-numeric: tabular-nums;
 }
 .brand-name .accent {
   color: var(--red);
@@ -344,7 +356,7 @@ button {
 .site-nav a {
   display: inline-flex;
   align-items: center;
-  min-height: 38px;
+  min-height: 40px;
   padding: 0 13px;
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
@@ -446,6 +458,8 @@ button {
   font-weight: 400;
   line-height: 1.12;
   letter-spacing: -0.022em;
+  font-feature-settings: "palt" 1;
+  text-wrap: balance;
   font-size: clamp(2.1rem, 5.4vw, 3.75rem);
   color: var(--ink);
   margin: 18px 0 0;
@@ -457,6 +471,7 @@ button {
   color: var(--ink);
   margin: 18px 0 0;
   max-width: 34em;
+  text-wrap: pretty;
 }
 .ls-motto {
   max-width: 600px;
@@ -516,6 +531,8 @@ button {
   font-size: 1.4rem;
   font-weight: 400;
   letter-spacing: -0.015em;
+  font-feature-settings: "palt" 1;
+  text-wrap: balance;
   color: var(--ink);
   margin: 0;
 }
@@ -550,6 +567,8 @@ button {
   font-size: clamp(1.5rem, 2.6vw, 1.9rem);
   font-weight: 400;
   letter-spacing: -0.022em;
+  font-feature-settings: "palt" 1;
+  text-wrap: balance;
   color: var(--ink);
   margin: 10px 0 0;
 }

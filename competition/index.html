@@ -1432,7 +1432,10 @@
             alert("成績保存功能暫不可用（Supabase 未載入）。");
             return;
           }
+          // Optimistic Update：先假設成功，失敗才回滾
           saveBtn.disabled = true;
+          var originalLabel = saveBtn.textContent;
+          saveBtn.textContent = "保存中…";
           supabaseClient
             .from("leaderboard")
             .insert(payload)
@@ -1440,8 +1443,8 @@
             .single()
             .then(function (result) {
               var data = result.data, error = result.error;
-              saveBtn.disabled = false;
               if (error) throw error;
+              saveBtn.textContent = "已保存 ✓";
               var shareUrl = window.location.origin + "/leaderboard/?entry=" + data.id;
               $("shareLinkInput").value = shareUrl;
               $("shareLinkRow").classList.remove("hidden");
@@ -1449,6 +1452,7 @@
             })
             .catch(function (err) {
               saveBtn.disabled = false;
+              saveBtn.textContent = originalLabel;
               console.error(err);
               alert("保存失敗，請稍後再試");
             });
