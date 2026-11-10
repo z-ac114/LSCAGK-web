@@ -4,9 +4,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="../styles.css" />
-        <style>html{background:#fcfbf4}html.dark-mode{background:#181715}</style>
+        <link rel="preconnect" href="https://oajvxavzsomymqunpgxx.supabase.co" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="preload" as="image" href="/assets/agk-icon.png" />
+    <style>html{background:#fcfbf4}html.dark-mode{background:#181715}</style>
     <script type="speculationrules">
-      {"prefetch": [{"source": "list", "urls": ["/", "/training", "/competition/", "/leaderboard/"], "eagerness": "conservative"}]}
+      {"prefetch": [{"source": "list", "urls": ["/", "/training", "/competition/", "/leaderboard/"], "eagerness": "immediate"}]}
     </script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -50,7 +53,23 @@
       border-radius: 0.25rem;
       background: var(--surface);
       border: 1px solid var(--hairline);
-      transition: transform 0.2s ease;
+      transition: border-color 0.2s ease;
+      animation: lb-row-in 320ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+      animation-delay: calc(var(--row-i, 0) * 45ms);
+    }
+    @keyframes lb-row-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: none; }
+    }
+    .leaderboard-card {
+      animation: lb-card-in 340ms ease both;
+    }
+    @keyframes lb-card-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .leaderboard-item, .leaderboard-card { animation: none; }
     }
     .leaderboard-item:hover { border-color: var(--hairline-strong); }
     .leaderboard-head {
@@ -490,7 +509,7 @@
           const bank = infinite ? bankOf(r) : null;
           const cat = bank ? `<span class="leaderboard-cat" data-full="${esc(bank.full)}" title="${esc(bank.full)}">${esc(bank.short)}</span>` : "";
           return `
-            <div class="leaderboard-item ${infinite ? 'item-infinite' : ''} ${isTop ? 'top' : ''}">
+            <div class="leaderboard-item ${infinite ? 'item-infinite' : ''} ${isTop ? 'top' : ''}" style="--row-i:${i}">
               <span class="leaderboard-rank">${rank}</span>
               <span class="leaderboard-name">${esc(r.name)}</span>
               ${cat}

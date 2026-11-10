@@ -64,6 +64,40 @@ function setupPageTransitions() {
   });
 }
 
+function setupPrefetch() {
+  // Chrome／Edge 已用 Speculation Rules 預載；這裡處理其他瀏覽器＋閒置全站預載
+  if (HTMLScriptElement.supports && HTMLScriptElement.supports("speculationrules")) return;
+  var seen = {};
+  function prefetchUrl(path) {
+    if (seen[path]) return;
+    seen[path] = true;
+    var l = document.createElement("link");
+    l.rel = "prefetch";
+    l.href = path;
+    document.head.appendChild(l);
+  }
+  document.addEventListener("mouseover", function (e) {
+    var a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
+    if (!a || a.target === "_blank") return;
+    var href = a.getAttribute("href");
+    if (!href || href.charAt(0) === "#") return;
+    var url = new URL(a.href, location.href);
+    if (url.origin !== location.origin) return;
+    prefetchUrl(url.pathname + url.search);
+  }, { passive: true });
+  var SITE_PAGES = ["/", "/training", "/competition/", "/leaderboard/"];
+  var startIdle = function () {
+    var run = function () { SITE_PAGES.forEach(prefetchUrl); };
+    if ("requestIdleCallback" in window) {
+      window.requestIdleCallback(run, { timeout: 3000 });
+    } else {
+      window.setTimeout(run, 1500);
+    }
+  };
+  if (document.readyState === "complete") startIdle();
+  else window.addEventListener("load", startIdle);
+}
+
 function setupReveal() {
   var reveals = document.querySelectorAll(".reveal");
   if (!reveals.length) return;
@@ -116,6 +150,7 @@ if (document.body) {
   setupNavToggle();
   setupReveal();
   setupPageTransitions();
+  setupPrefetch();
   protectPastPapers();
 } else {
   document.addEventListener("DOMContentLoaded", () => {
@@ -123,6 +158,7 @@ if (document.body) {
     setupNavToggle();
     setupReveal();
     setupPageTransitions();
+    setupPrefetch();
     protectPastPapers();
   });
 }
