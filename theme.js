@@ -71,11 +71,18 @@ function setupPrefetch() {
   function prefetchUrl(path) {
     if (seen[path]) return;
     seen[path] = true;
-    var l = document.createElement("link");
-    l.rel = "prefetch";
-    l.href = path;
-    document.head.appendChild(l);
+    // fetch 入 HTTP cache（Safari 不支援 rel=prefetch；fetch 全適用，低優先度）
+    fetch(path, { priority: "low" }).catch(function () {});
   }
+  var SITE_PAGES = ["/", "/training", "/competition/", "/leaderboard/"];
+  // 進入任何頁面即預載其餘內頁 —— 主頁尤其即時，令導航無縫
+  var prefetchRest = function () {
+    SITE_PAGES.forEach(function (p) {
+      if (p !== location.pathname) prefetchUrl(p);
+    });
+  };
+  if (document.readyState !== "loading") prefetchRest();
+  else document.addEventListener("DOMContentLoaded", prefetchRest);
   document.addEventListener("mouseover", function (e) {
     var a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
     if (!a || a.target === "_blank") return;
@@ -85,17 +92,6 @@ function setupPrefetch() {
     if (url.origin !== location.origin) return;
     prefetchUrl(url.pathname + url.search);
   }, { passive: true });
-  var SITE_PAGES = ["/", "/training", "/competition/", "/leaderboard/"];
-  var startIdle = function () {
-    var run = function () { SITE_PAGES.forEach(prefetchUrl); };
-    if ("requestIdleCallback" in window) {
-      window.requestIdleCallback(run, { timeout: 3000 });
-    } else {
-      window.setTimeout(run, 1500);
-    }
-  };
-  if (document.readyState === "complete") startIdle();
-  else window.addEventListener("load", startIdle);
 }
 
 function setupReveal() {
