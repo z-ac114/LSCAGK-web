@@ -420,6 +420,106 @@
         color: #2e7d32;
       }
 
+      /* ---------- 小型選項（考試樣式切換） ---------- */
+      .opt-size-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        margin-left: 0.5rem;
+        background: transparent;
+        border: 1px solid var(--hairline);
+        border-radius: 8px;
+        color: var(--muted);
+        cursor: pointer;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        transition: color 140ms ease, border-color 140ms ease;
+      }
+      .opt-size-btn:hover { color: var(--ink); border-color: var(--hairline-strong); }
+      .opt-size-btn[aria-pressed="true"] { color: var(--red); border-color: var(--red); }
+      #quizView.compact .q-options {
+        gap: 2px;
+        margin-top: 1rem;
+        max-width: 42rem;
+      }
+      #quizView.compact .q-option {
+        min-height: 2.3rem;
+        padding: 0.4rem 0.6rem;
+        background: transparent;
+        border-color: transparent;
+        border-radius: 8px;
+      }
+      #quizView.compact .q-option-key {
+        width: 1.15rem;
+        height: 1.15rem;
+        margin-top: 0.22rem;
+        font-size: 0.7rem;
+        background: transparent;
+        border: 1.5px solid var(--hairline-strong);
+        color: var(--muted);
+      }
+      #quizView.compact .q-option.selected {
+        background: transparent;
+        border-color: transparent;
+        box-shadow: none;
+      }
+      #quizView.compact .q-option.selected .q-option-key {
+        background: var(--red);
+        border-color: var(--red);
+        color: #ffffff;
+      }
+      #quizView.compact .q-option.correct {
+        background: #e8f5ec;
+        border-color: transparent;
+        box-shadow: none;
+      }
+      #quizView.compact .q-option.correct .q-option-key {
+        background: #2e7d32;
+        border-color: #2e7d32;
+        color: #ffffff;
+      }
+      #quizView.compact .q-option.wrong {
+        background: #fdeceb;
+        border-color: transparent;
+        box-shadow: none;
+      }
+      #quizView.compact .q-option.wrong .q-option-key {
+        background: var(--red);
+        border-color: var(--red);
+        color: #ffffff;
+      }
+      #quizView.compact .q-option.answer {
+        border-color: transparent;
+        box-shadow: none;
+      }
+      #quizView.compact .q-option.answer .q-option-key {
+        background: transparent;
+        border-color: #2e7d32;
+        color: #2e7d32;
+      }
+      .dark-mode #quizView.compact .q-option.correct {
+        background: #1e3a26;
+      }
+      .dark-mode #quizView.compact .q-option.correct .q-option-key {
+        background: #2e7d32;
+        border-color: #2e7d32;
+        color: #ffffff;
+      }
+      .dark-mode #quizView.compact .q-option.wrong {
+        background: #3a221f;
+      }
+      .dark-mode #quizView.compact .q-option.selected .q-option-key {
+        background: #a87fd6;
+        border-color: #a87fd6;
+        color: #2b303b;
+      }
+      .dark-mode #quizView.compact .q-option.answer .q-option-key {
+        border-color: #7dc98a;
+        color: #7dc98a;
+      }
+
       /* ---------- Nav ---------- */
       .q-nav {
         margin-top: 1.5rem;
@@ -701,6 +801,9 @@
                     </div>
                     <div class="quiz-progress">
                       <span class="quiz-progress-label" id="progressLabel">1/310</span>
+                      <button type="button" class="opt-size-btn" id="optSizeBtn" aria-pressed="false" title="切換選項大小">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="6" r="2"></circle><path d="M10 6h10"></path><circle cx="5" cy="12" r="2"></circle><path d="M10 12h10"></path><circle cx="5" cy="18" r="2"></circle><path d="M10 18h10"></path></svg>
+                      </button>
                     </div>
                   </div>
                   <div class="quiz-progress-track"><div class="quiz-progress-dot" id="progressDot"></div></div>
@@ -1429,7 +1532,8 @@
             accuracy: accuracy,
             time_taken: timeTaken,
             mode: gameMode,
-            details: runDetails
+            details: runDetails,
+            exam_style: optStyle === "compact"
           };
           if (!supabaseClient) {
             alert("成績保存功能暫不可用（Supabase 未載入）。");
@@ -1439,11 +1543,10 @@
           saveBtn.disabled = true;
           var originalLabel = saveBtn.textContent;
           saveBtn.textContent = "保存中…";
-          supabaseClient
-            .from("leaderboard")
-            .insert(payload)
-            .select()
-            .single()
+          var attempt = function (p) {
+            return supabaseClient.from("leaderboard").insert(p).select().single();
+          };
+          attempt(payload)
             .then(function (result) {
               var data = result.data, error = result.error;
               if (error) throw error;
@@ -1454,6 +1557,24 @@
               showToast("成績已保存，可複製連結分享");
             })
             .catch(function (err) {
+              // 資料表未加 exam_style 欄時：退回不含旗標的保存（成績仍會保存，只是無星標）
+              var msg = String(err && err.message || "");
+              if (/exam_style/i.test(msg)) {
+                var fallback = Object.assign({}, payload);
+                delete fallback.exam_style;
+                attempt(fallback)
+                  .then(function () {
+                    saveBtn.textContent = "已保存 ✓";
+                    showToast("成績已保存（未加星標：資料表尚未啟用考試模式欄）");
+                  })
+                  .catch(function (e2) {
+                    console.error(e2);
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = originalLabel;
+                    alert("保存失敗，請稍後再試");
+                  });
+                return;
+              }
               saveBtn.disabled = false;
               saveBtn.textContent = originalLabel;
               console.error(err);
@@ -1478,6 +1599,26 @@
             showToast("已複製連結");
           }
         });
+
+        /* ===================== 選項大小切換 ===================== */
+        var optStyle = "standard";
+        try {
+          if (localStorage.getItem("agkOptionStyle") === "compact") optStyle = "compact";
+        } catch (e) { /* 私密模式 */ }
+        function applyOptStyle() {
+          $("quizView").classList.toggle("compact", optStyle === "compact");
+          var btn = $("optSizeBtn");
+          if (btn) {
+            btn.setAttribute("aria-pressed", optStyle === "compact" ? "true" : "false");
+            btn.title = optStyle === "compact" ? "切換回標準選項" : "切換成小型選項";
+          }
+        }
+        $("optSizeBtn").addEventListener("click", function () {
+          optStyle = optStyle === "compact" ? "standard" : "compact";
+          try { localStorage.setItem("agkOptionStyle", optStyle); } catch (e) { /* 私密模式 */ }
+          applyOptStyle();
+        });
+        applyOptStyle();
 
         /* ===================== 初始化 ===================== */
         function bankLoaded() {

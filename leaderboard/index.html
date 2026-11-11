@@ -119,6 +119,13 @@
       color: #4a4f58;
       font-variant-numeric: tabular-nums;
     }
+    .lb-star {
+      color: var(--school-gold);
+      margin-left: 6px;
+      font-size: 0.8rem;
+      cursor: help;
+    }
+    .dark-mode .lb-star { color: #e2bb62; }
     .leaderboard-name {
       font-weight: 500;
       color: var(--ink);
@@ -589,7 +596,7 @@
           return `
             <div class="leaderboard-item ${infinite ? 'item-infinite' : ''} ${isTop ? 'top' : ''}" style="--row-i:${i}">
               <span class="leaderboard-rank">${rank}</span>
-              <span class="leaderboard-name">${esc(r.name)}</span>
+              <span class="leaderboard-name">${esc(r.name)}${r.exam_style ? '<span class="lb-star" title="考試模式（小型選項）">★</span>' : ""}</span>
               ${cat}
               <span class="leaderboard-score">${scoreText}</span>
               <span class="leaderboard-meta">${accText}</span>
@@ -691,7 +698,7 @@
         const dateText = data.created_at ? new Date(data.created_at).toLocaleDateString() : "";
         const el = document.getElementById("sharedEntry");
         el.innerHTML = `
-          <div class="shared-name">${esc(data.name)}</div>
+          <div class="shared-name">${esc(data.name)}${data.exam_style ? `<span class="lb-star" title="考試模式（小型選項）">★</span>` : ""}</div>
           <div class="shared-score">${scoreText}</div>
           <div class="shared-meta">${modeLabel(data.mode)} · ${isSprint ? `答對 ${data.total} 題` : `共答 ${data.total} 題`} · 用時 ${timeText} · ${dateText}</div>
           ${rank !== null ? `<div class="shared-rank">排名 第 ${rank} 位</div>` : ""}
