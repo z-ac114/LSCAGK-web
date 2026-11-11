@@ -1194,7 +1194,8 @@
           });
 
           $("prevBtn").disabled = idx === 0;
-          $("nextBtn").disabled = finished;
+          // 3 分鐘模式：未作答不可跳題
+          $("nextBtn").disabled = finished || (gameMode === "sprint" && sprintState[idx] == null);
           $("nextBtn").textContent =
             gameMode === "endless" && idx === QUESTIONS.length - 1 ? "完 成" : "下一題";
         }
@@ -1414,6 +1415,7 @@
 
         $("nextBtn").addEventListener("click", function () {
           if (finished) return;
+          if (gameMode === "sprint" && sprintState[idx] == null) return;
           if (idx === QUESTIONS.length - 1) {
             finish();
           } else {
@@ -1453,9 +1455,10 @@
             return;
           }
 
-          // 空格 = 下一題（可跳過答案回饋延遲）
+          // 空格 = 下一題（可跳過答案回饋延遲）；3 分鐘模式未作答不可跳題
           if (e.key === " ") {
             e.preventDefault();
+            if (gameMode === "sprint" && sprintState[idx] == null) return;
             if (advanceTimerId) {
               clearTimeout(advanceTimerId);
               advanceTimerId = null;
