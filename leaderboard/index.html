@@ -240,34 +240,54 @@
     }
 
     /* ---- Board toggle bar ---- */
-    .lb-tabs {
+    .lb-toolbar {
       display: flex;
-      gap: 0.5rem;
       flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px 16px;
       margin-top: 1.5rem;
-      padding-bottom: 0.9rem;
+      padding-bottom: 0.6rem;
       border-bottom: 1px solid var(--hairline);
       margin-bottom: 1.25rem;
     }
-    .lb-tab {
-      display: inline-flex;
-      align-items: center;
-      min-height: 2.2rem;
-      padding: 0 1.1rem;
-      background: var(--surface);
-      color: var(--ink);
-      border: 1px solid var(--hairline);
-      border-radius: 0.25rem;
-      font-size: 0.9rem;
+    .lb-tabs { display: flex; gap: 2px; }
+    .bank-filter { display: flex; align-items: center; gap: 2px; }
+    .bank-label {
+      font-size: 0.78rem;
       font-weight: 600;
-      cursor: pointer;
-      transition: border-color 0.15s ease, background 0.15s ease;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-right: 6px;
     }
-    .lb-tab:hover { border-color: var(--red); }
-    .lb-tab.active {
-      background: #e0524a;
-      border-color: #c74340;
-      color: #ffffff;
+    .lb-tab, .bank-opt {
+      appearance: none;
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+      font: inherit;
+      font-size: 0.875rem;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      color: var(--body-text);
+      padding: 9px 13px;
+      border-radius: 8px;
+      position: relative;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      transition: color 140ms ease, background-color 140ms ease;
+    }
+    .lb-tab:hover, .bank-opt:hover { color: var(--ink); background: var(--hairline-soft); }
+    .lb-tab.active, .bank-opt.active { color: var(--red); font-weight: 600; }
+    .lb-tab.active::after, .bank-opt.active::after {
+      content: "";
+      position: absolute;
+      left: 13px;
+      right: 13px;
+      bottom: 3px;
+      height: 2px;
+      background: var(--red);
+      border-radius: 1px;
     }
     .dark-mode .leaderboard-meta,
     .dark-mode .leaderboard-rank,
@@ -275,13 +295,6 @@
       color: #c5cad4;
     }
     .dark-mode .page-btn:disabled { color: #6a7180; }
-    .dark-mode .lb-tab {
-      background: #2b303b;
-    }
-    .dark-mode .lb-tab.active {
-      background: #e0524a;
-      border-color: #c74340;
-    }
     .shared-entry {
       margin-bottom: 1.5rem;
       background: var(--surface);
@@ -484,9 +497,12 @@
 
           <div class="shared-questions hidden" id="sharedQuestions"></div>
 
-          <div class="lb-tabs" id="lbTabs">
-            <button type="button" class="lb-tab active" data-board="listInfinite">無限模式</button>
-            <button type="button" class="lb-tab" data-board="listSprint">3分鐘挑戰</button>
+          <div class="lb-toolbar">
+            <div class="lb-tabs" id="lbTabs" role="tablist">
+              <button type="button" class="lb-tab active" data-board="listInfinite">無限模式</button>
+              <button type="button" class="lb-tab" data-board="listSprint">3分鐘挑戰</button>
+            </div>
+            <div class="bank-filter" id="bankFilter" role="group" aria-label="題庫篩選"></div>
           </div>
 
           <div class="leaderboard-card">
@@ -528,19 +544,30 @@
         return BANK_ERAS[BANK_ERAS.length - 1];
       }
 
+      let currentBank = "all";
+      let currentBoard = "listInfinite";
+
       const PAGE_SIZE = 10;
       const boardPages = {};
 
       function renderPage(listId, opts) {
         const state = boardPages[listId];
         const list = document.getElementById(listId);
-        if (!state || !state.rows || state.rows.length === 0) {
-          list.innerHTML = '<div class="leaderboard-empty">暫無成績記錄</div>';
+        const allRows = state && state.rows ? state.rows : [];
+        const rows = currentBank === "all" ? allRows : allRows.filter((r) => bankOf(r).short === currentBank);
+        if (rows.length === 0) {
+          list.innerHTML =
+            allRows.length > 0
+              ? '<div class="leaderboard-empty">此題庫暫無成績記錄</div>'
+              : '<div class="leaderboard-empty">暫無成績記錄</div>';
           return;
         }
         const infinite = opts && opts.infinite;
-        const start = state.page * PAGE_SIZE;
-        const slice = state.rows.slice(start, start + PAGE_SIZE);
+        const maxPage = Math.max(Math.ceil(rows.length / PAGE_SIZE) - 1, 0);
+        const page = Math.min(state.page || 0, maxPage);
+        state.page = page;
+        const start = page * PAGE_SIZE;
+        const slice = rows.slice(start, start + PAGE_SIZE);
         const head = infinite ? `
           <div class="leaderboard-head head-infinite">
             <span>排名</span><span>姓名</span><span>題庫</span><span>答對</span><span>準確率</span><span>用時</span><span>日期</span>
@@ -571,12 +598,11 @@
             </div>
           `;
         }).join("");
-        const maxPage = Math.ceil(state.rows.length / PAGE_SIZE);
         const controls = maxPage > 1 ? `
           <div class="board-pagination">
-            <button type="button" class="page-btn" data-board="${listId}" data-dir="-1" ${state.page === 0 ? "disabled" : ""}>上一頁</button>
-            <span class="page-indicator">${state.page + 1} / ${maxPage}</span>
-            <button type="button" class="page-btn" data-board="${listId}" data-dir="1" ${state.page >= maxPage - 1 ? "disabled" : ""}>下一頁</button>
+            <button type="button" class="page-btn" data-board="${listId}" data-dir="-1" ${page === 0 ? "disabled" : ""}>上一頁</button>
+            <span class="page-indicator">${page + 1} / ${maxPage}</span>
+            <button type="button" class="page-btn" data-board="${listId}" data-dir="1" ${page >= maxPage - 1 ? "disabled" : ""}>下一頁</button>
           </div>` : "";
         list.innerHTML = head + body + controls;
       }
@@ -778,6 +804,7 @@
       }
 
       async function activateTab(boardId) {
+        currentBoard = boardId;
         document.querySelectorAll(".leaderboard-list").forEach((el) => el.classList.add("hidden"));
         const list = document.getElementById(boardId);
         if (list) list.classList.remove("hidden");
@@ -790,6 +817,41 @@
           await renderInfinite(boardId);
         }
       }
+
+      // 題庫篩選：選項自動跟隨 BANK_ERAS
+      (function buildBankFilter() {
+        const wrap = document.getElementById("bankFilter");
+        const shorts = [];
+        BANK_ERAS.forEach((era) => {
+          if (!shorts.includes(era.short)) shorts.push(era.short);
+        });
+        const opts = [{ id: "all", label: "全部" }].concat(
+          shorts.map((s) => ({ id: s, label: s }))
+        );
+        wrap.innerHTML =
+          '<span class="bank-label">題庫</span>' +
+          opts
+            .map(
+              (o, i) =>
+                `<button type="button" class="bank-opt${i === 0 ? " active" : ""}" data-bank="${esc(o.id)}" aria-pressed="${i === 0}">${esc(o.label)}</button>`
+            )
+            .join("");
+      })();
+
+      document.getElementById("bankFilter").addEventListener("click", (e) => {
+        const btn = e.target && e.target.closest ? e.target.closest(".bank-opt") : null;
+        if (!btn || btn.classList.contains("active")) return;
+        currentBank = btn.dataset.bank || "all";
+        document.querySelectorAll("#bankFilter .bank-opt").forEach((b) => {
+          const active = b === btn;
+          b.classList.toggle("active", active);
+          b.setAttribute("aria-pressed", active ? "true" : "false");
+        });
+        if (boardPages[currentBoard]) {
+          boardPages[currentBoard].page = 0;
+          renderPage(currentBoard, { infinite: currentBoard === "listInfinite" });
+        }
+      });
 
       document.getElementById("lbTabs").addEventListener("click", (e) => {
         const tab = e.target && e.target.closest ? e.target.closest(".lb-tab") : null;
