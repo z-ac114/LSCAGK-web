@@ -1446,9 +1446,10 @@
             updateEndlessStats();
           }
           render();
-          // 自動跳到下一題；無限練習答錯且有解說時不跳，讓玩家細讀出處
+          // 自動跳到下一題；3 分鐘模式節奏更快，無限練習答錯且有解說時不跳
           var explainShown = gameMode === "endless" && !isCorrect && findSource(item.q);
           if (explainShown) return;
+          var advanceDelay = gameMode === "sprint" ? 400 : 850;
           if (advanceTimerId) clearTimeout(advanceTimerId);
           advanceTimerId = setTimeout(function () {
             advanceTimerId = null;
@@ -1457,7 +1458,7 @@
               idx++;
               render();
             }
-          }, 850);
+          }, advanceDelay);
         }
 
         function esc(s) {
