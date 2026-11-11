@@ -45,7 +45,7 @@
     }
     .leaderboard-item {
       display: grid;
-      grid-template-columns: 2.2rem minmax(0, 15rem) 9rem 4.5rem 5rem 6.5rem;
+      grid-template-columns: 2.2rem minmax(0, 15rem) 9rem 4.5rem 6.5rem;
       justify-content: space-between;
       gap: 0.9rem;
       align-items: center;
@@ -74,7 +74,7 @@
     .leaderboard-item:hover { border-color: var(--hairline-strong); }
     .leaderboard-head {
       display: grid;
-      grid-template-columns: 2.2rem minmax(0, 15rem) 9rem 4.5rem 5rem 6.5rem;
+      grid-template-columns: 2.2rem minmax(0, 15rem) 9rem 4.5rem 6.5rem;
       justify-content: space-between;
       gap: 0.9rem;
       align-items: center;
@@ -156,7 +156,7 @@
     /* 載入中骨架（skeleton） */
     .lb-skeleton-row {
       display: grid;
-      grid-template-columns: 2.2rem minmax(0, 15rem) 9rem 4.5rem 5rem 6.5rem;
+      grid-template-columns: 2.2rem minmax(0, 15rem) 9rem 4.5rem 6.5rem;
       gap: 0.9rem;
       align-items: center;
       padding: 0.9rem 1rem;
@@ -581,7 +581,7 @@
           </div>
         ` : `
           <div class="leaderboard-head">
-            <span>排名</span><span>姓名</span><span>得分</span><span>準確率</span><span>用時</span><span>日期</span>
+            <span>排名</span><span>姓名</span><span>得分</span><span>準確率</span><span>日期</span>
           </div>
         `;
         const pad2 = (n) => String(n).padStart(2, "0");
@@ -605,7 +605,7 @@
               ${cat}
               ${infinite ? "" : `<span class="leaderboard-score">${scoreText}</span>`}
               <span class="leaderboard-meta">${accText}</span>
-              <span class="leaderboard-meta">${timeText}</span>
+              ${infinite ? `<span class="leaderboard-meta">${timeText}</span>` : ""}
               <span class="leaderboard-meta">${dateText}</span>
             </div>
           `;

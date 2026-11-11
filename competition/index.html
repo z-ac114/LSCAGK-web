@@ -158,11 +158,12 @@
         color: #ffffff;
         border: 1px solid var(--red);
       }
-      .btn-primary:hover { background: var(--lasalle-red-dark); border-color: var(--lasalle-red-dark); }
+      .btn-primary:not(:disabled):hover { background: var(--lasalle-red-dark); border-color: var(--lasalle-red-dark); }
       .btn-primary:disabled {
-        background: var(--hairline);
-        border-color: var(--hairline);
+        background: var(--hairline-soft);
+        border: 1px dashed var(--hairline-strong);
         color: var(--muted);
+        opacity: 0.75;
         cursor: not-allowed;
       }
       .btn-ghost {
@@ -248,7 +249,11 @@
         font-variant-numeric: tabular-nums;
         transition: background 0.2s ease;
       }
-      .combo-badge.level-hot { background: var(--lasalle-red-dark); }
+      .combo-badge.level-hot {
+        background: var(--school-gold);
+        color: #141413;
+        box-shadow: 0 0 0 2px rgb(198 154 58 / 35%);
+      }
       .combo-badge.none { display: none; }
       .combo-badge.pop { animation: comboPop 0.45s cubic-bezier(0.22, 1.61, 0.36, 1); }
       @keyframes comboPop {
@@ -865,8 +870,8 @@
       .dark-mode .review-item.wrong .review-ans span:first-child { color: #f28779; }
       .dark-mode .review-item.wrong .review-badge { background: #b04a55; }
       .dark-mode .score-big { color: #e7c9ee; }
-      .dark-mode .btn-primary:hover { background: #7a4bb3; border-color: #7a4bb3; }
-      .dark-mode .btn-primary:disabled { background: #3a404d; border-color: #3a404d; color: #8b93a1; }
+      .dark-mode .btn-primary:not(:disabled):hover { background: #7a4bb3; border-color: #7a4bb3; }
+      .dark-mode .btn-primary:disabled { background: #1f1d19; border: 1px dashed #454b59; color: #8b93a1; opacity: 0.75; }
       .dark-mode .quiz-toast { background: #454b59; color: #f3eaf5; }
 
       @media (prefers-reduced-motion: reduce) {
@@ -1184,6 +1189,14 @@
               var n = Math.floor(Math.random() * (m + 1));
               var t = options[m]; options[m] = options[n]; options[n] = t;
             }
+            // 對/錯題（兩個選項）：肯定項固定在上、否定項在下（正確索引同步重算）
+            if (options.length === 2) {
+              var neg = options.filter(function (o) { return /^(不|否|沒|無)/.test(o); });
+              if (neg.length === 1) {
+                var pos = options.filter(function (o) { return o !== neg[0]; })[0];
+                options = [pos, neg[0]];
+              }
+            }
             return {
               q: entry.item.q,
               options: options,
@@ -1318,7 +1331,7 @@
 
         /* ===================== 畫面渲染 ===================== */
         function render() {
-          var item = viewOf(QUESTIONS[idx]);
+          var item = QUESTIONS[idx];
           $("progressLabel").textContent = (idx + 1) + "/" + QUESTIONS.length;
           $("progressDot").style.left = QUESTIONS.length > 1 ? (idx / (QUESTIONS.length - 1)) * 100 + "%" : "100%";
           $("questionText").textContent = item.q;
@@ -1335,9 +1348,7 @@
           var list = $("optionsList");
           list.innerHTML = "";
           var feedback = sprintState[idx];
-          var viewOpts = item.viewOptions || item.options;
-          var viewCorrect = item.viewCorrect != null ? item.viewCorrect : item.correctIndex;
-          viewOpts.forEach(function (opt, i) {
+          item.options.forEach(function (opt, i) {
             var label = document.createElement("button");
             label.type = "button";
             label.className = "q-option";
@@ -1354,7 +1365,7 @@
             if (feedback) {
               label.disabled = true;
               if (picked) label.classList.add(feedback === "correct" ? "correct" : "wrong");
-              else if (i === viewCorrect) label.classList.add("answer");
+              else if (i === item.correctIndex) label.classList.add("answer");
             } else {
               if (picked) label.classList.add("selected");
               label.addEventListener("click", function () {
@@ -1437,11 +1448,10 @@
             var isCorrect = sprintState[i] === "correct";
             if (isCorrect) correctCount++;
             if (wasAnswered) answeredCount++;
-            var view = viewOf(item);
             runDetails.push({
               q: item.q,
-              ua: wasAnswered ? LETTERS[selections[i]] + "、" + view.viewOptions[selections[i]] : null,
-              ca: LETTERS[view.viewCorrect] + "、" + item.correctAnswer,
+              ua: wasAnswered ? LETTERS[selections[i]] + "、" + item.options[selections[i]] : null,
+              ca: LETTERS[item.correctIndex] + "、" + item.correctAnswer,
               ok: isCorrect
             });
           });
@@ -1943,23 +1953,6 @@
           applyOptStyle();
         });
         applyOptStyle();
-
-        /* ===================== 對/錯題排序：肯定項在上，否定項在下 ===================== */
-        function tfOrdered(item) {
-          if (item.options.length !== 2) return null;
-          var neg = item.options.filter(function (o) { return /^(不|否|沒|無)/.test(o); });
-          if (neg.length !== 1) return null;
-          var pos = item.options.filter(function (o) { return o !== neg[0]; })[0];
-          return [pos, neg[0]];
-        }
-        function viewOf(item) {
-          if (!item.viewOptions) {
-            var o = tfOrdered(item);
-            item.viewOptions = o || item.options;
-            item.viewCorrect = item.viewOptions.indexOf(item.correctAnswer);
-          }
-          return item;
-        }
 
         /* ===================== 法例出處解說（無限練習答錯時） ===================== */
         var sourceLookup = null;
