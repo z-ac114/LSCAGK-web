@@ -690,6 +690,8 @@
         border-color: #7dc98a;
         color: #7dc98a;
       }
+      #quizView.compact .q-option { cursor: default; }
+      #quizView.compact .q-option .q-option-key { cursor: pointer; }
 
       /* ---------- Nav ---------- */
       .q-nav {
@@ -1403,8 +1405,14 @@
               else if (i === item.correctIndex) label.classList.add("answer");
             } else {
               if (picked) label.classList.add("selected");
-              label.addEventListener("click", function () {
-                if (started && !finished && sprintState[idx] == null) sprintAnswer(i);
+              label.addEventListener("click", function (e) {
+                if (!started || finished || sprintState[idx] != null) return;
+                // 小型模式：只按小圓圈才算作答
+                if (optStyle === "compact") {
+                  var hit = e.target && e.target.closest ? e.target.closest(".q-option-key") : null;
+                  if (!hit || hit.parentElement !== label) return;
+                }
+                sprintAnswer(i);
               });
             }
             list.appendChild(label);
@@ -1671,8 +1679,8 @@
 
           // 自訂按鍵：選項／下一題／上一題
           var k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
-          var keyIdx = KEYBINDS.options.indexOf(k);
-          if (keyIdx >= 0 && keyIdx < item.options.length) {
+          var keyIdx = k ? KEYBINDS.options.indexOf(k) : -1;
+          if (keyIdx >= 0 && KEYBINDS.options[keyIdx] && keyIdx < item.options.length) {
             sprintAnswer(keyIdx);
             e.preventDefault();
             return;
@@ -1874,8 +1882,9 @@
         });
 
         /* ===================== 鍵盤按鍵綁定 ===================== */
-        var KEYBINDS = { options: ["1", "2", "3", "4"], next: " ", prev: "Backspace" };
+        var KEYBINDS = { options: ["", "", "", ""], next: " ", prev: "Backspace" };
         function keyLabel(k) {
+          if (!k) return "—";
           if (k === " ") return "Space";
           if (k === "Backspace") return "⌫";
           return k.toUpperCase();
@@ -1893,10 +1902,15 @@
         (function initBinds() {
           try {
             var saved = JSON.parse(localStorage.getItem("agkKeyBindings") || "null");
+            var legacy = ["1", "2", "3", "4"];
             if (saved && Array.isArray(saved.options) && saved.options.length === 4) {
-              KEYBINDS.options = saved.options.map(function (k) { return String(k); });
-              if (saved.next) KEYBINDS.next = String(saved.next);
-              if (saved.prev) KEYBINDS.prev = String(saved.prev);
+              var opts = saved.options.map(function (k) { return String(k); });
+              // 舊預設 1/2/3/4 視為未綁定（改為自行綁定）
+              if (JSON.stringify(opts) !== JSON.stringify(legacy)) {
+                KEYBINDS.options = opts;
+                if (saved.next) KEYBINDS.next = String(saved.next);
+                if (saved.prev) KEYBINDS.prev = String(saved.prev);
+              }
             }
           } catch (e) { /* 私密模式 */ }
           refreshBinds();
