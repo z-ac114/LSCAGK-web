@@ -420,6 +420,50 @@
         color: #2e7d32;
       }
 
+      /* ---------- 選項大小切換（lobby） ---------- */
+      .style-toggle {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        margin-top: 1rem;
+      }
+      .style-label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        margin-right: 6px;
+      }
+      .style-opt {
+        appearance: none;
+        background: transparent;
+        border: 0;
+        cursor: pointer;
+        font: inherit;
+        font-size: 0.875rem;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        color: var(--body-text);
+        padding: 8px 13px;
+        border-radius: 8px;
+        position: relative;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        transition: color 140ms ease, background-color 140ms ease;
+      }
+      .style-opt:hover { color: var(--ink); background: var(--hairline-soft); }
+      .style-opt.active { color: var(--red); font-weight: 600; }
+      .style-opt.active::after {
+        content: "";
+        position: absolute;
+        left: 13px;
+        right: 13px;
+        bottom: 3px;
+        height: 2px;
+        background: var(--red);
+        border-radius: 1px;
+      }
+
       /* ---------- 小型選項（考試樣式切換） ---------- */
       .opt-size-btn {
         display: inline-flex;
@@ -769,6 +813,11 @@
                     <b>無限練習</b>
                     <span>不限時，逐題作答直到完成全部題目，中途可隨時交卷。</span>
                   </button>
+                </div>
+                <div class="style-toggle" id="styleToggle" role="group" aria-label="選項大小">
+                  <span class="style-label">選項</span>
+                  <button type="button" class="style-opt active" data-style="standard" aria-pressed="true">標準</button>
+                  <button type="button" class="style-opt" data-style="compact" aria-pressed="false">小型</button>
                 </div>
                 <ul class="lobby-rules">
                   <li>
@@ -1612,10 +1661,22 @@
             btn.setAttribute("aria-pressed", optStyle === "compact" ? "true" : "false");
             btn.title = optStyle === "compact" ? "切換回標準選項" : "切換成小型選項";
           }
+          document.querySelectorAll("#styleToggle .style-opt").forEach(function (b) {
+            var active = b.dataset.style === optStyle;
+            b.classList.toggle("active", active);
+            b.setAttribute("aria-pressed", active ? "true" : "false");
+          });
         }
         $("optSizeBtn").addEventListener("click", function () {
           optStyle = optStyle === "compact" ? "standard" : "compact";
           try { localStorage.setItem("agkOptionStyle", optStyle); } catch (e) { /* 私密模式 */ }
+          applyOptStyle();
+        });
+        document.getElementById("styleToggle").addEventListener("click", function (e) {
+          var btn = e.target && e.target.closest ? e.target.closest(".style-opt") : null;
+          if (!btn || btn.classList.contains("active")) return;
+          optStyle = btn.dataset.style === "compact" ? "compact" : "standard";
+          try { localStorage.setItem("agkOptionStyle", optStyle); } catch (e2) { /* 私密模式 */ }
           applyOptStyle();
         });
         applyOptStyle();
