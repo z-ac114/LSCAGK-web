@@ -1042,7 +1042,7 @@
                       </div>
                     </div>
                     <div class="quiz-progress">
-                      <span class="quiz-progress-label" id="progressLabel">1/310</span>
+                      <span class="quiz-progress-label" id="progressLabel">1/354</span>
                       <button type="button" class="opt-size-btn" id="optSizeBtn" aria-pressed="false" title="切換選項大小">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="6" r="2"></circle><path d="M10 6h10"></path><circle cx="5" cy="12" r="2"></circle><path d="M10 12h10"></path><circle cx="5" cy="18" r="2"></circle><path d="M10 18h10"></path></svg>
                       </button>
@@ -2015,9 +2015,9 @@
             return false;
           }
           box.innerHTML =
-            '<div class="q-explain-head"><span class="ex-tag">答錯了</span><span>·</span><span>法例出處</span></div>' +
-            '<p class="q-explain-ref">' + esc(src.ref) + "</p>" +
-            '<p class="q-explain-text">' + esc(src.text) + "</p>";
+            '<div class="q-explain-head"><span class="ex-tag">答錯了</span><span>·</span><span>' + esc(src.law) + '</span></div>' +
+            '<p class="q-explain-ref">出處 · ' + esc(src.ref) + "</p>" +
+            (src.text ? '<p class="q-explain-text">' + esc(src.text) + "</p>" : "");
           box.classList.remove("hidden");
           return true;
         }
