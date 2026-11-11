@@ -472,8 +472,14 @@
         text-transform: uppercase;
         color: var(--muted);
       }
-      .q-explain-head .ex-tag {
+      .q-explain-head .ex-tag.ex-wrong {
         color: var(--red);
+      }
+      .q-explain-head .ex-tag.ex-ok {
+        color: #2e7d32;
+      }
+      .dark-mode .q-explain-head .ex-tag.ex-ok {
+        color: #7dc98a;
       }
       .q-explain-ref {
         margin: 0.45rem 0 0;
@@ -1447,7 +1453,7 @@
           }
           render();
           // 自動跳到下一題；3 分鐘模式節奏更快，無限練習答錯且有解說時不跳
-          var explainShown = gameMode === "endless" && !isCorrect && findSource(item.q);
+          var explainShown = gameMode === "endless" && findSource(item.q);
           if (explainShown) return;
           var advanceDelay = gameMode === "sprint" ? 400 : 850;
           if (advanceTimerId) clearTimeout(advanceTimerId);
@@ -1507,9 +1513,9 @@
               "</span> · 得分 " + marks;
           } else {
             var pct = Math.round((correctCount / Math.max(QUESTIONS.length, 1)) * 100);
-            $("scoreBig").textContent = correctCount + " / " + QUESTIONS.length;
+            $("scoreBig").textContent = pct + "%";
             $("scoreSub").textContent =
-              "正確率 " + pct + "% · 用時 " + fmt(usedTime) + " · 共答 " + answeredCount + " 題";
+              "正確率 · 答對 " + correctCount + " / " + QUESTIONS.length + " 題 · 用時 " + fmt(usedTime) + " · 共答 " + answeredCount + " 題";
             $("reviewSummary").innerHTML =
               "共 " + QUESTIONS.length + " 題 · <span class='rv-ok'>答對 " + correctCount +
               "</span> · <span class='rv-wrong'>答錯 " + wrongCount +
@@ -2009,14 +2015,15 @@
 
         function renderExplain(item) {
           var box = $("explainBox");
-          var src = gameMode === "endless" && sprintState[idx] === "wrong" ? findSource(item.q) : null;
+          var src = gameMode === "endless" && sprintState[idx] != null ? findSource(item.q) : null;
           if (!src) {
             box.classList.add("hidden");
             box.innerHTML = "";
             return false;
           }
+          var ok = sprintState[idx] === "correct";
           box.innerHTML =
-            '<div class="q-explain-head"><span class="ex-tag">答錯了</span><span>·</span><span>' + esc(src.law) + '</span></div>' +
+            '<div class="q-explain-head"><span class="ex-tag ' + (ok ? "ex-ok" : "ex-wrong") + '">' + (ok ? "答對了" : "答錯了") + '</span><span>·</span><span>' + esc(src.law) + '</span></div>' +
             '<p class="q-explain-ref">出處 · ' + esc(src.ref) + "</p>" +
             (src.text ? '<p class="q-explain-text">' + esc(src.text) + "</p>" : "");
           box.classList.remove("hidden");
