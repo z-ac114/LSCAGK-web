@@ -249,10 +249,39 @@
         font-variant-numeric: tabular-nums;
         transition: background 0.2s ease;
       }
-      .combo-badge.level-hot {
+      /* 連擊色階（里程碑）：×1 玫瑰 → ×5 紅 → ×10 深紅 → ×20 金 → ×25+ 紅金漸層（白熱） */
+      .combo-badge[data-level="1"] {
+        background: var(--rose-soft);
+        color: var(--red);
+      }
+      .combo-badge[data-level="2"] {
+        background: var(--red);
+        color: #ffffff;
+      }
+      .combo-badge[data-level="3"] {
+        background: var(--lasalle-red-dark);
+        color: #ffffff;
+      }
+      .combo-badge[data-level="4"] {
         background: var(--school-gold);
         color: #141413;
         box-shadow: 0 0 0 2px rgb(198 154 58 / 35%);
+      }
+      .combo-badge[data-level="5"] {
+        background: linear-gradient(120deg, var(--red) 0%, var(--school-gold) 100%);
+        color: #ffffff;
+        box-shadow:
+          0 0 0 2px rgb(198 154 58 / 45%),
+          0 0 16px rgb(212 37 34 / 40%);
+      }
+      .dark-mode .combo-badge[data-level="1"] {
+        background: rgb(224 82 74 / 16%);
+        color: #f28779;
+      }
+      .dark-mode .combo-badge[data-level="4"] {
+        background: #e2bb62;
+        color: #141413;
+        box-shadow: 0 0 0 2px rgb(226 187 98 / 30%);
       }
       .combo-badge.none { display: none; }
       .combo-badge.pop { animation: comboPop 0.45s cubic-bezier(0.22, 1.61, 0.36, 1); }
@@ -1301,7 +1330,13 @@
           if (streakEl) streakEl.textContent = streak;
           if (!badge) return;
           badge.classList.toggle("none", streak === 0);
-          badge.classList.toggle("level-hot", streak >= 4);
+          // 連擊色階：里程碑 ×1 / ×5 / ×10 / ×20 / ×25+
+          badge.dataset.level =
+            streak >= 25 ? "5" :
+            streak >= 20 ? "4" :
+            streak >= 10 ? "3" :
+            streak >= 5  ? "2" :
+            streak >= 1  ? "1" : "";
           if (gained > 0) {
             badge.classList.remove("pop");
             void badge.offsetWidth;
