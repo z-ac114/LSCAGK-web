@@ -146,6 +146,57 @@
     .leaderboard-item.top .leaderboard-name,
     .leaderboard-item.top .leaderboard-score { color: #ffffff; }
     .leaderboard-item.top .leaderboard-meta { color: rgb(255 255 255 / 92%); }
+    /* 載入中骨架（skeleton） */
+    .lb-skeleton-row {
+      display: grid;
+      grid-template-columns: 2.2rem minmax(0, 15rem) 9rem 4.5rem 6.5rem;
+      gap: 0.9rem;
+      align-items: center;
+      padding: 0.9rem 1rem;
+      border: 1px solid var(--hairline);
+      border-radius: 0.25rem;
+      background: var(--surface);
+      margin-bottom: 0.75rem;
+    }
+    .lb-skeleton-row.item-infinite {
+      grid-template-columns: 2.2rem minmax(0, 13rem) minmax(0, 6rem) 5rem 4rem 4.5rem 6rem;
+    }
+    .lb-skel {
+      display: block;
+      height: 0.8rem;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--hairline-soft) 30%, var(--hairline) 50%, var(--hairline-soft) 70%);
+      background-size: 240% 100%;
+      animation: lb-shimmer 1.25s ease-in-out infinite;
+    }
+    .lb-skel.rank { width: 1.35rem; height: 1.05rem; }
+    .lb-skel.w40 { width: 40%; }
+    .lb-skel.w60 { width: 60%; }
+    .lb-skel.w85 { width: 85%; }
+    @keyframes lb-shimmer {
+      from { background-position: 130% 0; }
+      to { background-position: -130% 0; }
+    }
+    .lb-loading-note {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+      padding: 0.8rem 0 0;
+    }
+    .lb-dots span {
+      display: inline-block;
+      animation: lb-dot 1.2s ease-in-out infinite;
+    }
+    .lb-dots span:nth-child(2) { animation-delay: 0.18s; }
+    .lb-dots span:nth-child(3) { animation-delay: 0.36s; }
+    @keyframes lb-dot {
+      0%, 60%, 100% { opacity: 0.25; }
+      30% { opacity: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .lb-skel, .lb-dots span { animation: none; }
+    }
+
     .leaderboard-empty {
       text-align: center;
       padding: 2rem 0;
@@ -711,12 +762,28 @@
       // tab bar: one board visible at a time, fetched lazily and cached
       const fetchedBoards = new Set();
 
+      // 載入中骨架：以真實列佈局呈現 shimmer
+      function renderSkeleton(listId, infinite) {
+        const cols = infinite
+          ? ["rank", "w85", "w40", "w40", "w40", "w40", "w60"]
+          : ["rank", "w85", "w40", "w40", "w60"];
+        const rows = Array.from({ length: 6 }, () =>
+          `<div class="lb-skeleton-row${infinite ? " item-infinite" : ""}">` +
+            cols.map((w) => `<span class="lb-skel ${w}"></span>`).join("") +
+          "</div>"
+        ).join("");
+        document.getElementById(listId).innerHTML =
+          rows +
+          '<div class="lb-loading-note">載入成績中<span class="lb-dots"><span>.</span><span>.</span><span>.</span></span></div>';
+      }
+
       async function activateTab(boardId) {
         document.querySelectorAll(".leaderboard-list").forEach((el) => el.classList.add("hidden"));
         const list = document.getElementById(boardId);
         if (list) list.classList.remove("hidden");
         if (fetchedBoards.has(boardId)) return;
         fetchedBoards.add(boardId);
+        if (supabaseClient) renderSkeleton(boardId, boardId === "listInfinite");
         if (boardId === "listSprint") {
           await renderSprint(boardId);
         } else {
