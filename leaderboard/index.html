@@ -45,7 +45,7 @@
     }
     .leaderboard-item {
       display: grid;
-      grid-template-columns: 2.2rem minmax(0, 15rem) 9rem 4.5rem 6.5rem;
+      grid-template-columns: 2.2rem minmax(0, 15rem) 9rem 4.5rem 5rem 6.5rem;
       justify-content: space-between;
       gap: 0.9rem;
       align-items: center;
@@ -74,7 +74,7 @@
     .leaderboard-item:hover { border-color: var(--hairline-strong); }
     .leaderboard-head {
       display: grid;
-      grid-template-columns: 2.2rem minmax(0, 15rem) 9rem 4.5rem 6.5rem;
+      grid-template-columns: 2.2rem minmax(0, 15rem) 9rem 4.5rem 5rem 6.5rem;
       justify-content: space-between;
       gap: 0.9rem;
       align-items: center;
@@ -88,7 +88,7 @@
     /* infinite list: 7 columns with the category column */
     .leaderboard-item.item-infinite,
     .leaderboard-head.head-infinite {
-      grid-template-columns: 2.2rem minmax(0, 13rem) minmax(0, 6rem) 5rem 4rem 4.5rem 6rem;
+      grid-template-columns: 2.2rem minmax(0, 13rem) minmax(0, 6rem) 4.5rem 5rem 6.5rem;
     }
     .leaderboard-cat {
       font-size: 1.05rem;
@@ -156,7 +156,7 @@
     /* 載入中骨架（skeleton） */
     .lb-skeleton-row {
       display: grid;
-      grid-template-columns: 2.2rem minmax(0, 15rem) 9rem 4.5rem 6.5rem;
+      grid-template-columns: 2.2rem minmax(0, 15rem) 9rem 4.5rem 5rem 6.5rem;
       gap: 0.9rem;
       align-items: center;
       padding: 0.9rem 1rem;
@@ -166,7 +166,7 @@
       margin-bottom: 0.75rem;
     }
     .lb-skeleton-row.item-infinite {
-      grid-template-columns: 2.2rem minmax(0, 13rem) minmax(0, 6rem) 5rem 4rem 4.5rem 6rem;
+      grid-template-columns: 2.2rem minmax(0, 13rem) minmax(0, 6rem) 4.5rem 5rem 6.5rem;
     }
     .lb-skel {
       display: block;
@@ -577,19 +577,24 @@
         const slice = rows.slice(start, start + PAGE_SIZE);
         const head = infinite ? `
           <div class="leaderboard-head head-infinite">
-            <span>排名</span><span>姓名</span><span>題庫</span><span>答對</span><span>準確率</span><span>用時</span><span>日期</span>
+            <span>排名</span><span>姓名</span><span>題庫</span><span>準確率</span><span>用時</span><span>日期</span>
           </div>
         ` : `
           <div class="leaderboard-head">
-            <span>排名</span><span>姓名</span><span>得分</span><span>準確率</span><span>日期</span>
+            <span>排名</span><span>姓名</span><span>得分</span><span>準確率</span><span>用時</span><span>日期</span>
           </div>
         `;
+        const pad2 = (n) => String(n).padStart(2, "0");
+        const fmtDur = (s) => `${Math.floor(s / 60)}:${pad2(s % 60)}`;
         const body = slice.map((r, i) => {
           const rank = start + i + 1; // global rank across pages
-          const scoreText = infinite ? `${r.score} / ${r.total}` : `${r.score} 分`;
+          const scoreText = `${r.score} 分`;
           const accText = r.accuracy != null ? `${Math.round(r.accuracy * 100)}%` : "";
-          const timeText = r.time_taken != null ? `${r.time_taken}s` : "—";
-          const dateText = r.created_at ? new Date(r.created_at).toLocaleDateString() : "";
+          const timeText = r.time_taken != null ? fmtDur(r.time_taken) : "—";
+          const d = r.created_at ? new Date(r.created_at) : null;
+          const dateText = d
+            ? `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}.${String(d.getFullYear()).slice(2)} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`
+            : "";
           const isTop = rank <= 3;
           const bank = infinite ? bankOf(r) : null;
           const cat = bank ? `<span class="leaderboard-cat" data-full="${esc(bank.full)}" title="${esc(bank.full)}">${esc(bank.short)}</span>` : "";
@@ -598,9 +603,9 @@
               <span class="leaderboard-rank">${rank}</span>
               <span class="leaderboard-name">${esc(r.name)}${r.exam_style ? '<span class="lb-star" title="考試模式（小型選項）">★</span>' : ""}</span>
               ${cat}
-              <span class="leaderboard-score">${scoreText}</span>
+              ${infinite ? "" : `<span class="leaderboard-score">${scoreText}</span>`}
               <span class="leaderboard-meta">${accText}</span>
-              ${infinite ? `<span class="leaderboard-meta">${timeText}</span>` : ""}
+              <span class="leaderboard-meta">${timeText}</span>
               <span class="leaderboard-meta">${dateText}</span>
             </div>
           `;
@@ -694,8 +699,12 @@
 
         const isSprint = data.mode === "sprint";
         const scoreText = isSprint ? `${data.score} 分` : `${data.score} / ${data.total}`;
-        const timeText = data.time_taken != null ? `${data.time_taken}s` : "—";
-        const dateText = data.created_at ? new Date(data.created_at).toLocaleDateString() : "";
+        const pad2 = (n) => String(n).padStart(2, "0");
+        const timeText = data.time_taken != null ? `${Math.floor(data.time_taken / 60)}:${pad2(data.time_taken % 60)}` : "—";
+        const dd = data.created_at ? new Date(data.created_at) : null;
+        const dateText = dd
+          ? `${pad2(dd.getDate())}.${pad2(dd.getMonth() + 1)}.${String(dd.getFullYear()).slice(2)} ${pad2(dd.getHours())}:${pad2(dd.getMinutes())}`
+          : "";
         const el = document.getElementById("sharedEntry");
         el.innerHTML = `
           <div class="shared-name">${esc(data.name)}${data.exam_style ? `<span class="lb-star" title="考試模式（小型選項）">★</span>` : ""}</div>

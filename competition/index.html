@@ -508,6 +508,55 @@
         border-radius: 1px;
       }
 
+      /* ---------- 鍵盤按鍵綁定（桌面） ---------- */
+      .kbd-bind {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 0.6rem;
+      }
+      .kbd-slot {
+        appearance: none;
+        background: var(--surface);
+        border: 1px solid var(--hairline);
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1px;
+        padding: 5px 9px;
+        min-width: 2.6rem;
+        font: inherit;
+        color: var(--body-text);
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        transition: border-color 140ms ease, color 140ms ease;
+      }
+      .kbd-slot:hover { border-color: var(--hairline-strong); }
+      .kbd-cap {
+        font-family: var(--font-sans);
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--ink);
+        font-variant-numeric: tabular-nums;
+      }
+      .kbd-tag {
+        font-size: 0.66rem;
+        color: var(--muted);
+        letter-spacing: 0.04em;
+      }
+      .kbd-slot.listening {
+        border-color: var(--red);
+        color: var(--red);
+      }
+      .kbd-slot.listening .kbd-cap { color: var(--red); }
+      .kbd-sep { width: 1px; height: 1.6rem; background: var(--hairline); margin: 0 4px; }
+      @media (hover: none) and (pointer: coarse) {
+        .kbd-bind { display: none; }
+      }
+
       /* ---------- 小型選項（考試樣式切換） ---------- */
       .opt-size-btn {
         display: inline-flex;
@@ -883,7 +932,7 @@
       }
       body.quiz-live .quiz-stage > div {
         width: 100%;
-        margin: auto 0;
+        margin-block: auto;
       }
       body.quiz-live .quiz-card {
         margin-block: auto;
@@ -926,6 +975,16 @@
                   <span class="style-label">選項</span>
                   <button type="button" class="style-opt active" data-style="standard" aria-pressed="true">標準</button>
                   <button type="button" class="style-opt" data-style="compact" aria-pressed="false">小型</button>
+                </div>
+                <div class="kbd-bind" id="kbdBind" role="group" aria-label="鍵盤按鍵綁定">
+                  <span class="style-label">按鍵</span>
+                  <button type="button" class="kbd-slot" data-slot="0"><span class="kbd-cap">1</span><span class="kbd-tag">選項 A</span></button>
+                  <button type="button" class="kbd-slot" data-slot="1"><span class="kbd-cap">2</span><span class="kbd-tag">選項 B</span></button>
+                  <button type="button" class="kbd-slot" data-slot="2"><span class="kbd-cap">3</span><span class="kbd-tag">選項 C</span></button>
+                  <button type="button" class="kbd-slot" data-slot="3"><span class="kbd-cap">4</span><span class="kbd-tag">選項 D</span></button>
+                  <span class="kbd-sep" aria-hidden="true"></span>
+                  <button type="button" class="kbd-slot" data-slot="next"><span class="kbd-cap">Space</span><span class="kbd-tag">下一題</span></button>
+                  <button type="button" class="kbd-slot" data-slot="prev"><span class="kbd-cap">⌫</span><span class="kbd-tag">上一題</span></button>
                 </div>
                 <ul class="lobby-rules">
                   <li>
@@ -1259,7 +1318,7 @@
 
         /* ===================== 畫面渲染 ===================== */
         function render() {
-          var item = QUESTIONS[idx];
+          var item = viewOf(QUESTIONS[idx]);
           $("progressLabel").textContent = (idx + 1) + "/" + QUESTIONS.length;
           $("progressDot").style.left = QUESTIONS.length > 1 ? (idx / (QUESTIONS.length - 1)) * 100 + "%" : "100%";
           $("questionText").textContent = item.q;
@@ -1276,7 +1335,9 @@
           var list = $("optionsList");
           list.innerHTML = "";
           var feedback = sprintState[idx];
-          item.options.forEach(function (opt, i) {
+          var viewOpts = item.viewOptions || item.options;
+          var viewCorrect = item.viewCorrect != null ? item.viewCorrect : item.correctIndex;
+          viewOpts.forEach(function (opt, i) {
             var label = document.createElement("button");
             label.type = "button";
             label.className = "q-option";
@@ -1293,7 +1354,7 @@
             if (feedback) {
               label.disabled = true;
               if (picked) label.classList.add(feedback === "correct" ? "correct" : "wrong");
-              else if (i === item.correctIndex) label.classList.add("answer");
+              else if (i === viewCorrect) label.classList.add("answer");
             } else {
               if (picked) label.classList.add("selected");
               label.addEventListener("click", function () {
@@ -1376,10 +1437,11 @@
             var isCorrect = sprintState[i] === "correct";
             if (isCorrect) correctCount++;
             if (wasAnswered) answeredCount++;
+            var view = viewOf(item);
             runDetails.push({
               q: item.q,
-              ua: wasAnswered ? LETTERS[selections[i]] + "、" + item.options[selections[i]] : null,
-              ca: LETTERS[item.correctIndex] + "、" + item.correctAnswer,
+              ua: wasAnswered ? LETTERS[selections[i]] + "、" + view.viewOptions[selections[i]] : null,
+              ca: LETTERS[view.viewCorrect] + "、" + item.correctAnswer,
               ok: isCorrect
             });
           });
@@ -1562,16 +1624,16 @@
           var item = QUESTIONS[idx];
           if (!item) return;
 
-          // 數字鍵選項（1–9，0 = 第 10 個）
-          var keyIdx = e.key >= "1" && e.key <= "9" ? Number(e.key) - 1 : e.key === "0" ? 9 : -1;
+          // 自訂按鍵：選項／下一題／上一題
+          var k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+          var keyIdx = KEYBINDS.options.indexOf(k);
           if (keyIdx >= 0 && keyIdx < item.options.length) {
             sprintAnswer(keyIdx);
             e.preventDefault();
             return;
           }
 
-          // 空格 = 下一題（可跳過答案回饋延遲）；3 分鐘模式未作答不可跳題
-          if (e.key === " ") {
+          if (k === KEYBINDS.next) {
             e.preventDefault();
             if (gameMode === "sprint" && sprintState[idx] == null) return;
             if (advanceTimerId) {
@@ -1585,8 +1647,7 @@
             return;
           }
 
-          // Backspace / Delete = 上一題
-          if (e.key === "Delete" || e.key === "Backspace") {
+          if (k === KEYBINDS.prev || e.key === "Delete") {
             e.preventDefault();
             if (idx > 0) {
               idx--;
@@ -1767,6 +1828,90 @@
           }
         });
 
+        /* ===================== 鍵盤按鍵綁定 ===================== */
+        var KEYBINDS = { options: ["1", "2", "3", "4"], next: " ", prev: "Backspace" };
+        function keyLabel(k) {
+          if (k === " ") return "Space";
+          if (k === "Backspace") return "⌫";
+          return k.toUpperCase();
+        }
+        function saveBinds() {
+          try { localStorage.setItem("agkKeyBindings", JSON.stringify(KEYBINDS)); } catch (e) { /* 私密模式 */ }
+        }
+        function refreshBinds() {
+          document.querySelectorAll("#kbdBind .kbd-slot").forEach(function (slot) {
+            var s = slot.dataset.slot;
+            var k = s === "next" || s === "prev" ? KEYBINDS[s] : KEYBINDS.options[Number(s)];
+            slot.querySelector(".kbd-cap").textContent = keyLabel(k);
+          });
+        }
+        (function initBinds() {
+          try {
+            var saved = JSON.parse(localStorage.getItem("agkKeyBindings") || "null");
+            if (saved && Array.isArray(saved.options) && saved.options.length === 4) {
+              KEYBINDS.options = saved.options.map(function (k) { return String(k); });
+              if (saved.next) KEYBINDS.next = String(saved.next);
+              if (saved.prev) KEYBINDS.prev = String(saved.prev);
+            }
+          } catch (e) { /* 私密模式 */ }
+          refreshBinds();
+        })();
+
+        var listeningSlot = null;
+        function slotKey(slot) {
+          return slot === "next" || slot === "prev" ? KEYBINDS[slot] : KEYBINDS.options[Number(slot)];
+        }
+        function setSlotKey(slot, key) {
+          // 重複鍵：與另一個槽位對調，避免衝突
+          if (slot === "next" || slot === "prev") {
+            if (KEYBINDS[slot] === key) return;
+            for (var i = 0; i < KEYBINDS.options.length; i++) {
+              if (KEYBINDS.options[i] === key) { KEYBINDS.options[i] = KEYBINDS[slot]; break; }
+            }
+            KEYBINDS[slot] = key;
+          } else {
+            var idx = Number(slot);
+            if (KEYBINDS.options[idx] === key) return;
+            if (KEYBINDS.next === key) { KEYBINDS.next = KEYBINDS.options[idx]; }
+            else if (KEYBINDS.prev === key) { KEYBINDS.prev = KEYBINDS.options[idx]; }
+            else {
+              for (var j = 0; j < KEYBINDS.options.length; j++) {
+                if (j !== idx && KEYBINDS.options[j] === key) { KEYBINDS.options[j] = KEYBINDS.options[idx]; break; }
+              }
+            }
+            KEYBINDS.options[idx] = key;
+          }
+          saveBinds();
+          refreshBinds();
+        }
+        document.getElementById("kbdBind").addEventListener("click", function (e) {
+          var slot = e.target && e.target.closest ? e.target.closest(".kbd-slot") : null;
+          if (!slot) return;
+          if (listeningSlot === slot) { // 再按一次取消
+            slot.classList.remove("listening");
+            listeningSlot = null;
+            refreshBinds();
+            return;
+          }
+          if (listeningSlot) listeningSlot.classList.remove("listening");
+          listeningSlot = slot;
+          slot.classList.add("listening");
+          slot.querySelector(".kbd-cap").textContent = "按鍵…";
+          slot.blur();
+        });
+        document.addEventListener("keydown", function (e) {
+          if (!listeningSlot) return;
+          e.preventDefault();
+          e.stopPropagation();
+          var slot = listeningSlot;
+          listeningSlot = null;
+          slot.classList.remove("listening");
+          if (e.key === "Escape") { refreshBinds(); return; }
+          var k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+          if (k === "Escape" || k === "Tab" || k === "Enter") { refreshBinds(); return; }
+          setSlotKey(slot.dataset.slot, k);
+        });
+
         /* ===================== 選項大小切換 ===================== */
         var optStyle = "standard";
         try {
@@ -1798,6 +1943,23 @@
           applyOptStyle();
         });
         applyOptStyle();
+
+        /* ===================== 對/錯題排序：肯定項在上，否定項在下 ===================== */
+        function tfOrdered(item) {
+          if (item.options.length !== 2) return null;
+          var neg = item.options.filter(function (o) { return /^(不|否|沒|無)/.test(o); });
+          if (neg.length !== 1) return null;
+          var pos = item.options.filter(function (o) { return o !== neg[0]; })[0];
+          return [pos, neg[0]];
+        }
+        function viewOf(item) {
+          if (!item.viewOptions) {
+            var o = tfOrdered(item);
+            item.viewOptions = o || item.options;
+            item.viewCorrect = item.viewOptions.indexOf(item.correctAnswer);
+          }
+          return item;
+        }
 
         /* ===================== 法例出處解說（無限練習答錯時） ===================== */
         var sourceLookup = null;

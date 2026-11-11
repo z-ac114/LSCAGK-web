@@ -122,22 +122,31 @@ function setupNavToggle() {
   var toggle = document.querySelector(".nav-toggle");
   var header = document.querySelector(".site-header");
   if (!toggle || !header) return;
-  toggle.addEventListener("click", function () {
-    var open = header.classList.toggle("menu-open");
+  // 手機版：右側滑出側欄 + 背景遮罩
+  var backdrop = document.createElement("div");
+  backdrop.className = "nav-backdrop";
+  document.body.appendChild(backdrop);
+  function setOpen(open) {
+    header.classList.toggle("menu-open", open);
+    backdrop.classList.toggle("show", open);
+    document.body.classList.toggle("nav-lock", open);
     toggle.setAttribute("aria-expanded", open ? "true" : "false");
     toggle.setAttribute("aria-label", open ? "關閉選單" : "開啟選單");
+  }
+  toggle.addEventListener("click", function () {
+    setOpen(!header.classList.contains("menu-open"));
   });
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && header.classList.contains("menu-open")) {
-      header.classList.remove("menu-open");
-      toggle.setAttribute("aria-expanded", "false");
-    }
+    if (e.key === "Escape" && header.classList.contains("menu-open")) setOpen(false);
   });
   document.addEventListener("click", function (e) {
-    if (header.classList.contains("menu-open") && !e.target.closest(".site-header")) {
-      header.classList.remove("menu-open");
-      toggle.setAttribute("aria-expanded", "false");
+    if (!header.classList.contains("menu-open")) return;
+    if (e.target.closest(".site-header")) {
+      // 點選側欄連結後順手收起（頁面即將跳轉亦無妨）
+      if (e.target.closest(".site-nav a")) setOpen(false);
+      return;
     }
+    setOpen(false);
   });
 }
 
