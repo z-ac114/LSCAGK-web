@@ -126,15 +126,6 @@
         line-height: 1.6;
       }
       .dark-mode .mode-card { background: var(--surface); }
-      .lobby-kbd {
-        display: none;
-        margin: 1.25rem 0 0;
-        font-size: 0.85rem;
-        color: var(--muted);
-      }
-      @media (hover: hover) and (pointer: fine) {
-        .lobby-kbd { display: block; }
-      }
 
       /* ---------- Buttons ---------- */
       .btn-primary, .btn-ghost, .btn-text {
@@ -1033,7 +1024,6 @@
                 <div class="lobby-error hidden" id="lobbyError">
                   題庫載入失敗，請檢查網絡後重新整理頁面（Ctrl+Shift+R）。
                 </div>
-                <p class="lobby-kbd">桌面版提示：數字鍵 1–4 選擇選項 · 空格鍵下一題 · Backspace 返回上一題</p>
               </div>
 
               <!-- Quiz -->
