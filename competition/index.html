@@ -1048,7 +1048,7 @@
                       </div>
                     </div>
                     <div class="quiz-progress">
-                      <span class="quiz-progress-label" id="progressLabel">1/354</span>
+                      <span class="quiz-progress-label" id="progressLabel">1/2201</span>
                       <button type="button" class="opt-size-btn" id="optSizeBtn" aria-pressed="false" title="切換選項大小">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="6" r="2"></circle><path d="M10 6h10"></path><circle cx="5" cy="12" r="2"></circle><path d="M10 12h10"></path><circle cx="5" cy="18" r="2"></circle><path d="M10 18h10"></path></svg>
                       </button>
@@ -1114,8 +1114,7 @@
     <div class="quiz-toast" id="toast" role="status"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="/competition/nschallenge.js"></script>
-    <script src="/competition/ns-sources.js"></script>
+    <script src="/competition/guoqing.js"></script>
     <script>
       (function () {
         "use strict";
@@ -1178,7 +1177,7 @@
           return item.multi === true ? hits : (hits.length === 1 ? hits[0] : -1);
         }
 
-        var BANK_SOURCES = ["NS_QUESTION_BANK"];
+        var BANK_SOURCES = ["GQ_QUESTION_BANK"];
         var QUESTIONS = [];
 
         function buildQuestions() {
@@ -2032,14 +2031,14 @@
 
         /* ===================== 初始化 ===================== */
         function bankLoaded() {
-          return bankOrEmpty("NS_QUESTION_BANK").length > 0;
+          return bankOrEmpty("GQ_QUESTION_BANK").length > 0;
         }
         // 保險機制：若靜態 <script> 因任何原因（路徑、快取）未載入題庫，
         // 動態再嘗試一次以絕對路徑載入。
         function ensureBank(done) {
           if (bankLoaded()) { done(true); return; }
           var s = document.createElement("script");
-          s.src = "/competition/nschallenge.js";
+          s.src = "/competition/guoqing.js";
           s.onload = function () { done(bankLoaded()); };
           s.onerror = function () { done(false); };
           document.head.appendChild(s);
@@ -2053,7 +2052,7 @@
             $("lobbyCount").textContent = "0";
             $("lobbyError").classList.remove("hidden");
             $("startQuizBtn").disabled = true;
-            console.error("題庫載入失敗：NS_QUESTION_BANK 未載入或內容為空。");
+            console.error("題庫載入失敗：GQ_QUESTION_BANK 未載入或內容為空。");
           }
         }
         refreshLobby();
