@@ -47,7 +47,8 @@ module.exports = async (req, res) => {
         let j = {};
         try { j = JSON.parse(text); } catch (e) {}
         if (!r.ok || !j.url) { json(res, 502, { error: "取得上傳位址失敗：" + text.slice(0, 200) }); return; }
-        json(res, 200, { path, uploadUrl: SB_URL + j.url });
+        // j.url 形如 /object/upload/sign/{bucket}/{path}?token=...，需加 /storage/v1 前綴
+        json(res, 200, { path, uploadUrl: SB_URL + "/storage/v1" + j.url });
         return;
       }
 
