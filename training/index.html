@@ -422,6 +422,44 @@
         var PASSWORD = "agk2627";
         var SESSION_KEY = "agkResourcesUnlocked";
 
+        /* 雲端資源（由管理後台上傳，存於 Supabase）
+           - 資料表 pdfs 開放公開讀取；檔案存於 Storage bucket「pdfs」 */
+        var SUPABASE_URL = "https://oajvxavzsomymqunpgxx.supabase.co";
+        var SUPABASE_ANON_KEY = "sb_publishable_L8QCQotDAIP-Fzm8r5IIWQ_U17i-eFy";
+        var cloudResources = [];
+
+        function fmtCloudSize(b) {
+          if (!b && b !== 0) return "PDF";
+          if (b < 1024 * 1024) return Math.max(1, Math.round(b / 1024)) + " KB";
+          return (b / 1024 / 1024).toFixed(1) + " MB";
+        }
+
+        function loadCloud() {
+          if (typeof fetch !== "function") return;
+          fetch(SUPABASE_URL + "/rest/v1/pdfs?select=*&order=created_at.desc", {
+            headers: { apikey: SUPABASE_ANON_KEY, Authorization: "Bearer " + SUPABASE_ANON_KEY }
+          })
+            .then(function (r) { return r.ok ? r.json() : []; })
+            .then(function (rows) {
+              cloudResources = (rows || []).map(function (r) {
+                return {
+                  id: r.id,
+                  title: r.title,
+                  desc: r.description || "",
+                  tag: r.tag || "資料",
+                  file: SUPABASE_URL + "/storage/v1/object/public/pdfs/" + r.storage_path,
+                  date: r.created_at ? String(r.created_at).slice(0, 10) : "",
+                  size: fmtCloudSize(r.file_size),
+                  pages: r.pages || "PDF",
+                  thumb: null,
+                  extra: !!r.extra
+                };
+              });
+              render();
+            })
+            .catch(function () { /* 雲端資源載入失敗時仍顯示靜態清單 */ });
+        }
+
         var $ = function (id) { return document.getElementById(id); };
         var grid = $("resGrid");
         var gridExtra = $("resGridExtra");
@@ -496,6 +534,7 @@
         var canHover = window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
         function showPreview(item, card) {
+          if (!item.thumb) return;
           var img = $("previewImg");
           if (!img.getAttribute("src") || img.dataset.file !== item.file) {
             img.src = item.thumb;
@@ -564,15 +603,18 @@
               "</div>" +
               '<h3 class="res-title">' + esc(item.title) + "</h3>" +
               '<p class="res-desc">' + esc(item.desc) + "</p>" +
-              '<div class="res-meta"><span>' + esc(item.pages) + "</span><span>" + esc(item.size) + "</span><span>" + esc(item.date) + "</span></div>" +
+              '<div class="res-meta"><span>' + esc(item.pages || "PDF") + "</span><span>" + esc(item.size) + "</span><span>" + esc(item.date) + "</span></div>" +
             "</button>"
           );
         }
 
+        var ALL = [];
+
         function render() {
+          ALL = cloudResources.concat(RESOURCES);
           var mainHtml = "";
           var extraHtml = "";
-          RESOURCES.forEach(function (item, i) {
+          ALL.forEach(function (item, i) {
             if (item.extra) extraHtml += cardHtml(item, i);
             else mainHtml += cardHtml(item, i);
           });
@@ -584,7 +626,7 @@
           var card = e.target && e.target.closest ? e.target.closest(".res-card") : null;
           if (!card) return;
           var index = Number(card.dataset.index);
-          var item = RESOURCES[index];
+          var item = ALL[index];
           if (!item) return;
           currentIndex = index;
           if (requestUnlock()) openViewer(item, card);
@@ -598,8 +640,8 @@
             g.addEventListener("mouseover", function (e) {
               var card = e.target && e.target.closest ? e.target.closest(".res-card") : null;
               if (!card) return;
-              var item = RESOURCES[Number(card.dataset.index)];
-              if (item) bindPreview(card, item);
+              var item = ALL[Number(card.dataset.index)];
+              if (item && item.thumb) bindPreview(card, item);
             });
           });
           document.addEventListener("scroll", hidePreview, { passive: true });
@@ -617,6 +659,7 @@
         });
 
         render();
+        loadCloud();
       })();
     </script>
   </body>
