@@ -204,12 +204,16 @@
                   <label class="field"><span>分類標籤</span><input type="text" id="pdfTag" maxlength="30" list="tagList" placeholder="競賽資料" />
                     <datalist id="tagList"><option value="競賽資料"></option><option value="化學"></option><option value="物理"></option><option value="數學"></option><option value="中文"></option><option value="英文"></option><option value="其他"></option></datalist>
                   </label>
+                  <label class="field"><span>頁數</span><input type="text" id="pdfPages" maxlength="30" placeholder="例如：28 頁（可自動生成）" /></label>
                   <label class="field span2"><span>描述（會顯示在資源庫卡片）</span><textarea id="pdfDesc" maxlength="500" placeholder="簡介內容、題數、頁數等"></textarea></label>
                   <label class="field span2 check-row"><input type="checkbox" id="pdfExtra" /> 歸入「延伸資料」（非隊伍資源）</label>
                 </div>
                 <div class="progress" id="upProg"><i id="upBar"></i></div>
                 <p class="form-msg" id="upMsg" role="status"></p>
-                <button type="button" class="btn primary" id="uploadBtn">上傳</button>
+                <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+                  <button type="button" class="btn" id="genBtn" title="分析 PDF 自動填入標題、描述與頁數">自動填入資料</button>
+                  <button type="button" class="btn primary" id="uploadBtn">上傳</button>
+                </div>
               </div>
 
               <h2 class="admin-title" style="font-size: 1.15rem; margin: 1.8rem 0 0.8rem;">已上傳的 PDF（雲端）</h2>
@@ -353,6 +357,68 @@
 
         /* ===================== 資源管理 ===================== */
         var pdfRows = [];
+        var SB_URL = "https://oajvxavzsomymqunpgxx.supabase.co";
+
+        /* ---- PDF 自動分析（pdf.js 動態載入） ---- */
+        var PDFJS_BASE = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/";
+        var pdfjsPromise = null;
+        function loadPdfJs() {
+          if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+          if (pdfjsPromise) return pdfjsPromise;
+          pdfjsPromise = new Promise(function (resolve, reject) {
+            var s = document.createElement("script");
+            s.src = PDFJS_BASE + "pdf.min.js";
+            s.onload = function () {
+              try {
+                window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_BASE + "pdf.worker.min.js";
+                resolve(window.pdfjsLib);
+              } catch (e) { pdfjsPromise = null; reject(e); }
+            };
+            s.onerror = function () { pdfjsPromise = null; reject(new Error("無法載入 PDF 解析元件，請檢查網絡。")); };
+            document.head.appendChild(s);
+          });
+          return pdfjsPromise;
+        }
+
+        function fileToArrayBuffer(file) {
+          return new Promise(function (resolve, reject) {
+            var r = new FileReader();
+            r.onload = function () { resolve(r.result); };
+            r.onerror = function () { reject(new Error("讀取檔案失敗。")); };
+            r.readAsArrayBuffer(file);
+          });
+        }
+
+        function analyzeData(buf) {
+          return loadPdfJs().then(function (pdfjsLib) {
+            return pdfjsLib.getDocument({ data: buf }).promise.then(function (pdf) {
+              var probes = [1, 2].filter(function (n) { return n <= pdf.numPages; });
+              return Promise.all(probes.map(function (n) {
+                return pdf.getPage(n).then(function (p) { return p.getTextContent(); }).then(function (tc) {
+                  return tc.items.map(function (it) { return it.str; }).join(" ");
+                });
+              })).then(function (texts) {
+                return pdf.getMetadata().catch(function () { return null; }).then(function (m) {
+                  return { pages: pdf.numPages, text: texts.join(" "), meta: m && m.info };
+                });
+              });
+            });
+          });
+        }
+
+        function buildSuggestions(res) {
+          var full = res.pages + " 頁";
+          var clean = String(res.text || "").replace(/\s+/g, " ").trim();
+          var prefix = [];
+          var q = clean.match(/([0-9０-９][0-9０-９,，]*)\s*(?:道)?題/);
+          var cat = clean.match(/([0-9０-９][0-9０-９,，]*)\s*個(?:分類|類別|部分)/);
+          if (q) prefix.push(q[1].replace(/[,，]/g, "") + " 題");
+          if (cat) prefix.push(cat[1].replace(/[,，]/g, "") + " 個分類");
+          var desc = (prefix.length ? prefix.join(" · ") + (clean ? "，" : "") : "") + clean.slice(0, 110);
+          var t = res.meta && res.meta.Title ? String(res.meta.Title).trim() : "";
+          var title = t && t.length >= 4 && t.length <= 120 ? t : "";
+          return { pages: full, desc: desc, title: title };
+        }
 
         function fmtSize(b) {
           if (!b && b !== 0) return "—";
@@ -385,7 +451,8 @@
                 '<div class="item-meta"><span class="badge' + (r.extra ? " extra" : "") + '">' + esc(r.tag || "資料") + "</span>" +
                 "<span>" + fmtSize(r.file_size) + "</span><span>" + fmtDate(r.created_at) + "</span></div>" +
               "</div>" +
-              '<div class="item-actions"><button type="button" class="btn sm" data-act="edit">編輯</button>' +
+              '<div class="item-actions"><button type="button" class="btn sm" data-act="gen" title="重新分析此 PDF 並更新頁數／描述">生成</button>' +
+              '<button type="button" class="btn sm" data-act="edit">編輯</button>' +
               '<button type="button" class="btn sm danger" data-act="del">刪除</button></div></div>' +
               '<div class="edit-form hidden" style="margin-top: 0.9rem;"></div>' +
             "</div>";
@@ -406,6 +473,22 @@
             api("pdfs", "DELETE", { id: id })
               .then(loadPdfs)
               .catch(function (err) { alert(err.message); btn.disabled = false; });
+            return;
+          }
+
+          if (btn.dataset.act === "gen") {
+            btn.disabled = true; btn.textContent = "分析中…";
+            fetch(SB_URL + "/storage/v1/object/public/pdfs/" + row.storage_path)
+              .then(function (r) { if (!r.ok) throw new Error("無法取得檔案。"); return r.arrayBuffer(); })
+              .then(analyzeData)
+              .then(buildSuggestions)
+              .then(function (s) {
+                var patch = { id: row.id, pages: s.pages };
+                if (!row.description) patch.description = s.desc;
+                return api("pdfs", "PATCH", patch);
+              })
+              .then(loadPdfs)
+              .catch(function (err) { alert(err.message || "分析失敗。"); btn.disabled = false; btn.textContent = "生成"; });
             return;
           }
 
@@ -477,6 +560,32 @@
           });
         }
 
+        /* ---- 自動填入（上傳表單） ---- */
+        $("genBtn").addEventListener("click", function () {
+          var btn = this;
+          var msg = $("upMsg");
+          if (!chosenFile) { msg.textContent = "請先選擇 PDF 檔案。"; msg.className = "form-msg err"; return; }
+          btn.disabled = true;
+          var oldLabel = btn.textContent;
+          btn.textContent = "分析中…";
+          msg.className = "form-msg"; msg.textContent = "正在分析 PDF…";
+          fileToArrayBuffer(chosenFile)
+            .then(analyzeData)
+            .then(buildSuggestions)
+            .then(function (s) {
+              $("pdfPages").value = s.pages;
+              if (!$("pdfTitle").value.trim() && s.title) $("pdfTitle").value = s.title;
+              if (!$("pdfDesc").value.trim()) $("pdfDesc").value = s.desc;
+              msg.className = "form-msg ok";
+              msg.textContent = "已自動填入頁數與簡介，可自行修改後上傳。";
+            })
+            .catch(function (err) {
+              msg.className = "form-msg err";
+              msg.textContent = err.message || "分析失敗（PDF 可能已加密），請手動填寫。";
+            })
+            .finally(function () { btn.disabled = false; btn.textContent = oldLabel; });
+        });
+
         $("uploadBtn").addEventListener("click", function () {
           var btn = this;
           var msg = $("upMsg");
@@ -499,6 +608,7 @@
                 path: r.path, title: title,
                 description: $("pdfDesc").value.trim(),
                 tag: $("pdfTag").value.trim() || "競賽資料",
+                pages: $("pdfPages").value.trim(),
                 extra: $("pdfExtra").checked,
                 size: chosenFile.size, filename: chosenFile.name
               });
@@ -510,7 +620,7 @@
               $("pdfFile").value = "";
               $("fileLabel").textContent = "點擊選擇檔案";
               $("fileDrop").classList.remove("has-file");
-              $("pdfTitle").value = ""; $("pdfDesc").value = ""; $("pdfExtra").checked = false;
+              $("pdfTitle").value = ""; $("pdfDesc").value = ""; $("pdfExtra").checked = false; $("pdfPages").value = "";
               $("upProg").classList.remove("show");
               loadPdfs();
             })

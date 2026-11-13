@@ -67,15 +67,22 @@ module.exports = async (req, res) => {
           file_size: Number(body.size) || null,
           filename: String(body.filename || "").slice(0, 200)
         };
-        const r = await sb("/rest/v1/pdfs", {
-          method: "POST",
-          headers: serviceHeaders({ "Content-Type": "application/json", Prefer: "return=representation" }),
-          body: JSON.stringify(row)
-        });
-        const text = await r.text();
-        if (!r.ok) { json(res, 502, { error: "寫入資料庫失敗：" + text.slice(0, 200) }); return; }
+        if (body.pages) row.pages = String(body.pages).slice(0, 30);
+        const doInsert = (payload) =>
+          sb("/rest/v1/pdfs", {
+            method: "POST",
+            headers: serviceHeaders({ "Content-Type": "application/json", Prefer: "return=representation" }),
+            body: JSON.stringify(payload)
+          }).then((rr) => rr.text().then((t) => ({ ok: rr.ok, text: t })));
+        let ins = await doInsert(row);
+        // 資料表尚未加 pages 欄時：退回不含頁數的寫入
+        if (!ins.ok && row.pages && /pages/i.test(ins.text)) {
+          delete row.pages;
+          ins = await doInsert(row);
+        }
+        if (!ins.ok) { json(res, 502, { error: "寫入資料庫失敗：" + ins.text.slice(0, 200) }); return; }
         let inserted = [];
-        try { inserted = JSON.parse(text); } catch (e) {}
+        try { inserted = JSON.parse(ins.text); } catch (e) {}
         json(res, 200, { row: inserted[0] || row });
         return;
       }
@@ -94,14 +101,21 @@ module.exports = async (req, res) => {
       if (body.description != null) patch.description = String(body.description).slice(0, 500);
       if (body.tag != null) patch.tag = String(body.tag).trim().slice(0, 30);
       if (body.extra != null) patch.extra = !!body.extra;
+      if (body.pages != null) patch.pages = String(body.pages).slice(0, 30);
       if (!Object.keys(patch).length) { json(res, 400, { error: "沒有要更新的欄位。" }); return; }
-      const r = await sb("/rest/v1/pdfs?id=eq." + encodeURIComponent(id), {
-        method: "PATCH",
-        headers: serviceHeaders({ "Content-Type": "application/json", Prefer: "return=representation" }),
-        body: JSON.stringify(patch)
-      });
-      const text = await r.text();
-      if (!r.ok) { json(res, 502, { error: "更新失敗：" + text.slice(0, 200) }); return; }
+      const doPatch = (payload) =>
+        sb("/rest/v1/pdfs?id=eq." + encodeURIComponent(id), {
+          method: "PATCH",
+          headers: serviceHeaders({ "Content-Type": "application/json", Prefer: "return=representation" }),
+          body: JSON.stringify(payload)
+        }).then((rr) => rr.text().then((t) => ({ ok: rr.ok, text: t })));
+      let upd = await doPatch(patch);
+      // 資料表尚未加 pages 欄時：退回不含頁數的更新
+      if (!upd.ok && patch.pages && /pages/i.test(upd.text)) {
+        delete patch.pages;
+        upd = await doPatch(patch);
+      }
+      if (!upd.ok) { json(res, 502, { error: "更新失敗：" + upd.text.slice(0, 200) }); return; }
       json(res, 200, { ok: true });
       return;
     }
