@@ -408,47 +408,36 @@
           });
         }
 
-        function buildSuggestions(res) {
+        function buildSuggestions(res, fallbackDateMs) {
           var clean = String(res.text || "").replace(/\s+/g, " ").trim();
 
           var qMatch = clean.match(/([0-9０-９][0-9０-９,，]*)\s*(?:道)?題/);
           var catFromText = clean.match(/([0-9０-９][0-9０-９,，]*)\s*個(?:分類|類別|部分)/);
 
-          // 書籤（目錄）→ 分類數與「涵蓋…」
+          // 書籤（目錄）→ 分類數
           var topTitles = (res.outline || [])
             .map(function (o) { return o && o.title ? String(o.title).replace(/\s+/g, "").trim() : ""; })
             .filter(function (t) { return t && t.length <= 16; });
           var useOutline = topTitles.length >= 2;
 
-          var prefix = [];
-          if (qMatch) prefix.push(qMatch[1].replace(/[,，]/g, "") + " 題");
-          if (useOutline) prefix.push(topTitles.length + " 個分類");
-          else if (catFromText) prefix.push(catFromText[1].replace(/[,，]/g, "") + " 個分類");
+          var parts = [];
+          if (qMatch) parts.push(qMatch[1].replace(/[,，]/g, "") + " 題");
+          if (useOutline) parts.push(topTitles.length + " 個分類");
+          else if (catFromText) parts.push(catFromText[1].replace(/[,，]/g, "") + " 個分類");
 
-          var body = "";
-          if (useOutline) {
-            body = "涵蓋" + topTitles.slice(0, 6).join("、") + (topTitles.length > 6 ? "等" : "");
-          } else {
-            var idx = qMatch ? clean.indexOf(qMatch[0]) : -1;
-            var head = idx > 0 ? clean.slice(0, idx).trim() : "";
-            if (head.length >= 6 && head.length <= 60) {
-              body = head;
-            } else {
-              var metaT = res.meta && res.meta.Title ? String(res.meta.Title).replace(/\s+/g, " ").trim() : "";
-              body = metaT.length >= 6 && metaT.length <= 60
-                ? metaT
-                : clean
-                    .replace(/[0-9０-９][0-9０-９,，]*\s*(?:道)?題/g, "")
-                    .replace(/[0-9０-９][0-9０-９,，]*\s*個(?:分類|類別|部分)/g, "")
-                    .trim()
-                    .slice(0, 60);
-            }
+          // 製作日期：優先 PDF 元資料的建立日期，退回檔案修改日期
+          var made = "";
+          var cm = res.meta && res.meta.CreationDate ? String(res.meta.CreationDate).match(/D:(\d{4})(\d{2})(\d{2})/) : null;
+          if (cm) made = cm[1] + "-" + cm[2] + "-" + cm[3];
+          if (!made && fallbackDateMs) {
+            var d = new Date(fallbackDateMs);
+            made = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
           }
+          if (made) parts.push("製作日期 " + made);
 
-          var desc = (prefix.length ? prefix.join(" · ") + "，" : "") + body + "。";
           var t = res.meta && res.meta.Title ? String(res.meta.Title).trim() : "";
           var title = t && t.length >= 4 && t.length <= 120 ? t : "";
-          return { pages: res.pages + " 頁", desc: desc.slice(0, 500), title: title };
+          return { pages: res.pages + " 頁", desc: parts.join(" · "), title: title };
         }
 
         function fmtSize(b) {
@@ -512,11 +501,9 @@
             fetch(SB_URL + "/storage/v1/object/public/pdfs/" + row.storage_path)
               .then(function (r) { if (!r.ok) throw new Error("無法取得檔案。"); return r.arrayBuffer(); })
               .then(analyzeData)
-              .then(buildSuggestions)
+              .then(function (s) { return buildSuggestions(s); })
               .then(function (s) {
-                var patch = { id: row.id, pages: s.pages };
-                if (!row.description) patch.description = s.desc;
-                return api("pdfs", "PATCH", patch);
+                return api("pdfs", "PATCH", { id: row.id, pages: s.pages, description: s.desc });
               })
               .then(loadPdfs)
               .catch(function (err) { alert(err.message || "分析失敗。"); btn.disabled = false; btn.textContent = "生成"; });
@@ -602,7 +589,7 @@
           msg.className = "form-msg"; msg.textContent = "正在分析 PDF…";
           fileToArrayBuffer(chosenFile)
             .then(analyzeData)
-            .then(buildSuggestions)
+            .then(function (s) { return buildSuggestions(s, chosenFile.lastModified); })
             .then(function (s) {
               $("pdfPages").value = s.pages;
               if (!$("pdfTitle").value.trim() && s.title) $("pdfTitle").value = s.title;
