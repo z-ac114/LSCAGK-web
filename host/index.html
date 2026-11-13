@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="zh-Hant" class="antialiased">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="../styles.css" />
+    <style>html{background:#fcfbf4}html.dark-mode{background:#181715}</style>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="icon" type="image/png" href="../assets/agk-icon.png" />
+    <script src="../theme.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@400;700&display=swap" />
+    <title>主持台 | LSCAGKT 問答競技場</title>
+    <meta name="robots" content="noindex" />
+    <style>
+      .host-wrap { max-width: 920px; margin: 0 auto; padding: 1.5rem 1.2rem 4rem; }
+      .host-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+      .host-title { font-family: "Noto Serif TC", serif; font-size: 1.7rem; font-weight: 700; color: var(--purple); margin: 0; }
+      .dark-mode .host-title { color: #e3c6dc; }
+      .host-sub { color: var(--muted); font-size: 0.88rem; margin: 0.2rem 0 0; }
+
+      /* 登入 */
+      .login-box { max-width: 380px; margin: 3.5rem auto 0; padding: 2.2rem 2rem; background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius); }
+      .login-box h1 { font-family: "Noto Serif TC", serif; font-size: 1.4rem; font-weight: 700; color: var(--purple); margin: 0 0 0.3rem; }
+      .dark-mode .login-box h1 { color: #e3c6dc; }
+      .login-box p { color: var(--muted); font-size: 0.88rem; margin: 0 0 1.4rem; }
+      .field { display: block; margin-bottom: 1rem; }
+      .field span { display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 0.35rem; }
+      .field input, .field select, .field textarea {
+        width: 100%; box-sizing: border-box; padding: 0.6rem 0.8rem;
+        border: 1px solid var(--hairline-strong, var(--hairline)); border-radius: 8px;
+        background: var(--cream, #fcfbf4); color: var(--ink); font: inherit; font-size: 0.95rem;
+      }
+      .dark-mode .field input, .dark-mode .field select { background: rgb(255 255 255 / 4%); }
+      .field input:focus, .field select:focus { outline: 2px solid var(--school-gold, #c9a227); outline-offset: 1px; }
+
+      .btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+        min-height: 2.5rem; padding: 0 1.1rem; border-radius: 9999px; border: 1px solid var(--hairline);
+        background: var(--surface); color: var(--ink); font: inherit; font-size: 0.9rem; font-weight: 600;
+        cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+        text-decoration: none; transition: border-color 150ms ease, opacity 150ms ease;
+      }
+      .btn:hover { border-color: var(--purple); }
+      .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+      .btn.primary { background: var(--red); border-color: var(--red); color: #fff; }
+      .btn.primary:hover { background: var(--lasalle-red-dark); }
+      .btn.danger { color: #b3261e; border-color: rgb(179 38 30 / 40%); }
+      .btn.danger:hover { border-color: #b3261e; background: rgb(179 38 30 / 6%); }
+      .btn.big { min-height: 3rem; font-size: 1rem; padding: 0 1.6rem; }
+      .btn.sm { min-height: 2.1rem; padding: 0 0.8rem; font-size: 0.82rem; }
+      .dark-mode .btn.danger { color: #f28779; }
+
+      .card { background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius); padding: 1.5rem; }
+      .card + .card { margin-top: 1.2rem; }
+      .card h2 { font-family: "Noto Serif TC", serif; font-size: 1.2rem; font-weight: 700; color: var(--purple); margin: 0 0 1rem; }
+      .dark-mode .card h2 { color: #e3c6dc; }
+      .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0 1.2rem; }
+      @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+      .form-msg { font-size: 0.85rem; margin: 0.7rem 0 0; min-height: 1.2em; }
+      .form-msg.err { color: #b3261e; }
+      .dark-mode .form-msg.err { color: #f28779; }
+      .form-msg.ok { color: #1b7f3b; }
+      .dark-mode .form-msg.ok { color: #7bd39a; }
+      .hidden { display: none !important; }
+
+      /* 大廳 */
+      .lobby-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 1.4rem; align-items: start; }
+      @media (max-width: 720px) { .lobby-grid { grid-template-columns: 1fr; } }
+      .k-pin {
+        font-family: "Noto Serif TC", serif; font-size: 4.2rem; font-weight: 700; line-height: 1.1;
+        letter-spacing: 0.12em; color: var(--purple); font-variant-numeric: tabular-nums;
+      }
+      .dark-mode .k-pin { color: #e3c6dc; }
+      .k-url { color: var(--muted); font-size: 0.95rem; margin: 0.4rem 0 0; word-break: break-all; }
+      .k-url strong { color: var(--ink); }
+      .k-chips { display: flex; flex-wrap: wrap; gap: 0.45rem; min-height: 2rem; }
+      .k-chips .chip { padding: 0.35rem 0.85rem; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--cream, #fcfbf4); font-size: 0.88rem; animation: chipin 240ms ease; }
+      .dark-mode .k-chips .chip { background: rgb(255 255 255 / 5%); }
+      @keyframes chipin { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: none; } }
+      .k-count { color: var(--muted); font-size: 0.88rem; margin: 0.8rem 0 1rem; font-variant-numeric: tabular-nums; }
+
+      /* 進行中 */
+      .live-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.7rem; }
+      .live-phase { font-size: 0.85rem; font-weight: 700; letter-spacing: 0.12em; color: var(--red); }
+      .q-num { color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+      .k-qtext { font-family: "Noto Serif TC", serif; font-size: 1.7rem; font-weight: 700; line-height: 1.55; margin: 0.6rem 0 1.3rem; }
+      .k-opt {
+        position: relative; display: flex; align-items: center; gap: 0.8rem; overflow: hidden;
+        padding: 0.85rem 1.1rem; border-radius: 12px; border: 1px solid var(--hairline);
+        font-size: 1.05rem; font-weight: 600; margin-bottom: 0.6rem;
+      }
+      .k-opt .bar { position: absolute; inset: 0; width: 0; opacity: 0.22; transition: width 500ms ease; }
+      .k-opt .lab { position: relative; flex: 1; min-width: 0; }
+      .k-opt .cnt { position: relative; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .k-opt.correct { border-color: var(--school-gold); }
+      .k-opt.correct .lab::after { content: " — 正確答案"; color: #1b7f3b; font-weight: 700; font-size: 0.85rem; }
+      .dark-mode .k-opt.correct .lab::after { color: #7bd39a; }
+      .o-red .bar, .o-gold .bar, .o-plum .bar, .o-green .bar { background: #fff; }
+      .o-red { background: #c0392b; color: #fff; border-color: transparent; }
+      .o-gold { background: #b3862c; color: #fff; border-color: transparent; }
+      .o-plum { background: #6b3a63; color: #fff; border-color: transparent; }
+      .o-green { background: #3e7d5a; color: #fff; border-color: transparent; }
+      .o-red .lab::after, .o-gold .lab::after, .o-plum .lab::after, .o-green .lab::after { color: #fff !important; }
+      .timer-track { height: 10px; border-radius: 9999px; background: var(--hairline); overflow: hidden; margin-bottom: 1rem; }
+      .timer-fill { height: 100%; width: 0; background: var(--school-gold); transition: width 300ms linear; }
+      .timer-fill.low { background: var(--red); }
+      .live-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 1.2rem; }
+
+      /* 排行 */
+      .board-list { display: flex; flex-direction: column; gap: 0.5rem; }
+      .board-row {
+        display: flex; align-items: center; gap: 0.9rem; padding: 0.7rem 1rem;
+        border-radius: 10px; border: 1px solid var(--hairline); background: var(--cream, #fcfbf4);
+        font-size: 1rem; animation: rowin 300ms ease backwards;
+      }
+      .dark-mode .board-row { background: rgb(255 255 255 / 4%); }
+      @keyframes rowin { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
+      .board-row .rk { width: 1.8em; color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; }
+      .board-row .rk.m { width: 1.9em; height: 1.9em; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 0.9rem; }
+      .rk.m1 { background: var(--red); } .rk.m2 { background: var(--school-gold); } .rk.m3 { background: #9c7b52; }
+      .board-row .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .board-row .sc { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+      /* 報告 */
+      .kr-q { border-top: 1px solid var(--hairline); padding: 1rem 0; }
+      .kr-q:first-child { border-top: 0; }
+      .kr-head { display: flex; justify-content: space-between; gap: 0.8rem; font-size: 0.9rem; font-weight: 700; }
+      .kr-head span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; font-weight: 600; }
+      .kr-qt { margin: 0.4rem 0 0; font-size: 1rem; line-height: 1.6; }
+      .kr-ans { margin: 0.3rem 0 0; font-size: 0.88rem; color: #1b7f3b; }
+      .dark-mode .kr-ans { color: #7bd39a; }
+      .kr-wrong { margin: 0.25rem 0 0; font-size: 0.86rem; color: #b3261e; line-height: 1.7; }
+      .dark-mode .kr-wrong { color: #f28779; }
+      .kr-timeout { margin: 0.25rem 0 0; font-size: 0.86rem; color: var(--muted); line-height: 1.7; }
+
+      /* 歷史 */
+      .k-hist-row { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; padding: 0.7rem 0; border-bottom: 1px solid var(--hairline); font-size: 0.9rem; }
+      .k-hist-row:last-child { border-bottom: 0; }
+      .k-hist-pin { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--purple); }
+      .dark-mode .k-hist-pin { color: #e3c6dc; }
+      .k-hist-meta { flex: 1; min-width: 220px; color: var(--muted); }
+      .k-hist-actions { display: flex; gap: 0.4rem; }
+
+      /* 載入動畫 */
+      .skel { border-radius: 8px; background: linear-gradient(90deg, var(--hairline-soft) 25%, var(--hairline) 50%, var(--hairline-soft) 75%); background-size: 400px 100%; animation: shimmer 1.1s infinite linear; height: 0.9rem; margin: 0.55rem 0; }
+      @keyframes shimmer { from { background-position: -400px 0; } to { background-position: 400px 0; } }
+      .spinner {
+        width: 30px; height: 30px; border-radius: 50%;
+        border: 3px solid var(--hairline-strong); border-top-color: var(--purple);
+        animation: spin 900ms linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .view-anim { animation: vfade 280ms ease; }
+      @keyframes vfade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+      .center-spin { display: flex; justify-content: center; padding: 2.5rem 0; }
+    </style>
+  </head>
+  <body>
+    <div class="min-h-screen flex flex-col bg-cream text-ink">
+      <header class="site-header"><div class="site-header-inner"><a class="brand" href="/"><img class="brand-icon" src="/assets/agk-icon.png" width="30" height="30" alt="LSCAGKT 校徽標誌" /><span class="brand-name">LSC<span class="accent">AGKT</span></span><span class="brand-zh">問答競技場 · 主持台</span></a><nav class="site-nav" id="siteNav"><a href="/">首頁</a><a href="/admin">管理後台</a></nav><button type="button" class="nav-toggle" aria-expanded="false" aria-label="開啟選單"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16"></path><path d="M4 18h16"></path><path d="M4 6h16"></path></svg></button></div></header>
+
+      <main class="flex-1">
+        <div class="host-wrap">
+          <!-- 登入 -->
+          <div class="login-box" id="loginView">
+            <h1>主持台</h1>
+            <p>請輸入管理員帳號密碼以繼續。</p>
+            <form id="loginForm">
+              <label class="field"><span>帳號</span><input type="text" id="loginUser" autocomplete="username" required /></label>
+              <label class="field"><span>密碼</span><input type="password" id="loginPass" autocomplete="current-password" required /></label>
+              <button type="submit" class="btn primary" id="loginBtn" style="width: 100%;">進入</button>
+              <p class="form-msg err" id="loginMsg" role="alert"></p>
+            </form>
+          </div>
+
+          <!-- 面板 -->
+          <div id="panelView" class="hidden">
+            <div class="host-head">
+              <div>
+                <h1 class="host-title">問答競技場 · 主持台</h1>
+                <p class="host-sub">玩家到 <strong id="joinUrlHint"></strong> 以 6 位遊戲碼加入。</p>
+              </div>
+              <button type="button" class="btn sm" id="logoutBtn">登出</button>
+            </div>
+
+            <!-- 建立 -->
+            <div class="card" id="vSetup" style="margin-top:1.5rem;">
+              <h2>開新遊戲</h2>
+              <div class="form-grid">
+                <label class="field"><span>題庫</span>
+                  <select id="kBank">
+                    <option value="guoqing">全民國情（2159 題）</option>
+                    <option value="nschallenge">國家安全挑戰賽（354 題）</option>
+                  </select>
+                </label>
+                <label class="field"><span>題數</span>
+                  <select id="kCount"><option value="5">5 題</option><option value="10" selected>10 題</option><option value="15">15 題</option><option value="20">20 題</option></select>
+                </label>
+                <label class="field"><span>每題時限</span>
+                  <select id="kTime"><option value="10">10 秒</option><option value="20" selected>20 秒</option><option value="30">30 秒</option></select>
+                </label>
+              </div>
+              <p class="form-msg" id="kMsg" role="status"></p>
+              <button type="button" class="btn primary big" id="kCreate">建立遊戲</button>
+            </div>
+
+            <!-- 大廳 -->
+            <div class="card" id="vLobby" style="display:none; margin-top:1.5rem;">
+              <h2>等待玩家加入</h2>
+              <div class="lobby-grid">
+                <div>
+                  <div class="k-pin" id="kPin">------</div>
+                  <p class="k-url">加入頁：<strong id="kUrl"></strong></p>
+                </div>
+                <div>
+                  <div class="k-chips" id="kPlayers"></div>
+                  <p class="k-count" id="kCount2">已加入 0 位玩家</p>
+                  <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+                    <button type="button" class="btn primary big" id="kStart">開始遊戲</button>
+                    <button type="button" class="btn danger" id="kCancel">取消遊戲</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 進行中 -->
+            <div class="card" id="vLive" style="display:none; margin-top:1.5rem;">
+              <div class="live-top">
+                <span class="live-phase" id="kPhase">進行中</span>
+                <span class="q-num" id="kIdx"></span>
+              </div>
+              <div class="timer-track" id="kTimerWrap"><div class="timer-fill" id="kTimerFill"></div></div>
+              <p class="q-num" id="kAnswered" style="margin:0 0 0.4rem;"></p>
+              <p class="k-qtext" id="kQ"></p>
+              <div id="kOptions"></div>
+              <p class="host-sub" id="kHint" style="margin:0.8rem 0 0;"></p>
+              <div class="live-actions">
+                <button type="button" class="btn primary big" id="kNext">繼續</button>
+                <button type="button" class="btn" id="kReportBtn" style="display:none;">查看報告</button>
+                <button type="button" class="btn danger" id="kEnd">結束遊戲</button>
+              </div>
+              <p class="form-msg" id="kLiveMsg"></p>
+            </div>
+
+            <!-- 報告 -->
+            <div class="card" id="vReport" style="display:none; margin-top:1.5rem;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:0.8rem; flex-wrap:wrap; margin-bottom:0.4rem;">
+                <h2 style="margin:0;">遊戲報告 <span class="q-num" id="krPin"></span></h2>
+                <button type="button" class="btn sm" id="krBack">返回</button>
+              </div>
+              <p class="host-sub" id="krMeta" style="margin-bottom:1rem;"></p>
+              <div id="krBody"></div>
+            </div>
+
+            <!-- 歷史 -->
+            <div class="card" id="vHistory" style="display:none; margin-top:1.2rem;">
+              <h2>歷史遊戲</h2>
+              <div id="kHistList"><div class="skel" style="width:70%;"></div><div class="skel" style="width:55%;"></div></div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer class="bg-purple-deep"><div class="mx-auto max-w-6xl px-4 py-10 sm:px-6"><p class="text-sm text-muted" style="margin: 0;">版權所有 © 2026 LSCAGKT · 喇沙書院學術時事及常識問答隊</p></div></footer>
+    </div>
+
+    <script>
+      (function () {
+        "use strict";
+        var $ = function (id) { return document.getElementById(id); };
+        var PASS_KEY = "agkAdminPass", USER_KEY = "agkAdminUser";
+
+        function getPass() { try { return sessionStorage.getItem(PASS_KEY) || ""; } catch (e) { return ""; } }
+        function setPass(p) { try { p ? sessionStorage.setItem(PASS_KEY, p) : sessionStorage.removeItem(PASS_KEY); } catch (e) {} }
+        function getUser() { try { return sessionStorage.getItem(USER_KEY) || ""; } catch (e) { return ""; } }
+        function setUser(u) { try { u ? sessionStorage.setItem(USER_KEY, u) : sessionStorage.removeItem(USER_KEY); } catch (e) {} }
+
+        function esc(s) {
+          return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+
+        function gameApi(path, method, body) {
+          return fetch("/api/game/" + path, {
+            method: method || "GET",
+            headers: { "Content-Type": "application/json", "x-admin-user": getUser(), "x-admin-pass": getPass() },
+            body: body ? JSON.stringify(body) : undefined
+          }).then(function (res) {
+            return res.json().catch(function () { return {}; }).then(function (data) {
+              if (res.status === 401) { logout(); throw new Error("密碼不正確或已登出。"); }
+              if (!res.ok) throw new Error(data.error || "請求失敗（" + res.status + "）");
+              return data;
+            });
+          });
+        }
+
+        function setView(id) {
+          ["loginView", "panelView"].forEach(function (x) { $(x).classList.toggle("hidden", x !== id); });
+        }
+        function showSection(which) {
+          ["vSetup", "vLobby", "vLive", "vReport"].forEach(function (id) { $(id).style.display = id === which ? "block" : "none"; });
+          $("vHistory").style.display = which === "vSetup" ? "block" : "none";
+        }
+        function kMsg(el, text, cls) { var e = $(el); e.textContent = text || ""; e.className = "form-msg" + (cls ? " " + cls : ""); }
+
+        /* ===================== 登入 ===================== */
+        function showPanel() {
+          setView("panelView");
+          $("joinUrlHint").textContent = location.origin + "/play";
+          loadHistory();
+          resumeLive();
+        }
+        function logout() {
+          setPass(""); setUser("");
+          kStopPoll();
+          setView("loginView");
+          $("loginPass").value = "";
+        }
+
+        $("loginForm").addEventListener("submit", function (e) {
+          e.preventDefault();
+          var user = $("loginUser").value.trim();
+          var pass = $("loginPass").value;
+          $("loginBtn").disabled = true;
+          $("loginMsg").textContent = "";
+          fetch("/api/admin/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-admin-user": user, "x-admin-pass": pass }
+          }).then(function (res) { return res.json().then(function (d) { return { ok: res.ok, d: d }; }); })
+            .then(function (r) {
+              if (!r.ok) throw new Error(r.d.error || "登入失敗。");
+              setUser(user); setPass(pass);
+              showPanel();
+            })
+            .catch(function (err) { $("loginMsg").textContent = err.message || "登入失敗。"; })
+            .finally(function () { $("loginBtn").disabled = false; });
+        });
+        $("logoutBtn").addEventListener("click", logout);
+
+        /* ===================== 建立 ===================== */
+        var K = { pin: null, poll: null, tick: null, last: null, busy: false, key: "", offset: 0, offsetReady: false };
+
+        function loadBank(name) {
+          return new Promise(function (resolve, reject) {
+            var w = window;
+            if (name === "guoqing" && w.GQ_QUESTION_BANK) return resolve(w.GQ_QUESTION_BANK);
+            if (name === "nschallenge" && w.NS_QUESTION_BANK) return resolve(w.NS_QUESTION_BANK);
+            var s = document.createElement("script");
+            s.src = "/competition/" + (name === "guoqing" ? "guoqing.js" : "nschallenge.js");
+            s.onload = function () {
+              var b = name === "guoqing" ? w.GQ_QUESTION_BANK : w.NS_QUESTION_BANK;
+              b && b.length ? resolve(b) : reject(new Error("題庫為空"));
+            };
+            s.onerror = function () { reject(new Error("題庫載入失敗。")); };
+            document.head.appendChild(s);
+          });
+        }
+
+        $("kCreate").addEventListener("click", function () {
+          var btn = this;
+          if (btn.disabled) return;
+          btn.disabled = true;
+          kMsg("kMsg", "載入題庫…");
+          var bank = $("kBank").value, count = Number($("kCount").value), timeLimit = Number($("kTime").value);
+          loadBank(bank).then(function (bankArr) {
+            kMsg("kMsg", "抽選題目…");
+            var idx = bankArr.map(function (_, i) { return i; });
+            for (var i = idx.length - 1; i > 0; i--) {
+              var j = Math.floor(Math.random() * (i + 1));
+              var t = idx[i]; idx[i] = idx[j]; idx[j] = t;
+            }
+            var qs = idx.slice(0, count).map(function (i) { return { q: bankArr[i].q, options: bankArr[i].options, c: bankArr[i].c }; });
+            return gameApi("create", "POST", { bank: bank, count: count, timeLimit: timeLimit, questions: qs });
+          }).then(function (d) {
+            K.pin = d.pin;
+            try { sessionStorage.setItem("agkLivePin", d.pin); } catch (e) {}
+            $("kPin").textContent = d.pin;
+            $("kUrl").textContent = location.origin + "/play";
+            showSection("vLobby");
+            kStartPoll();
+          }).catch(function (err) {
+            kMsg("kMsg", err.message || "建立失敗。", "err");
+          }).finally(function () { btn.disabled = false; });
+        });
+
+        /* ===================== 輪詢 ===================== */
+        function kStartPoll() {
+          kStopPoll();
+          K.poll = setInterval(kPoll, 1000);
+          kPoll();
+        }
+        function kStopPoll() {
+          if (K.poll) { clearInterval(K.poll); K.poll = null; }
+          if (K.tick) { clearInterval(K.tick); K.tick = null; }
+        }
+        function noteOffset(nowIso, t0, t1) {
+          if (!nowIso) return;
+          var off = Date.parse(nowIso) + Math.max(0, t1 - t0) / 2 - t1;
+          K.offset = K.offsetReady ? K.offset * 0.7 + off * 0.3 : off;
+          K.offsetReady = true;
+        }
+        function kPoll() {
+          if (K.busy || !K.pin) return;
+          K.busy = true;
+          var t0 = Date.now();
+          gameApi("host?pin=" + encodeURIComponent(K.pin))
+            .then(function (d) { var t1 = Date.now(); noteOffset(d.now, t0, t1); K.last = d; kRender(d); })
+            .catch(function (err) { kMsg("kLiveMsg", err.message || "", "err"); })
+            .finally(function () { K.busy = false; });
+        }
+
+        var OPT_CLS = ["o-red", "o-gold", "o-plum", "o-green"];
+
+        function kRender(d) {
+          var key = d.status + ":" + (d.index || 0);
+          if (d.status === "lobby") {
+            if (K.key !== key) { K.key = key; stopTickerK(); }
+            showSection("vLobby");
+            $("kPlayers").innerHTML = (d.players || []).map(function (n) { return '<span class="chip">' + esc(n) + "</span>"; }).join("");
+            $("kCount2").textContent = "已加入 " + (d.players || []).length + " 位玩家";
+            return;
+          }
+          showSection("vLive");
+          $("kPhase").textContent = d.status === "question" ? "作答中" : d.status === "reveal" ? "揭曉" : d.status === "board" ? "排行榜" : "已結束";
+          $("kIdx").textContent = d.status === "ended" ? "遊戲結束" : "第 " + (d.index + 1) + " / " + d.total + " 題";
+          $("kReportBtn").style.display = "none";
+          $("kEnd").style.display = "";
+
+          if (d.status === "question") {
+            $("kAnswered").textContent = "已作答 " + (d.answered || 0) + " / " + (d.playerCount || 0) + " 位玩家";
+            if (K.key !== key) {
+              K.key = key;
+              var fill = $("kTimerFill");
+              fill.style.width = "100%";
+              fill.classList.remove("low");
+              $("kQ").textContent = d.q || "";
+              $("kOptions").innerHTML = (d.options || []).map(function (o, i) {
+                return '<div class="k-opt ' + (OPT_CLS[i] || "o-plum") + '"><span class="bar"></span><span class="lab">' + esc(o) + "</span></div>";
+              }).join("");
+              $("kHint").textContent = "時間到後自動揭曉，玩家裝置會即時切換。";
+              $("kNext").textContent = "提前揭曉";
+              $("kNext").style.display = "";
+              kTicker(d);
+            }
+            return;
+          }
+
+          $("kAnswered").textContent = "";
+          if (K.key === key) return; // 揭曉／排行／結束內容靜態
+          K.key = key;
+          stopTickerK();
+          $("kTimerWrap").style.visibility = d.status === "reveal" ? "visible" : "hidden";
+          $("kTimerFill").style.width = "0";
+
+          if (d.status === "reveal") {
+            $("kQ").textContent = d.q || "";
+            var max = Math.max.apply(null, (d.counts || [0]).concat([1]));
+            $("kOptions").innerHTML = (d.options || []).map(function (o, i) {
+              var c = (d.counts || [])[i] || 0;
+              var cls = "k-opt " + (OPT_CLS[i] || "o-plum") + (i === d.correct ? " correct" : "");
+              return '<div class="' + cls + '"><span class="bar" style="width:' + Math.round(c / max * 100) + '%;"></span>' +
+                '<span class="lab">' + esc(o) + '</span><span class="cnt">' + c + "</span></div>";
+            }).join("");
+            $("kHint").textContent = "分佈已公佈。";
+            $("kNext").textContent = "顯示排行榜";
+            $("kNext").style.display = "";
+          } else if (d.status === "board") {
+            $("kQ").textContent = "目前排行";
+            $("kOptions").innerHTML = boardHtml(d.standings);
+            var last = d.index + 1 >= d.total;
+            $("kHint").textContent = last ? "這是最後一題。" : "按「下一題」繼續。";
+            $("kNext").textContent = last ? "查看最終結果" : "下一題";
+            $("kNext").style.display = "";
+          } else if (d.status === "ended") {
+            $("kQ").textContent = "最終排名";
+            $("kOptions").innerHTML = boardHtml(d.standings);
+            $("kHint").textContent = "玩家裝置已顯示頒獎台。記錄保留在「歷史遊戲」。";
+            $("kNext").textContent = "完成";
+            $("kNext").style.display = "";
+            $("kReportBtn").style.display = "";
+            $("kEnd").style.display = "none";
+          }
+        }
+
+        function boardHtml(standings) {
+          return (standings || []).slice(0, 20).map(function (p, i) {
+            var rk = i < 3 ? '<span class="rk m m' + (i + 1) + '">' + (i + 1) + "</span>" : '<span class="rk">' + (i + 1) + "</span>";
+            return '<div class="board-row" style="animation-delay:' + Math.min(i * 45, 400) + 'ms">' + rk +
+              '<span class="nm">' + esc(p.name) + '</span><span class="sc">' + p.score + "</span></div>";
+          }).join("");
+        }
+
+        function kTicker(d) {
+          stopTickerK();
+          if (d.status !== "question" || !d.endsAt) return;
+          var ends = Date.parse(d.endsAt) - K.offset;
+          K.tick = setInterval(function () {
+            var fill = $("kTimerFill");
+            if (!fill || !K.last || K.last.status !== "question") { stopTickerK(); return; }
+            var pct = Math.max(0, Math.min(100, (ends - Date.now()) / ((d.timeLimit || 20) * 1000) * 100));
+            fill.style.width = pct + "%";
+            if (pct < 25) fill.classList.add("low");
+            if (pct <= 0) stopTickerK();
+          }, 300);
+        }
+        function stopTickerK() { if (K.tick) { clearInterval(K.tick); K.tick = null; } }
+
+        /* ===================== 控制 ===================== */
+        function kReset() {
+          kStopPoll();
+          K.pin = null; K.last = null; K.key = "";
+          try { sessionStorage.removeItem("agkLivePin"); } catch (e) {}
+          showSection("vSetup");
+          kMsg("kMsg", "");
+          loadHistory();
+        }
+
+        $("kStart").addEventListener("click", function () {
+          var btn = this;
+          btn.disabled = true;
+          gameApi("control", "POST", { pin: K.pin, action: "start" })
+            .then(kPoll)
+            .catch(function (err) { kMsg("kLiveMsg", err.message || "操作失敗。", "err"); })
+            .finally(function () { btn.disabled = false; });
+        });
+        $("kNext").addEventListener("click", function () {
+          var btn = this;
+          var d = K.last;
+          if (!d) return;
+          var action = d.status === "question" ? "reveal" : d.status === "reveal" ? "next" : d.status === "board" ? "go" : null;
+          if (!action) {
+            kReset();
+            return;
+          }
+          btn.disabled = true;
+          gameApi("control", "POST", { pin: K.pin, action: action })
+            .then(kPoll)
+            .catch(function (err) { kMsg("kLiveMsg", err.message || "操作失敗。", "err"); })
+            .finally(function () { btn.disabled = false; });
+        });
+        $("kEnd").addEventListener("click", function () {
+          if (!confirm("確定結束遊戲？")) return;
+          this.disabled = true;
+          gameApi("control", "POST", { pin: K.pin, action: "end" })
+            .then(kPoll)
+            .catch(function (err) { kMsg("kLiveMsg", err.message || "操作失敗。", "err"); })
+            .finally(function () { this.disabled = false; }.bind(this));
+        });
+        $("kCancel").addEventListener("click", function () {
+          if (!confirm("確定取消遊戲？所有玩家會被移除。")) return;
+          gameApi("control", "POST", { pin: K.pin, action: "cancel" })
+            .then(kReset)
+            .catch(function (err) { kMsg("kLiveMsg", err.message || "操作失敗。", "err"); });
+        });
+        $("kReportBtn").addEventListener("click", function () { showReport(K.pin); });
+
+        /* ===================== 歷史 ===================== */
+        var kHistRows = null;
+        function loadHistory() {
+          $("kHistList").innerHTML = '<div class="skel" style="width:70%;"></div><div class="skel" style="width:55%;"></div>';
+          gameApi("history").then(function (r) {
+            kHistRows = r.rows || [];
+            renderHistory();
+          }).catch(function () {
+            $("kHistList").innerHTML = '<p class="host-sub">無法載入歷史記錄。</p>';
+          });
+        }
+        function renderHistory() {
+          var el = $("kHistList");
+          if (!kHistRows.length) { el.innerHTML = '<p class="host-sub">沒有歷史遊戲。</p>'; return; }
+          var STATUS = { lobby: "等待中", question: "進行中", reveal: "進行中", board: "進行中", ended: "已結束" };
+          el.innerHTML = kHistRows.map(function (g) {
+            var live = g.status !== "ended";
+            return '<div class="k-hist-row">' +
+              '<span class="k-hist-pin">' + esc(g.pin) + "</span>" +
+              '<span class="k-hist-meta">' + esc(String(g.created_at || "").slice(0, 10)) + " · " +
+              (g.bank === "nschallenge" ? "國安" : "國情") + " · " + g.count + " 題 · " +
+              (g.time_limit || 20) + " 秒 · " + (g.players || 0) + " 人 · " + (STATUS[g.status] || esc(g.status)) + "</span>" +
+              '<span class="k-hist-actions">' +
+              (live ? '<button type="button" class="btn sm" data-resume="' + esc(g.pin) + '">接管</button>' : '<button type="button" class="btn sm" data-report="' + esc(g.pin) + '">報告</button>') +
+              '<button type="button" class="btn sm danger" data-delhist="' + esc(g.pin) + '">刪除</button>' +
+              "</span></div>";
+          }).join("");
+        }
+        $("kHistList").addEventListener("click", function (e) {
+          var btn = e.target.closest ? e.target.closest("button") : null;
+          if (!btn) return;
+          if (btn.dataset.resume) {
+            K.pin = btn.dataset.resume;
+            try { sessionStorage.setItem("agkLivePin", K.pin); } catch (e2) {}
+            kStartPoll();
+            return;
+          }
+          if (btn.dataset.report) { showReport(btn.dataset.report); return; }
+          if (btn.dataset.delhist) {
+            if (!confirm("確定刪除遊戲 " + btn.dataset.delhist + "？玩家與答案記錄會一併移除。")) return;
+            btn.disabled = true;
+            gameApi("history", "DELETE", { pin: btn.dataset.delhist })
+              .then(loadHistory)
+              .catch(function (err) { alert(err.message); btn.disabled = false; });
+          }
+        });
+
+        /* ===================== 報告 ===================== */
+        function showReport(pin) {
+          $("krBody").innerHTML = '<div class="skel" style="width:80%;"></div><div class="skel" style="width:60%;"></div><div class="skel" style="width:72%;"></div>';
+          showSection("vReport");
+          gameApi("report?pin=" + encodeURIComponent(pin)).then(function (r) {
+            $("krPin").textContent = "· " + pin;
+            var STATUS = { lobby: "等待中", question: "進行中", reveal: "進行中", board: "進行中", ended: "已結束" };
+            $("krMeta").textContent = String(r.createdAt || "").slice(0, 10) + " · " +
+              (r.bank === "nschallenge" ? "國安挑戰賽" : "全民國情") + " · " + r.count + " 題 · " +
+              (r.players || []).length + " 位玩家 · " + (STATUS[r.status] || r.status);
+            var html = (r.questions || []).map(function (q, i) {
+              var pct = q.answered ? Math.round(q.correctCount / q.answered * 100) : 0;
+              return '<div class="kr-q">' +
+                '<div class="kr-head"><span>第 ' + (i + 1) + " 題</span><span>" + q.correctCount + " / " + q.answered + " 正確（" + pct + "%）</span></div>" +
+                '<p class="kr-qt">' + esc(q.q) + "</p>" +
+                '<p class="kr-ans">正確答案：' + esc((q.options || [])[q.correct] || "—") + "</p>" +
+                (q.wrong && q.wrong.length ? '<p class="kr-wrong">答錯：' + q.wrong.map(function (w) { return esc(w.name) + "（" + esc(w.picked) + "）"; }).join("、") + "</p>" : "") +
+                (q.timeout && q.timeout.length ? '<p class="kr-timeout">未作答：' + q.timeout.map(esc).join("、") + "</p>" : "") +
+                "</div>";
+            }).join("");
+            $("krBody").innerHTML = html || '<p class="host-sub">沒有題目資料。</p>';
+          }).catch(function (err) {
+            $("krBody").innerHTML = '<p class="host-sub">' + esc(err.message || "無法載入報告。") + "</p>";
+          });
+        }
+        $("krBack").addEventListener("click", function () {
+          if (K.pin && K.last && K.last.status && K.last.status !== "ended") {
+            showSection("vLive");
+          } else {
+            kReset();
+          }
+        });
+
+        /* ===================== 接管 ===================== */
+        function resumeLive() {
+          var saved = "";
+          try { saved = sessionStorage.getItem("agkLivePin") || ""; } catch (e) {}
+          if (saved && !K.pin) {
+            gameApi("host?pin=" + encodeURIComponent(saved)).then(function (d) {
+              if (d.status && d.status !== "ended") {
+                K.pin = saved;
+                kStartPoll();
+              } else {
+                try { sessionStorage.removeItem("agkLivePin"); } catch (e) {}
+              }
+            }).catch(function () {
+              try { sessionStorage.removeItem("agkLivePin"); } catch (e) {}
+            });
+          }
+        }
+
+        /* ===================== 啟動 ===================== */
+        if (getPass() && getUser()) {
+          fetch("/api/admin/verify", { method: "POST", headers: { "Content-Type": "application/json", "x-admin-user": getUser(), "x-admin-pass": getPass() } })
+            .then(function (res) { if (res.ok) showPanel(); else logout(); })
+            .catch(function () {});
+        }
+      })();
+    </script>
+  </body>
+</html>

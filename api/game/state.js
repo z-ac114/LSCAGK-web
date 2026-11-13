@@ -54,6 +54,12 @@ module.exports = async (req, res) => {
       answers.forEach((a) => { if (counts[a.option] != null) counts[a.option]++; });
       const mine = me ? answers.find((a) => a.player_id === me.id) : null;
       const rank = me ? 1 + players.filter((p) => p.score > me.score).length : null;
+      // 緊隨其上的一名玩家（分數高於我之中最低者）
+      let ahead = null;
+      if (me) {
+        const higher = players.filter((p) => p.score > me.score);
+        if (higher.length) ahead = { name: higher[higher.length - 1].name, score: higher[higher.length - 1].score };
+      }
       json(res, 200, Object.assign(base, {
         q: q ? q.q : "",
         options: q ? q.options : [],
@@ -65,7 +71,9 @@ module.exports = async (req, res) => {
           correct: mine ? mine.correct : false,
           points: mine ? mine.points : 0,
           score: me ? me.score : 0,
-          rank
+          rank,
+          aheadName: ahead ? ahead.name : null,
+          aheadScore: ahead ? ahead.score : null
         }
       }));
       return;

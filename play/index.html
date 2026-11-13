@@ -128,6 +128,10 @@
       .submitted .big { font-family: "Noto Serif TC", serif; font-size: 1.5rem; font-weight: 700; color: var(--purple); }
       .dark-mode .submitted .big { color: #e3c6dc; }
       .submitted p { color: var(--muted); margin: 0; font-size: 0.92rem; }
+      .submitted .pick {
+        padding: 0.5rem 1.1rem; border-radius: 10px; border: 1px solid var(--hairline);
+        background: var(--surface); font-weight: 700; max-width: 100%; box-sizing: border-box;
+      }
       .spinner {
         width: 30px; height: 30px; border-radius: 50%; margin-top: 0.6rem;
         border: 3px solid var(--hairline-strong); border-top-color: var(--purple);
@@ -145,6 +149,19 @@
       .dark-mode .verdict .v-bad { color: #f28779; }
       .verdict .v-sub { color: var(--muted); font-size: 0.95rem; margin: 0.3rem 0 0; font-variant-numeric: tabular-nums; }
       .verdict .v-score { color: var(--muted); font-size: 0.9rem; margin-top: 0.4rem; font-variant-numeric: tabular-nums; }
+      .verdict .v-rank, .verdict .v-gap {
+        margin: 0.55rem 0 0; font-size: 0.98rem; color: var(--ink); font-variant-numeric: tabular-nums;
+      }
+      .verdict .v-gap { color: var(--muted); margin-top: 0.25rem; }
+      .verdict .v-rank strong { color: var(--red); font-size: 1.15em; }
+      .interlude { margin: auto 0; text-align: center; display: flex; flex-direction: column; gap: 0.6rem; align-items: center; }
+      .interlude .big { font-family: "Noto Serif TC", serif; font-size: 1.5rem; font-weight: 700; color: var(--purple); }
+      .dark-mode .interlude .big { color: #e3c6dc; }
+      .interlude p { color: var(--muted); margin: 0; font-size: 0.92rem; }
+
+      /* 畫面轉場 */
+      .view-anim { animation: vfade 280ms ease; }
+      @keyframes vfade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
       /* ---- 排行 ---- */
       .board-title { font-family: "Noto Serif TC", serif; text-align: center; font-size: 1.4rem; color: var(--purple); margin: 1.2rem 0 1rem; }
@@ -203,8 +220,13 @@
         var serverOffset = 0;
         var answeredIndex = -1;   // 本題已提交（本地即時反饋）
         var chosen = -1;
-        var busy = false, joined = false, pollTimer = null, tickTimer = null;
+        var pollBusy = false, answerBusy = false, pollTimer = null, tickTimer = null;
         var failCount = 0;
+
+        function setView(html) {
+          app.innerHTML = html;
+          if (app.firstElementChild) app.firstElementChild.classList.add("view-anim");
+        }
 
         function esc(s) {
           return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -233,7 +255,7 @@
 
         /* ===================== 加入 ===================== */
         function renderJoin(msg, isErr) {
-          app.innerHTML =
+          setView(
             '<div class="join-box">' +
               '<h1 class="join-title">問答競技場</h1>' +
               '<p class="join-sub">輸入主持人提供的 6 位遊戲碼加入</p>' +
@@ -241,7 +263,7 @@
               '<input class="name-input" id="jName" maxlength="16" placeholder="你的名字" value="' + esc(myName) + '" />' +
               '<button class="btn primary" id="jGo">加入遊戲</button>' +
               '<p class="play-msg ' + (isErr ? "err" : "") + '" id="jMsg">' + esc(msg || "") + "</p>" +
-            "</div>";
+            "</div>");
           document.getElementById("jGo").addEventListener("click", doJoin);
           app.querySelectorAll("input").forEach(function (inp) {
             inp.addEventListener("keydown", function (e) { if (e.key === "Enter") doJoin(); });
@@ -250,13 +272,13 @@
         }
 
         function doJoin() {
-          if (busy) return;
+          if (answerBusy) return;
           var p = document.getElementById("jPin").value.replace(/\D/g, "");
           var n = document.getElementById("jName").value.trim();
           var msg = document.getElementById("jMsg");
           if (p.length !== 6) { msg.textContent = "請輸入 6 位遊戲碼。"; msg.className = "play-msg err"; return; }
           if (!n) { msg.textContent = "請輸入名字。"; msg.className = "play-msg err"; return; }
-          busy = true;
+          answerBusy = true;
           msg.textContent = "加入中…"; msg.className = "play-msg";
           api("join", "POST", { pin: p, name: n })
             .then(function (d) {
@@ -271,7 +293,7 @@
               msg.textContent = err.message || "加入失敗。";
               msg.className = "play-msg err";
             })
-            .finally(function () { busy = false; });
+            .finally(function () { answerBusy = false; });
         }
 
         /* ===================== 大廳／等待 ===================== */
@@ -287,13 +309,13 @@
           var cloud = (players && players.length)
             ? '<div class="player-cloud">' + players.map(function (n) { return '<span class="chip">' + esc(n) + "</span>"; }).join("") + "</div>"
             : "";
-          app.innerHTML =
+          setView(
             '<div class="lobby-head"><div class="pin">' + esc(pin) + "</div><p>遊戲碼</p></div>" +
             '<div style="align-self:center;"><span class="me-badge">' + esc(myName) + "（你）</span></div>" +
             cloud +
             '<p class="wait-note" style="margin-top:auto;">' + esc(text) + "</p>" +
             '<div class="spinner" style="align-self:center; margin-bottom:0.4rem;"></div>' +
-            '<button type="button" class="leave" id="leaveBtn" style="align-self:center;">離開遊戲</button>';
+            '<button type="button" class="leave" id="leaveBtn" style="align-self:center;">離開遊戲</button>');
           var lb = document.getElementById("leaveBtn");
           if (lb) lb.addEventListener("click", leaveGame);
         }
@@ -312,13 +334,13 @@
             return '<button type="button" class="' + cls + '" data-opt="' + i + '"' + (answered ? " disabled" : "") + ">" +
               SHAPES[i] + '<span class="txt">' + esc(o) + "</span></button>";
           }).join("");
-          app.innerHTML =
+          setView(
             '<div class="dots">' + dots.join("") + "</div>" +
             '<div class="q-top"><span class="q-num">第 ' + (d.index + 1) + " / " + d.total + " 題</span>" +
               '<div class="timer-track"><div class="timer-fill" id="tFill"></div></div>' +
               '<span class="t-num" id="tNum"></span></div>' +
             '<p class="q-text">' + esc(d.q) + "</p>" +
-            '<div class="answers">' + opts + "</div>";
+            '<div class="answers">' + opts + "</div>");
           if (!answered) {
             app.querySelectorAll(".ans-btn").forEach(function (b) {
               b.addEventListener("click", function () { submitAnswer(Number(b.dataset.opt)); });
@@ -346,28 +368,31 @@
         function stopTicker() { if (tickTimer) { clearInterval(tickTimer); tickTimer = null; } }
 
         function renderSubmitted(chosenText) {
-          app.innerHTML =
+          setView(
             '<div class="submitted"><div class="big">已提交</div>' +
             (chosenText ? '<p>你選了「' + esc(chosenText) + '」</p>' : "") +
             "<p>等待其他玩家作答…</p>" +
-            '<div class="spinner"></div></div>';
+            '<div class="spinner"></div></div>');
         }
 
         function submitAnswer(opt) {
-          if (busy || answeredIndex !== -1) return;
-          busy = true;
+          // 只受作答鎖限制（輪詢不會吃掉點擊）
+          if (answerBusy || answeredIndex !== -1 || !lastData) return;
+          answerBusy = true;
           chosen = opt;
-          answeredIndex = lastData ? lastData.index : -2;
-          var chosenText = lastData && lastData.options ? lastData.options[opt] : "";
+          answeredIndex = lastData.index;
+          var chosenText = lastData.options ? lastData.options[opt] : "";
+          // 樂觀回饋：即時顯示已選，再送出
+          renderKey = "q:" + lastData.index + ":s";
+          renderSubmitted(chosenText);
           api("answer", "POST", { pin: pin, player: playerId, index: lastData.index, option: opt })
-            .then(function () { renderKey = "q:" + (lastData ? lastData.index : 0) + ":s"; renderSubmitted(chosenText); })
             .catch(function (err) {
               answeredIndex = -1; chosen = -1;
               renderKey = "";
               connEl.textContent = err.message || "提交失敗";
               if (lastData) renderQuestion(lastData);
             })
-            .finally(function () { busy = false; });
+            .finally(function () { answerBusy = false; });
         }
 
         /* ===================== 揭曉 ===================== */
@@ -382,35 +407,38 @@
           var sub = mine.answered && good ? "+" + mine.points + " 分"
             : !mine.answered ? "這題沒有取得分數"
             : "再接再厲";
-          var opts = (d.options || []).map(function (o, i) {
-            var cls = "ans-btn " + (CLS[i] || "ans-plum");
-            if (i === d.correct) cls += " right";
-            else if (mine.answered && mine.option === i) cls += " dim";
-            else cls += " dim";
-            return '<button type="button" class="' + cls + '" disabled>' +
-              SHAPES[i] + '<span class="txt">' + esc(o) + "</span></button>";
-          }).join("");
-          app.innerHTML =
+          var rankLine = "";
+          if (mine.rank != null) {
+            rankLine += '<p class="v-rank">目前第 <strong>' + mine.rank + "</strong> 名 · " + (mine.score != null ? mine.score : 0) + " 分</p>";
+            if (mine.aheadName != null) {
+              var gap = Math.max(0, (mine.aheadScore || 0) - (mine.score || 0));
+              rankLine += '<p class="v-gap">落後 ' + esc(mine.aheadName) + " " + gap + " 分</p>";
+            } else {
+              rankLine += '<p class="v-gap">你是第一名！</p>';
+            }
+          }
+          setView(
             '<div class="verdict"><div class="v-big ' + vCls + '">' + vBig + "</div>" +
             '<p class="v-sub">' + sub + "</p>" +
-            '<p class="v-score">目前總分 ' + (mine.score != null ? mine.score : 0) + " 分</p></div>" +
-            '<div class="answers" style="margin-top:auto; margin-bottom:1rem;">' + opts + "</div>";
+            rankLine +
+            '<p class="v-score" style="display:none;"></p></div>');
         }
 
-        /* ===================== 排行 ===================== */
+        /* ===================== 題間（排行榜只在主持台顯示） ===================== */
+        function renderIntermission() {
+          setView(
+            '<div class="interlude"><div class="big">下一題即將開始</div>' +
+            "<p>請留意主持人螢幕上的排行榜</p>" +
+            '<div class="spinner"></div></div>');
+        }
+
+        /* ===================== 排行（僅最終畫面使用） ===================== */
         function boardRows(d) {
           return (d.standings || []).map(function (r, i) {
             var rk = i < 3 ? '<span class="rk m m' + (i + 1) + '">' + (i + 1) + "</span>" : '<span class="rk">' + (i + 1) + "</span>";
             var cls = "board-row" + (r.name === myName ? " me" : "");
             return '<div class="' + cls + '">' + rk + '<span class="nm">' + esc(r.name) + '</span><span class="sc">' + r.score + "</span></div>";
           }).join("");
-        }
-
-        function renderBoard(d, isFinal) {
-          var my = d.my ? '<p class="wait-note" style="margin:1rem 0 0;">你排第 <strong>' + d.my.rank + "</strong> 名 · " + d.my.score + " 分</p>" : "";
-          var title = isFinal ? "最終排名" : "排行榜";
-          app.innerHTML = '<h2 class="board-title">' + title + "</h2>" +
-            '<div class="board-list">' + (boardRows(d) || '<p class="wait-note">暫無資料</p>') + "</div>" + my;
         }
 
         /* ===================== 頒獎台 ===================== */
@@ -424,12 +452,12 @@
               '<div class="p-score">' + (p ? p.score + " 分" : "") + "</div>" +
               '<div class="p-block">' + place + "</div></div>";
           }).join("");
-          app.innerHTML =
+          setView(
             '<h2 class="board-title">遊戲結束</h2>' +
             '<div class="podium">' + blocks + "</div>" +
             '<div class="board-list">' + boardRows(d) + "</div>" +
             '<p class="end-note">感謝參與！</p>' +
-            '<button type="button" class="leave" id="againBtn" style="align-self:center;">離開</button>';
+            '<button type="button" class="leave" id="againBtn" style="align-self:center;">離開</button>');
           if (d.my) {
             var note = app.querySelector(".end-note");
             note.textContent = "你排第 " + d.my.rank + " 名 · " + d.my.score + " 分 · 感謝參與！";
@@ -459,8 +487,8 @@
         function stopPolling() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
 
         function poll() {
-          if (busy) return;
-          busy = true;
+          if (pollBusy) return;
+          pollBusy = true;
           var t0 = Date.now();
           api("state?pin=" + encodeURIComponent(pin) + "&player=" + encodeURIComponent(playerId))
             .then(function (d) {
@@ -497,7 +525,7 @@
               } else if (d.status === "board") {
                 if (renderKey !== "b") {
                   renderKey = "b";
-                  renderBoard(d, false);
+                  renderIntermission();
                 }
               } else if (d.status === "ended") {
                 if (renderKey !== "e") {
@@ -514,7 +542,7 @@
                 connEl.textContent = "連線中斷，請重新整理頁面。";
               }
             })
-            .finally(function () { busy = false; });
+            .finally(function () { pollBusy = false; });
         }
 
         /* ===================== 啟動 ===================== */
