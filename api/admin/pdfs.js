@@ -12,7 +12,6 @@ const MAX_SIZE = 50 * 1024 * 1024; // 50MB
 function bad(msg) { return { ok: false, msg }; }
 
 module.exports = async (req, res) => {
-  if (!process.env.ADMIN_PASSWORD) { envError(res, "ADMIN_PASSWORD"); return; }
   if (!process.env.SUPABASE_SERVICE_KEY) { envError(res, "SUPABASE_SERVICE_KEY"); return; }
   if (!checkAuth(req)) { json(res, 401, { error: "密碼不正確。" }); return; }
 

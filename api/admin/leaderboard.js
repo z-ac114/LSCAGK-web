@@ -5,7 +5,6 @@
 const { checkAuth, readBody, json, envError, serviceHeaders, sb, UUID_RE } = require("../../lib/admin-util");
 
 module.exports = async (req, res) => {
-  if (!process.env.ADMIN_PASSWORD) { envError(res, "ADMIN_PASSWORD"); return; }
   if (!process.env.SUPABASE_SERVICE_KEY) { envError(res, "SUPABASE_SERVICE_KEY"); return; }
   if (!checkAuth(req)) { json(res, 401, { error: "密碼不正確。" }); return; }
 
