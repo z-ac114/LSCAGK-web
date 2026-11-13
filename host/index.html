@@ -121,6 +121,10 @@
       .rk.m1 { background: var(--red); } .rk.m2 { background: var(--school-gold); } .rk.m3 { background: #9c7b52; }
       .board-row .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .board-row .sc { font-weight: 700; font-variant-numeric: tabular-nums; }
+      .board-row.rise { background: rgb(62 125 90 / 14%); border-color: #3e7d5a; }
+      .board-row.fall { background: rgb(179 38 30 / 10%); border-color: rgb(179 38 30 / 35%); }
+      .board-row.enter { animation: chipin 260ms ease backwards; }
+      .board-list .board-row { will-change: transform; }
 
       /* 報告 */
       .kr-q { border-top: 1px solid var(--hairline); padding: 1rem 0; }
@@ -234,6 +238,10 @@
               <p class="q-num" id="kAnswered" style="margin:0 0 0.4rem;"></p>
               <p class="k-qtext" id="kQ"></p>
               <div id="kOptions"></div>
+              <div id="kBoardWrap" style="display:none; margin-top:1.4rem;">
+                <h2 style="font-family:'Noto Serif TC',serif; font-size:1.15rem; color:var(--purple); margin:0 0 0.8rem;" id="kBoardTitle">即時排行</h2>
+                <div class="board-list" id="kBoard"></div>
+              </div>
               <p class="host-sub" id="kHint" style="margin:0.8rem 0 0;"></p>
               <div class="live-actions">
                 <button type="button" class="btn primary big" id="kNext">繼續</button>
@@ -373,6 +381,7 @@
             return gameApi("create", "POST", { bank: bank, count: count, timeLimit: timeLimit, questions: qs });
           }).then(function (d) {
             K.pin = d.pin;
+            K.boardRanks = {}; K.boardScores = {};
             try { sessionStorage.setItem("agkLivePin", d.pin); } catch (e) {}
             $("kPin").textContent = d.pin;
             $("kUrl").textContent = location.origin + "/play";
@@ -411,6 +420,65 @@
 
         var OPT_CLS = ["o-red", "o-gold", "o-plum", "o-green"];
 
+        /* ===== 動態排行：FLIP 滑動 + 分數滾動 ===== */
+        function renderBoardAnimated(el, standings) {
+          var prevRanks = K.boardRanks || {};
+          var prevScores = K.boardScores || {};
+          var rows = (standings || []).slice(0, 20);
+          var hadPrev = Object.keys(prevRanks).length > 0;
+
+          el.innerHTML = rows.map(function (p, i) {
+            var rk = i < 3 ? '<span class="rk m m' + (i + 1) + '">' + (i + 1) + "</span>" : '<span class="rk">' + (i + 1) + "</span>";
+            var shown = prevScores[p.name] != null ? prevScores[p.name] : p.score;
+            var enter = hadPrev && prevRanks[p.name] == null ? " enter" : "";
+            return '<div class="board-row' + enter + '" data-name="' + esc(p.name) + '" data-score="' + p.score + '">' + rk +
+              '<span class="nm">' + esc(p.name) + '</span><span class="sc">' + shown + "</span></div>";
+          }).join("");
+
+          var rowEls = Array.prototype.slice.call(el.children);
+          var rowH = rowEls.length > 1
+            ? (rowEls[1].offsetTop - rowEls[0].offsetTop)
+            : (rowEls[0] ? rowEls[0].offsetHeight + 8 : 50);
+
+          // 1. 預位移（從舊位置出發）
+          rowEls.forEach(function (r, i) {
+            var old = prevRanks[r.dataset.name];
+            if (old != null && old !== i) {
+              r.style.transform = "translateY(" + ((old - i) * rowH) + "px)";
+              r.classList.add(old > i ? "rise" : "fall");
+            }
+          });
+          // 2. 強制重排後滑回原位
+          void el.offsetHeight;
+          rowEls.forEach(function (r) {
+            r.style.transition = "transform 520ms cubic-bezier(.22,.9,.36,1)";
+            r.style.transform = "";
+          });
+          setTimeout(function () {
+            rowEls.forEach(function (r) { r.style.transition = ""; r.classList.remove("rise", "fall"); });
+          }, 560);
+
+          // 3. 分數滾動
+          rowEls.forEach(function (r) {
+            var scEl = r.querySelector(".sc");
+            var target = Number(r.dataset.score);
+            var from = prevScores[r.dataset.name];
+            if (from == null || from === target) { scEl.textContent = target; return; }
+            var t0 = performance.now(), dur = 700;
+            (function tick(t) {
+              var k = Math.min(1, (t - t0) / dur);
+              scEl.textContent = Math.round(from + (target - from) * (1 - Math.pow(1 - k, 3)));
+              if (k < 1) requestAnimationFrame(tick);
+            })(t0);
+          });
+
+          // 儲存快照
+          var ranks = {}, scores = {};
+          rows.forEach(function (p, i) { ranks[p.name] = i; scores[p.name] = p.score; });
+          K.boardRanks = ranks;
+          K.boardScores = scores;
+        }
+
         function kRender(d) {
           var key = d.status + ":" + (d.index || 0);
           if (d.status === "lobby") {
@@ -442,6 +510,10 @@
               $("kNext").style.display = "";
               kTicker(d);
             }
+            // 即時排行：隨玩家得分即時滑動
+            $("kBoardWrap").style.display = "";
+            $("kBoardTitle").textContent = "即時排行";
+            renderBoardAnimated($("kBoard"), d.standings);
             return;
           }
 
@@ -453,6 +525,7 @@
           $("kTimerFill").style.width = "0";
 
           if (d.status === "reveal") {
+            $("kBoardWrap").style.display = "none";
             $("kQ").textContent = d.q || "";
             var max = Math.max.apply(null, (d.counts || [0]).concat([1]));
             $("kOptions").innerHTML = (d.options || []).map(function (o, i) {
@@ -465,15 +538,21 @@
             $("kNext").textContent = "顯示排行榜";
             $("kNext").style.display = "";
           } else if (d.status === "board") {
-            $("kQ").textContent = "目前排行";
-            $("kOptions").innerHTML = boardHtml(d.standings);
+            $("kBoardWrap").style.display = "";
+            $("kBoardTitle").textContent = "目前排行";
+            $("kQ").textContent = "";
+            $("kOptions").innerHTML = "";
+            renderBoardAnimated($("kBoard"), d.standings);
             var last = d.index + 1 >= d.total;
             $("kHint").textContent = last ? "這是最後一題。" : "按「下一題」繼續。";
             $("kNext").textContent = last ? "查看最終結果" : "下一題";
             $("kNext").style.display = "";
           } else if (d.status === "ended") {
-            $("kQ").textContent = "最終排名";
-            $("kOptions").innerHTML = boardHtml(d.standings);
+            $("kBoardWrap").style.display = "";
+            $("kBoardTitle").textContent = "最終排名";
+            $("kQ").textContent = "";
+            $("kOptions").innerHTML = "";
+            renderBoardAnimated($("kBoard"), d.standings);
             $("kHint").textContent = "玩家裝置已顯示頒獎台。記錄保留在「歷史遊戲」。";
             $("kNext").textContent = "完成";
             $("kNext").style.display = "";
@@ -482,13 +561,6 @@
           }
         }
 
-        function boardHtml(standings) {
-          return (standings || []).slice(0, 20).map(function (p, i) {
-            var rk = i < 3 ? '<span class="rk m m' + (i + 1) + '">' + (i + 1) + "</span>" : '<span class="rk">' + (i + 1) + "</span>";
-            return '<div class="board-row" style="animation-delay:' + Math.min(i * 45, 400) + 'ms">' + rk +
-              '<span class="nm">' + esc(p.name) + '</span><span class="sc">' + p.score + "</span></div>";
-          }).join("");
-        }
 
         function kTicker(d) {
           stopTickerK();
@@ -509,6 +581,7 @@
         function kReset() {
           kStopPoll();
           K.pin = null; K.last = null; K.key = "";
+          K.boardRanks = {}; K.boardScores = {};
           try { sessionStorage.removeItem("agkLivePin"); } catch (e) {}
           showSection("vSetup");
           kMsg("kMsg", "");

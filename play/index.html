@@ -306,16 +306,20 @@
         }
 
         function renderWait(text, players) {
-          var cloud = (players && players.length)
-            ? '<div class="player-cloud">' + players.map(function (n) { return '<span class="chip">' + esc(n) + "</span>"; }).join("") + "</div>"
+          // 只顯示「其他玩家」，自己以徽章顯示（避免重複）
+          var others = (players || []).filter(function (n) { return n !== myName; });
+          var cloud = others.length
+            ? '<p class="host-sub" style="text-align:center; margin:1.3rem 0 0.5rem; font-size:0.82rem; letter-spacing:0.1em;">房內玩家</p>' +
+              '<div class="player-cloud">' + others.map(function (n) { return '<span class="chip">' + esc(n) + "</span>"; }).join("") + "</div>"
             : "";
-          setView(
+          var total = players ? players.length : 1;
+          app.innerHTML =
             '<div class="lobby-head"><div class="pin">' + esc(pin) + "</div><p>遊戲碼</p></div>" +
             '<div style="align-self:center;"><span class="me-badge">' + esc(myName) + "（你）</span></div>" +
             cloud +
-            '<p class="wait-note" style="margin-top:auto;">' + esc(text) + "</p>" +
+            '<p class="wait-note" style="margin-top:auto;">共 ' + total + " 位玩家 · " + esc(text) + "</p>" +
             '<div class="spinner" style="align-self:center; margin-bottom:0.4rem;"></div>' +
-            '<button type="button" class="leave" id="leaveBtn" style="align-self:center;">離開遊戲</button>');
+            '<button type="button" class="leave" id="leaveBtn" style="align-self:center;">離開遊戲</button>';
           var lb = document.getElementById("leaveBtn");
           if (lb) lb.addEventListener("click", leaveGame);
         }

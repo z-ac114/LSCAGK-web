@@ -44,6 +44,7 @@ module.exports = async (req, res) => {
         out.q = q.q;
         out.options = q.options;
         out.endsAt = game.q_ends_at;
+        out.standings = players.slice(0, 20).map((p) => ({ name: p.name, score: p.score }));
       } else if (phase === "reveal" && q) {
         out.q = q.q;
         out.options = q.options;
