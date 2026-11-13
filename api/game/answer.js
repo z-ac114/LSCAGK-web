@@ -3,11 +3,12 @@
 // 正確答案只在伺服器比對，回應不洩露對錯（統一於 reveal 公佈）
 "use strict";
 const { readBody, json, serviceHeaders, sb } = require("../../lib/admin-util");
-const { fetchGameInPhase, effPhase, UUID_RE } = require("../../lib/game-util");
+const { fetchGameInPhase, effPhase, UUID_RE, rateLimit } = require("../../lib/game-util");
 
 module.exports = async (req, res) => {
   if (req.method !== "POST") { json(res, 405, { error: "Method not allowed" }); return; }
   if (!process.env.SUPABASE_SERVICE_KEY) { json(res, 500, { error: "伺服器未設定 SUPABASE_SERVICE_KEY。" }); return; }
+  if (!rateLimit(req, 600, 60000)) { json(res, 429, { error: "請稍後再試。" }); return; }
 
   try {
     const body = await readBody(req);

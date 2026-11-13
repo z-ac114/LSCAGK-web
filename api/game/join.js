@@ -2,11 +2,12 @@
 // body: { pin, name }
 "use strict";
 const { readBody, json, serviceHeaders, sb } = require("../../lib/admin-util");
-const { fetchGame } = require("../../lib/game-util");
+const { fetchGame, MAX_PLAYERS, rateLimit } = require("../../lib/game-util");
 
 module.exports = async (req, res) => {
   if (req.method !== "POST") { json(res, 405, { error: "Method not allowed" }); return; }
   if (!process.env.SUPABASE_SERVICE_KEY) { json(res, 500, { error: "伺服器未設定 SUPABASE_SERVICE_KEY。" }); return; }
+  if (!rateLimit(req, 60, 60000)) { json(res, 429, { error: "請稍後再試。" }); return; }
 
   try {
     const body = await readBody(req);
@@ -21,6 +22,7 @@ module.exports = async (req, res) => {
 
     const pr = await sb("/rest/v1/players?select=name&game_id=eq." + game.id + "&limit=300", { headers: serviceHeaders() });
     const players = pr.ok ? JSON.parse(await pr.text()) : [];
+    if (players.length >= MAX_PLAYERS) { json(res, 400, { error: "遊戲人數已滿。" }); return; }
     if (players.some((p) => String(p.name).toLowerCase() === name.toLowerCase())) {
       json(res, 400, { error: "此名字已被使用，請換一個。" });
       return;

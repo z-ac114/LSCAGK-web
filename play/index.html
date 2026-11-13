@@ -80,10 +80,21 @@
         background: var(--surface); font-size: 0.88rem; color: var(--ink);
       }
       .wait-note { text-align: center; color: var(--muted); font-size: 0.88rem; margin: auto 0 1rem; }
+      .leave {
+        background: none; border: none; color: var(--muted); text-decoration: underline;
+        text-underline-offset: 3px; font: inherit; font-size: 0.85rem; cursor: pointer;
+        padding: 0.5rem; touch-action: manipulation;
+      }
+      .leave:hover { color: var(--ink); }
 
       /* ---- 題目 ---- */
-      .q-top { display: flex; align-items: center; gap: 0.8rem; margin: 0.4rem 0 0.8rem; }
+      .dots { display: flex; gap: 5px; justify-content: center; margin: 0.2rem 0 0.7rem; }
+      .dot { width: 7px; height: 7px; border-radius: 9999px; background: var(--hairline-strong); transition: width 200ms ease, background 200ms ease; }
+      .dot.done { background: var(--school-gold); }
+      .dot.cur { background: var(--red); width: 20px; }
+      .q-top { display: flex; align-items: center; gap: 0.8rem; margin: 0.4rem 0 0.5rem; }
       .q-num { color: var(--muted); font-size: 0.88rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .t-num { color: var(--ink); font-weight: 700; font-size: 1.05rem; font-variant-numeric: tabular-nums; min-width: 1.6em; text-align: right; }
       .timer-track { flex: 1; height: 8px; border-radius: 9999px; background: var(--hairline); overflow: hidden; }
       .timer-fill { height: 100%; width: 100%; background: var(--school-gold); border-radius: 9999px; transition: width 250ms linear; }
       .timer-fill.low { background: var(--red); }
@@ -126,7 +137,8 @@
 
       /* ---- 揭曉 ---- */
       .verdict { text-align: center; margin: 1.2rem 0; }
-      .verdict .v-big { font-family: "Noto Serif TC", serif; font-size: 2rem; font-weight: 700; }
+      .verdict .v-big { font-family: "Noto Serif TC", serif; font-size: 2rem; font-weight: 700; animation: vpop 320ms ease; }
+      @keyframes vpop { 0% { transform: scale(0.72); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
       .verdict .v-good { color: #1b7f3b; }
       .dark-mode .verdict .v-good { color: #7bd39a; }
       .verdict .v-bad { color: #b3261e; }
@@ -143,6 +155,13 @@
         border-radius: 10px; border: 1px solid var(--hairline); background: var(--surface); font-size: 0.95rem;
       }
       .board-row .rk { width: 1.8em; color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; }
+      .board-row .rk.m {
+        width: 1.7em; height: 1.7em; border-radius: 50%; display: inline-flex;
+        align-items: center; justify-content: center; color: #fff; font-size: 0.82rem; flex-shrink: 0;
+      }
+      .rk.m1 { background: var(--red); }
+      .rk.m2 { background: var(--school-gold); }
+      .rk.m3 { background: #9c7b52; }
       .board-row .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .board-row .sc { font-weight: 700; font-variant-numeric: tabular-nums; }
       .board-row.me { border-color: var(--red); background: var(--rose-soft); }
@@ -256,6 +275,14 @@
         }
 
         /* ===================== 大廳／等待 ===================== */
+        function leaveGame() {
+          stopPolling();
+          pin = ""; playerId = ""; myName = "";
+          sSet(K_PIN, ""); sSet(K_ID, ""); sSet(K_NAME, "");
+          view = "join";
+          renderJoin();
+        }
+
         function renderWait(text, players) {
           var cloud = (players && players.length)
             ? '<div class="player-cloud">' + players.map(function (n) { return '<span class="chip">' + esc(n) + "</span>"; }).join("") + "</div>"
@@ -265,13 +292,20 @@
             '<div style="align-self:center;"><span class="me-badge">' + esc(myName) + "（你）</span></div>" +
             cloud +
             '<p class="wait-note" style="margin-top:auto;">' + esc(text) + "</p>" +
-            '<div class="spinner" style="align-self:center; margin-bottom:1.2rem;"></div>';
+            '<div class="spinner" style="align-self:center; margin-bottom:0.4rem;"></div>' +
+            '<button type="button" class="leave" id="leaveBtn" style="align-self:center;">離開遊戲</button>';
+          var lb = document.getElementById("leaveBtn");
+          if (lb) lb.addEventListener("click", leaveGame);
         }
 
         /* ===================== 題目 ===================== */
         function renderQuestion(d) {
           if (answeredIndex !== d.index) { answeredIndex = -1; chosen = -1; }
           var answered = answeredIndex === d.index;
+          var dots = [];
+          for (var di = 0; di < d.total; di++) {
+            dots.push('<span class="dot' + (di < d.index ? " done" : di === d.index ? " cur" : "") + '"></span>');
+          }
           var opts = d.options.map(function (o, i) {
             var cls = "ans-btn " + (CLS[i] || "ans-plum");
             if (answered && chosen === i) cls += " right";
@@ -279,8 +313,10 @@
               SHAPES[i] + '<span class="txt">' + esc(o) + "</span></button>";
           }).join("");
           app.innerHTML =
+            '<div class="dots">' + dots.join("") + "</div>" +
             '<div class="q-top"><span class="q-num">第 ' + (d.index + 1) + " / " + d.total + " 題</span>" +
-              '<div class="timer-track"><div class="timer-fill" id="tFill"></div></div></div>' +
+              '<div class="timer-track"><div class="timer-fill" id="tFill"></div></div>' +
+              '<span class="t-num" id="tNum"></span></div>' +
             '<p class="q-text">' + esc(d.q) + "</p>" +
             '<div class="answers">' + opts + "</div>";
           if (!answered) {
@@ -294,22 +330,25 @@
         function startTicker(d) {
           stopTicker();
           var ends = Date.parse(d.endsAt) - serverOffset;
-          var total = d.total ? 0 : 0;
+          var dur = d.timeMs || 20000;
           tickTimer = setInterval(function () {
             var fill = document.getElementById("tFill");
+            var num = document.getElementById("tNum");
             if (!fill) { stopTicker(); return; }
             var remain = Math.max(0, ends - Date.now());
-            var pct = Math.max(0, Math.min(100, remain / (d.timeMs || 20000) * 100));
+            var pct = Math.max(0, Math.min(100, remain / dur * 100));
             fill.style.width = pct + "%";
+            if (num) num.textContent = Math.ceil(remain / 1000);
             if (remain <= 5000) fill.classList.add("low");
             if (remain <= 0) stopTicker();
           }, 250);
         }
         function stopTicker() { if (tickTimer) { clearInterval(tickTimer); tickTimer = null; } }
 
-        function renderSubmitted() {
+        function renderSubmitted(chosenText) {
           app.innerHTML =
             '<div class="submitted"><div class="big">已提交</div>' +
+            (chosenText ? '<p>你選了「' + esc(chosenText) + '」</p>' : "") +
             "<p>等待其他玩家作答…</p>" +
             '<div class="spinner"></div></div>';
         }
@@ -319,10 +358,12 @@
           busy = true;
           chosen = opt;
           answeredIndex = lastData ? lastData.index : -2;
+          var chosenText = lastData && lastData.options ? lastData.options[opt] : "";
           api("answer", "POST", { pin: pin, player: playerId, index: lastData.index, option: opt })
-            .then(function () { renderSubmitted(); })
+            .then(function () { renderKey = "q:" + (lastData ? lastData.index : 0) + ":s"; renderSubmitted(chosenText); })
             .catch(function (err) {
               answeredIndex = -1; chosen = -1;
+              renderKey = "";
               connEl.textContent = err.message || "提交失敗";
               if (lastData) renderQuestion(lastData);
             })
@@ -357,15 +398,19 @@
         }
 
         /* ===================== 排行 ===================== */
-        function renderBoard(d, isFinal) {
-          var rows = (d.standings || []).map(function (r, i) {
+        function boardRows(d) {
+          return (d.standings || []).map(function (r, i) {
+            var rk = i < 3 ? '<span class="rk m m' + (i + 1) + '">' + (i + 1) + "</span>" : '<span class="rk">' + (i + 1) + "</span>";
             var cls = "board-row" + (r.name === myName ? " me" : "");
-            return '<div class="' + cls + '"><span class="rk">' + (i + 1) + "</span><span class=\"nm\">" + esc(r.name) + "</span><span class=\"sc\">" + r.score + "</span></div>";
+            return '<div class="' + cls + '">' + rk + '<span class="nm">' + esc(r.name) + '</span><span class="sc">' + r.score + "</span></div>";
           }).join("");
+        }
+
+        function renderBoard(d, isFinal) {
           var my = d.my ? '<p class="wait-note" style="margin:1rem 0 0;">你排第 <strong>' + d.my.rank + "</strong> 名 · " + d.my.score + " 分</p>" : "";
           var title = isFinal ? "最終排名" : "排行榜";
           app.innerHTML = '<h2 class="board-title">' + title + "</h2>" +
-            '<div class="board-list">' + (rows || '<p class="wait-note">暫無資料</p>') + "</div>" + my;
+            '<div class="board-list">' + (boardRows(d) || '<p class="wait-note">暫無資料</p>') + "</div>" + my;
         }
 
         /* ===================== 頒獎台 ===================== */
@@ -379,19 +424,18 @@
               '<div class="p-score">' + (p ? p.score + " 分" : "") + "</div>" +
               '<div class="p-block">' + place + "</div></div>";
           }).join("");
-          var rows = (d.standings || []).map(function (r, i) {
-            var cls = "board-row" + (r.name === myName ? " me" : "");
-            return '<div class="' + cls + '"><span class="rk">' + (i + 1) + "</span><span class=\"nm\">" + esc(r.name) + "</span><span class=\"sc\">" + r.score + "</span></div>";
-          }).join("");
           app.innerHTML =
             '<h2 class="board-title">遊戲結束</h2>' +
             '<div class="podium">' + blocks + "</div>" +
-            '<div class="board-list">' + rows + "</div>" +
-            '<p class="end-note">感謝參與！</p>';
+            '<div class="board-list">' + boardRows(d) + "</div>" +
+            '<p class="end-note">感謝參與！</p>' +
+            '<button type="button" class="leave" id="againBtn" style="align-self:center;">離開</button>';
           if (d.my) {
             var note = app.querySelector(".end-note");
             note.textContent = "你排第 " + d.my.rank + " 名 · " + d.my.score + " 分 · 感謝參與！";
           }
+          var ab = document.getElementById("againBtn");
+          if (ab) ab.addEventListener("click", leaveGame);
         }
 
         /* ===================== 輪詢 ===================== */

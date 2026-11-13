@@ -176,6 +176,29 @@
       .timer-fill { height: 100%; width: 0; background: var(--school-gold); transition: width 300ms linear; }
       .timer-fill.low { background: var(--red); }
 
+      /* 歷史遊戲 */
+      .k-hist-row {
+        display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap;
+        padding: 0.6rem 0; border-bottom: 1px solid var(--hairline); font-size: 0.88rem;
+      }
+      .k-hist-row:last-child { border-bottom: 0; }
+      .k-hist-pin { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--purple); }
+      .dark-mode .k-hist-pin { color: #e3c6dc; }
+      .k-hist-meta { flex: 1; min-width: 200px; color: var(--muted); }
+      .k-hist-actions { display: flex; gap: 0.4rem; }
+
+      /* 遊戲報告 */
+      .kr-q { border-top: 1px solid var(--hairline); padding: 0.9rem 0; }
+      .kr-q:first-child { border-top: 0; }
+      .kr-head { display: flex; justify-content: space-between; gap: 0.8rem; font-size: 0.88rem; font-weight: 700; }
+      .kr-head span { color: var(--muted); font-variant-numeric: tabular-nums; font-weight: 600; }
+      .kr-qt { margin: 0.35rem 0 0; font-size: 0.95rem; line-height: 1.6; }
+      .kr-ans { margin: 0.3rem 0 0; font-size: 0.85rem; color: #1b7f3b; }
+      .dark-mode .kr-ans { color: #7bd39a; }
+      .kr-wrong { margin: 0.25rem 0 0; font-size: 0.84rem; color: #b3261e; line-height: 1.6; }
+      .dark-mode .kr-wrong { color: #f28779; }
+      .kr-timeout { margin: 0.25rem 0 0; font-size: 0.84rem; color: var(--muted); line-height: 1.6; }
+
       @media (max-width: 640px) {
         .admin-wrap { padding: 1rem 0.85rem 3rem; }
         .card { padding: 1.1rem 1rem; }
@@ -338,9 +361,26 @@
                 <p class="admin-sub" id="kHint" style="margin-bottom:0.9rem;"></p>
                 <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
                   <button type="button" class="btn primary" id="kNext">繼續</button>
+                  <button type="button" class="btn" id="kReportBtn" style="display:none;">查看報告</button>
                   <button type="button" class="btn danger" id="kEnd">結束遊戲</button>
                 </div>
                 <p class="form-msg" id="kLiveMsg"></p>
+              </div>
+
+              <!-- 報告 -->
+              <div class="card" id="kReport" style="display:none;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:0.8rem; flex-wrap:wrap; margin-bottom:0.4rem;">
+                  <h2 style="margin:0;">遊戲報告 <span class="q-num" id="krPin"></span></h2>
+                  <button type="button" class="btn sm" id="krBack">返回</button>
+                </div>
+                <p class="admin-sub" id="krMeta" style="margin-bottom:1rem;"></p>
+                <div id="krBody"></div>
+              </div>
+
+              <!-- 歷史 -->
+              <div class="card" id="kHistoryCard" style="display:none; margin-top:1.2rem;">
+                <h2>歷史遊戲</h2>
+                <div id="kHistList"><p class="admin-sub">載入中…</p></div>
               </div>
             </section>
           </div>
@@ -426,6 +466,7 @@
               $("tab-" + name).classList.toggle("hidden", name !== t.dataset.tab);
             });
             if (t.dataset.tab === "board" && !boardLoaded) { loadBoard(); }
+            if (t.dataset.tab === "kahoot") { kTabInit(); }
           });
         });
 
@@ -864,7 +905,8 @@
         }
 
         function kShow(which) {
-          ["kSetup", "kLobby", "kLive"].forEach(function (id) { $(id).style.display = id === which ? "block" : "none"; });
+          ["kSetup", "kLobby", "kLive", "kReport"].forEach(function (id) { $(id).style.display = id === which ? "block" : "none"; });
+          $("kHistoryCard").style.display = which === "kSetup" ? "block" : "none";
         }
 
         $("kCreate").addEventListener("click", function () {
@@ -890,6 +932,7 @@
             return gameApi("create", "POST", { bank: bank, count: count, timeLimit: timeLimit, questions: qs });
           }).then(function (d) {
             K.pin = d.pin;
+            try { sessionStorage.setItem("agkLivePin", d.pin); } catch (e) {}
             $("kPin").textContent = d.pin;
             $("kUrl").textContent = location.origin + "/play";
             kShow("kLobby");
@@ -950,6 +993,8 @@
           }
           kShow("kLive");
           $("kIdx").textContent = d.status === "ended" ? "遊戲結束" : "第 " + (d.index + 1) + " / " + d.total + " 題";
+          $("kReportBtn").style.display = "none";
+          $("kEnd").style.display = "";
 
           if (d.status === "question") {
             // 每次輪詢只更新作答人數；畫面與計時條只在換題時重建（避免跳動）
@@ -1003,9 +1048,11 @@
             $("kOptions").innerHTML = (d.standings || []).slice(0, 10).map(function (p, i) {
               return '<div class="board-row"><span class="rk">' + (i + 1) + '</span><span class="nm">' + esc(p.name) + '</span><span class="sc">' + p.score + "</span></div>";
             }).join("");
-            $("kHint").textContent = "玩家裝置已顯示頒獎台。";
-            $("kNext").textContent = "關閉遊戲";
+            $("kHint").textContent = "玩家裝置已顯示頒獎台。記錄會保留在「歷史遊戲」。";
+            $("kNext").textContent = "完成";
             $("kNext").style.display = "";
+            $("kReportBtn").style.display = "";
+            $("kEnd").style.display = "none";
           }
         }
 
@@ -1027,8 +1074,105 @@
         function kReset() {
           kStopPoll();
           K.pin = null; K.last = null; kKey = "";
+          try { sessionStorage.removeItem("agkLivePin"); } catch (e) {}
           kShow("kSetup");
           kMsg("kMsg", "");
+          loadHistory();
+        }
+
+        /* ---- 歷史遊戲 ---- */
+        var kHistRows = [];
+        function loadHistory() {
+          gameApi("history").then(function (r) {
+            kHistRows = r.rows || [];
+            renderHistory();
+          }).catch(function () {
+            $("kHistList").innerHTML = '<p class="admin-sub">無法載入歷史記錄。</p>';
+          });
+        }
+        function renderHistory() {
+          var el = $("kHistList");
+          if (!kHistRows.length) { el.innerHTML = '<p class="admin-sub">沒有歷史遊戲。</p>'; return; }
+          var STATUS = { lobby: "等待中", question: "進行中", reveal: "進行中", board: "進行中", ended: "已結束" };
+          el.innerHTML = kHistRows.map(function (g) {
+            var live = g.status !== "ended";
+            return '<div class="k-hist-row">' +
+              '<span class="k-hist-pin">' + esc(g.pin) + "</span>" +
+              '<span class="k-hist-meta">' + esc(String(g.created_at || "").slice(0, 10)) + " · " +
+              (g.bank === "nschallenge" ? "國安" : "國情") + " · " + g.count + " 題 · " +
+              (g.time_limit || 20) + " 秒 · " + (g.players || 0) + " 人 · " + (STATUS[g.status] || esc(g.status)) + "</span>" +
+              '<span class="k-hist-actions">' +
+              (live ? '<button type="button" class="btn sm" data-resume="' + esc(g.pin) + '">接管</button>' : '<button type="button" class="btn sm" data-report="' + esc(g.pin) + '">報告</button>') +
+              '<button type="button" class="btn sm danger" data-delhist="' + esc(g.pin) + '">刪除</button>' +
+              "</span></div>";
+          }).join("");
+        }
+        $("kHistList").addEventListener("click", function (e) {
+          var btn = e.target.closest ? e.target.closest("button") : null;
+          if (!btn) return;
+          if (btn.dataset.resume) {
+            K.pin = btn.dataset.resume;
+            try { sessionStorage.setItem("agkLivePin", K.pin); } catch (e2) {}
+            kStartPoll();
+            return;
+          }
+          if (btn.dataset.report) { showReport(btn.dataset.report); return; }
+          if (btn.dataset.delhist) {
+            if (!confirm("確定刪除遊戲 " + btn.dataset.delhist + "？玩家與答案記錄會一併移除。")) return;
+            btn.disabled = true;
+            gameApi("history", "DELETE", { pin: btn.dataset.delhist })
+              .then(loadHistory)
+              .catch(function (err) { alert(err.message); btn.disabled = false; });
+          }
+        });
+
+        /* ---- 遊戲報告 ---- */
+        function showReport(pin) {
+          gameApi("report?pin=" + encodeURIComponent(pin)).then(function (r) {
+            kShow("kReport");
+            $("krPin").textContent = "· " + pin;
+            var STATUS = { lobby: "等待中", question: "進行中", reveal: "進行中", board: "進行中", ended: "已結束" };
+            $("krMeta").textContent = String(r.createdAt || "").slice(0, 10) + " · " +
+              (r.bank === "nschallenge" ? "國安挑戰賽" : "全民國情") + " · " + r.count + " 題 · " +
+              (r.players || []).length + " 位玩家 · " + (STATUS[r.status] || r.status);
+            var html = (r.questions || []).map(function (q, i) {
+              var pct = q.answered ? Math.round(q.correctCount / q.answered * 100) : 0;
+              return '<div class="kr-q">' +
+                '<div class="kr-head"><span>第 ' + (i + 1) + " 題</span><span>" + q.correctCount + " / " + q.answered + " 正確（" + pct + "%）</span></div>" +
+                '<p class="kr-qt">' + esc(q.q) + "</p>" +
+                '<p class="kr-ans">正確答案：' + esc((q.options || [])[q.correct] || "—") + "</p>" +
+                (q.wrong && q.wrong.length ? '<p class="kr-wrong">答錯：' + q.wrong.map(function (w) { return esc(w.name) + "（" + esc(w.picked) + "）"; }).join("、") + "</p>" : "") +
+                (q.timeout && q.timeout.length ? '<p class="kr-timeout">未作答：' + q.timeout.map(esc).join("、") + "</p>" : "") +
+                "</div>";
+            }).join("");
+            $("krBody").innerHTML = html || '<p class="admin-sub">沒有題目資料。</p>';
+          }).catch(function (err) { alert(err.message || "無法載入報告。"); });
+        }
+        $("krBack").addEventListener("click", function () {
+          if (K.pin && K.last && K.last.status && K.last.status !== "ended") {
+            kShow("kLive");
+          } else {
+            kReset();
+          }
+        });
+
+        /* ---- 分頁啟動：載入歷史 + 接管進行中的遊戲 ---- */
+        function kTabInit() {
+          loadHistory();
+          var saved = "";
+          try { saved = sessionStorage.getItem("agkLivePin") || ""; } catch (e) {}
+          if (saved && !K.pin) {
+            gameApi("host?pin=" + encodeURIComponent(saved)).then(function (d) {
+              if (d.status && d.status !== "ended") {
+                K.pin = saved;
+                kStartPoll();
+              } else {
+                try { sessionStorage.removeItem("agkLivePin"); } catch (e) {}
+              }
+            }).catch(function () {
+              try { sessionStorage.removeItem("agkLivePin"); } catch (e) {}
+            });
+          }
         }
 
         $("kStart").addEventListener("click", function () {
@@ -1044,13 +1188,20 @@
           var btn = this;
           var d = K.last;
           if (!d) return;
-          var action = d.status === "question" ? "reveal" : d.status === "reveal" ? "next" : d.status === "board" ? "go" : "cancel";
+          var action = d.status === "question" ? "reveal" : d.status === "reveal" ? "next" : d.status === "board" ? "go" : null;
+          if (!action) {
+            // 已結束：保留記錄（可在歷史查看／刪除），返回設定
+            kReset();
+            loadHistory();
+            return;
+          }
           btn.disabled = true;
           gameApi("control", "POST", { pin: K.pin, action: action })
-            .then(function () { if (action === "cancel") kReset(); else kPoll(); })
+            .then(function () { kPoll(); })
             .catch(function (err) { kMsg("kLiveMsg", err.message || "操作失敗。", "err"); })
             .finally(function () { btn.disabled = false; });
         });
+        $("kReportBtn").addEventListener("click", function () { showReport(K.pin); });
         $("kEnd").addEventListener("click", function () {
           if (!confirm("確定結束遊戲？")) return;
           gameApi("control", "POST", { pin: K.pin, action: "end" }).then(kPoll)
