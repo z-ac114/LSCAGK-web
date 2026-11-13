@@ -144,6 +144,38 @@
       .soon li:last-child { border-bottom: 0; }
 
       .hidden { display: none !important; }
+
+      /* ---- 問答競技場（主持） ---- */
+      .k-pin {
+        font-family: "Noto Serif TC", serif; font-size: 3.2rem; font-weight: 700;
+        letter-spacing: 0.14em; color: var(--purple); font-variant-numeric: tabular-nums; line-height: 1.1;
+      }
+      .dark-mode .k-pin { color: #e3c6dc; }
+      .k-chips { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.9rem; }
+      .k-chips .chip {
+        padding: 0.35rem 0.85rem; border-radius: 9999px; border: 1px solid var(--hairline);
+        background: var(--cream, #fcfbf4); font-size: 0.86rem;
+      }
+      .dark-mode .k-chips .chip { background: rgb(255 255 255 / 5%); }
+      .k-qtext { font-family: "Noto Serif TC", serif; font-size: 1.15rem; font-weight: 700; line-height: 1.6; margin: 0 0 1rem; }
+      .k-opt {
+        display: flex; align-items: center; gap: 0.7rem; padding: 0.65rem 0.9rem;
+        border-radius: 10px; border: 1px solid var(--hairline); font-size: 0.95rem; position: relative; overflow: hidden;
+      }
+      .k-opt .bar { position: absolute; inset: 0; opacity: 0.18; }
+      .k-opt .lab { position: relative; flex: 1; min-width: 0; font-weight: 600; }
+      .k-opt .cnt { position: relative; font-weight: 700; font-variant-numeric: tabular-nums; }
+      .k-opt.correct { border-color: var(--school-gold); }
+      .k-opt.correct .lab::after { content: " · 正確答案"; color: #1b7f3b; font-weight: 700; font-size: 0.8rem; }
+      .o-red { background: #c0392b; } .o-gold { background: #b3862c; }
+      .o-plum { background: #6b3a63; } .o-green { background: #3e7d5a; }
+      .o-red .bar, .o-gold .bar, .o-plum .bar, .o-green .bar { background: #fff; }
+      .k-live-top { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
+      .q-num { color: var(--muted); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+      .timer-track { height: 8px; border-radius: 9999px; background: var(--hairline); overflow: hidden; }
+      .timer-fill { height: 100%; width: 0; background: var(--school-gold); transition: width 300ms linear; }
+      .timer-fill.low { background: var(--red); }
+
       @media (max-width: 640px) {
         .admin-wrap { padding: 1rem 0.85rem 3rem; }
         .card { padding: 1.1rem 1rem; }
@@ -254,19 +286,61 @@
               <p class="admin-sub" id="boardCount" style="margin-top: 0.8rem;"></p>
             </section>
 
-            <!-- ======== 問答遊戲（TBC） ======== -->
+            <!-- ======== 問答遊戲（主持） ======== -->
             <section id="tab-kahoot" role="tabpanel" class="hidden">
-              <div class="card soon">
-                <svg class="soon-icon" width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>
-                <h2>問答競技場（開發中）</h2>
-                <p>Kahoot 式即時問答遊戲，目前正在計劃中。完成後將支援：</p>
-                <ul>
-                  <li>🏠 主持人開房，玩家以 PIN 碼加入</li>
-                  <li>⚡ 即時答題與速度計分</li>
-                  <li>📊 現場排行榜動畫</li>
-                  <li>📚 直接選用題庫（全民國情／國安挑戰賽）出題</li>
-                </ul>
-                <button type="button" class="btn primary" disabled title="開發中">開始遊戲</button>
+              <!-- 建立 -->
+              <div class="card" id="kSetup">
+                <h2>開新遊戲</h2>
+                <div class="form-grid">
+                  <label class="field"><span>題庫</span>
+                    <select id="kBank">
+                      <option value="guoqing">全民國情（2159 題）</option>
+                      <option value="nschallenge">國家安全挑戰賽（354 題）</option>
+                    </select>
+                  </label>
+                  <label class="field"><span>題數</span>
+                    <select id="kCount"><option value="5">5 題</option><option value="10" selected>10 題</option><option value="15">15 題</option><option value="20">20 題</option></select>
+                  </label>
+                  <label class="field"><span>每題時限</span>
+                    <select id="kTime"><option value="10">10 秒</option><option value="20" selected>20 秒</option><option value="30">30 秒</option></select>
+                  </label>
+                </div>
+                <p class="form-msg" id="kMsg" role="status"></p>
+                <button type="button" class="btn primary" id="kCreate">建立遊戲</button>
+              </div>
+
+              <!-- 大廳 -->
+              <div class="card" id="kLobby" style="display:none;">
+                <h2>等待玩家加入</h2>
+                <div class="k-pin-row">
+                  <div>
+                    <div class="k-pin" id="kPin">------</div>
+                    <p class="admin-sub">玩家到 <strong id="kUrl"></strong> 輸入遊戲碼加入</p>
+                  </div>
+                </div>
+                <div class="k-chips" id="kPlayers"></div>
+                <p class="admin-sub" id="kCount2" style="margin:0.6rem 0 1rem;"></p>
+                <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+                  <button type="button" class="btn primary" id="kStart">開始遊戲</button>
+                  <button type="button" class="btn danger" id="kCancel">取消遊戲</button>
+                </div>
+              </div>
+
+              <!-- 進行中 -->
+              <div class="card" id="kLive" style="display:none;">
+                <div class="k-live-top">
+                  <span class="q-num" id="kIdx"></span>
+                  <span class="q-num" id="kAnswered"></span>
+                </div>
+                <div class="timer-track" style="margin-bottom:1rem;"><div class="timer-fill" id="kTimerFill"></div></div>
+                <p class="k-qtext" id="kQ"></p>
+                <div id="kOptions" style="display:flex; flex-direction:column; gap:0.55rem; margin-bottom:1.2rem;"></div>
+                <p class="admin-sub" id="kHint" style="margin-bottom:0.9rem;"></p>
+                <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+                  <button type="button" class="btn primary" id="kNext">繼續</button>
+                  <button type="button" class="btn danger" id="kEnd">結束遊戲</button>
+                </div>
+                <p class="form-msg" id="kLiveMsg"></p>
               </div>
             </section>
           </div>
@@ -751,6 +825,185 @@
             .then(function () { selected = {}; loadBoard(); })
             .catch(function (err) { alert(err.message); })
             .finally(function () { updateDeleteBtn(); });
+        });
+
+        /* ===================== 問答競技場（主持） ===================== */
+        var K = { pin: null, poll: null, tick: null, last: null, busy: false };
+
+        function kMsg(el, text, cls) { var e = $(el); e.textContent = text || ""; e.className = "form-msg" + (cls ? " " + cls : ""); }
+
+        function loadBank(name) {
+          return new Promise(function (resolve, reject) {
+            var win = window;
+            if (name === "guoqing" && win.GQ_QUESTION_BANK) return resolve(win.GQ_QUESTION_BANK);
+            if (name === "nschallenge" && win.NS_QUESTION_BANK) return resolve(win.NS_QUESTION_BANK);
+            var s = document.createElement("script");
+            s.src = "/competition/" + (name === "guoqing" ? "guoqing.js" : "nschallenge.js");
+            s.onload = function () {
+              var b = name === "guoqing" ? win.GQ_QUESTION_BANK : win.NS_QUESTION_BANK;
+              b && b.length ? resolve(b) : reject(new Error("題庫為空"));
+            };
+            s.onerror = function () { reject(new Error("題庫載入失敗。")); };
+            document.head.appendChild(s);
+          });
+        }
+
+        function kShow(which) {
+          ["kSetup", "kLobby", "kLive"].forEach(function (id) { $(id).style.display = id === which ? "block" : "none"; });
+        }
+
+        $("kCreate").addEventListener("click", function () {
+          var btn = this;
+          if (btn.disabled) return;
+          btn.disabled = true;
+          kMsg("kMsg", "載入題庫…");
+          var bank = $("kBank").value;
+          var count = Number($("kCount").value);
+          var timeLimit = Number($("kTime").value);
+          loadBank(bank).then(function (bankArr) {
+            kMsg("kMsg", "抽選題目…");
+            // Fisher–Yates 抽題
+            var idx = bankArr.map(function (_, i) { return i; });
+            for (var i = idx.length - 1; i > 0; i--) {
+              var j = Math.floor(Math.random() * (i + 1));
+              var t = idx[i]; idx[i] = idx[j]; idx[j] = t;
+            }
+            var qs = idx.slice(0, count).map(function (i) {
+              var e = bankArr[i];
+              return { q: e.q, options: e.options, c: e.c };
+            });
+            return api("game/create", "POST", { bank: bank, count: count, timeLimit: timeLimit, questions: qs });
+          }).then(function (d) {
+            K.pin = d.pin;
+            $("kPin").textContent = d.pin;
+            $("kUrl").textContent = location.origin + "/play";
+            kShow("kLobby");
+            kStartPoll();
+          }).catch(function (err) {
+            kMsg("kMsg", err.message || "建立失敗。", "err");
+          }).finally(function () { btn.disabled = false; });
+        });
+
+        function kStartPoll() {
+          kStopPoll();
+          K.poll = setInterval(kPoll, 1000);
+          kPoll();
+        }
+        function kStopPoll() {
+          if (K.poll) { clearInterval(K.poll); K.poll = null; }
+          if (K.tick) { clearInterval(K.tick); K.tick = null; }
+        }
+
+        function kPoll() {
+          if (K.busy || !K.pin) return;
+          K.busy = true;
+          api("game/host?pin=" + encodeURIComponent(K.pin))
+            .then(function (d) { K.last = d; kRender(d); })
+            .catch(function (err) { kMsg("kLiveMsg", err.message || "", "err"); })
+            .finally(function () { K.busy = false; });
+        }
+
+        var OPT_CLS = ["o-red", "o-gold", "o-plum", "o-green"];
+
+        function kRender(d) {
+          if (d.status === "lobby") {
+            kShow("kLobby");
+            $("kPlayers").innerHTML = (d.players || []).map(function (n) { return '<span class="chip">' + esc(n) + "</span>"; }).join("");
+            $("kCount2").textContent = "已加入 " + (d.players || []).length + " 位玩家";
+            return;
+          }
+          kShow("kLive");
+          $("kIdx").textContent = d.status === "ended" ? "遊戲結束" : "第 " + (d.index + 1) + " / " + d.total + " 題";
+          $("kAnswered").textContent = d.status === "question" ? "已作答 " + (d.answered || 0) + " / " + (d.playerCount || 0) : "";
+          $("kTimerFill").style.width = "0";
+
+          if (d.status === "question") {
+            $("kQ").textContent = d.q || "";
+            $("kOptions").innerHTML = (d.options || []).map(function (o, i) {
+              return '<div class="k-opt ' + (OPT_CLS[i] || "o-plum") + '"><span class="bar" style="width:0;"></span><span class="lab">' + esc(o) + "</span></div>";
+            }).join("");
+            $("kHint").textContent = "玩家作答中，時間到後自動揭曉。";
+            $("kNext").textContent = "提前揭曉";
+            $("kNext").style.display = "";
+            kTicker(d);
+          } else if (d.status === "reveal") {
+            stopTickerK();
+            $("kQ").textContent = d.q || "";
+            var max = Math.max.apply(null, (d.counts || [0]).concat([1]));
+            $("kOptions").innerHTML = (d.options || []).map(function (o, i) {
+              var c = (d.counts || [])[i] || 0;
+              var cls = "k-opt " + (OPT_CLS[i] || "o-plum") + (i === d.correct ? " correct" : "");
+              return '<div class="' + cls + '"><span class="bar" style="width:' + Math.round(c / max * 100) + '%;"></span>' +
+                '<span class="lab">' + esc(o) + "</span><span class=\"cnt\">" + c + "</span></div>";
+            }).join("");
+            $("kHint").textContent = "分佈已公佈。";
+            $("kNext").textContent = "顯示排行榜";
+            $("kNext").style.display = "";
+          } else if (d.status === "board") {
+            stopTickerK();
+            $("kQ").textContent = "目前排行";
+            $("kOptions").innerHTML = (d.standings || []).slice(0, 10).map(function (p, i) {
+              return '<div class="board-row"><span class="rk">' + (i + 1) + '</span><span class="nm">' + esc(p.name) + '</span><span class="sc">' + p.score + "</span></div>";
+            }).join("");
+            var last = d.index + 1 >= d.total;
+            $("kHint").textContent = last ? "這是最後一題。" : "按「下一題」繼續。";
+            $("kNext").textContent = last ? "查看最終結果" : "下一題";
+            $("kNext").style.display = "";
+          } else if (d.status === "ended") {
+            stopTickerK();
+            $("kQ").textContent = "最終排名";
+            $("kOptions").innerHTML = (d.standings || []).slice(0, 10).map(function (p, i) {
+              return '<div class="board-row"><span class="rk">' + (i + 1) + '</span><span class="nm">' + esc(p.name) + '</span><span class="sc">' + p.score + "</span></div>";
+            }).join("");
+            $("kHint").textContent = "玩家裝置已顯示頒獎台。";
+            $("kNext").textContent = "關閉遊戲";
+            $("kNext").style.display = "";
+          }
+        }
+
+        function kTicker(d) {
+          stopTickerK();
+          if (d.status !== "question" || !d.endsAt) return;
+          var ends = Date.parse(d.endsAt) - (Date.parse(d.now) - Date.now());
+          K.tick = setInterval(function () {
+            var fill = $("kTimerFill");
+            if (!fill || !K.last || K.last.status !== "question") { stopTickerK(); return; }
+            var pct = Math.max(0, Math.min(100, (ends - Date.now()) / (d.timeLimit * 1000) * 100));
+            fill.style.width = pct + "%";
+            if (pct < 25) fill.classList.add("low");
+            if (pct <= 0) stopTickerK();
+          }, 300);
+        }
+        function stopTickerK() { if (K.tick) { clearInterval(K.tick); K.tick = null; } }
+
+        function kReset() {
+          kStopPoll();
+          K.pin = null; K.last = null;
+          kShow("kSetup");
+          kMsg("kMsg", "");
+        }
+
+        $("kNext").addEventListener("click", function () {
+          var btn = this;
+          var d = K.last;
+          if (!d) return;
+          var action = d.status === "question" ? "reveal" : d.status === "reveal" ? "next" : d.status === "board" ? "go" : "cancel";
+          btn.disabled = true;
+          api("game/control", "POST", { pin: K.pin, action: action })
+            .then(function () { if (action === "cancel") kReset(); else kPoll(); })
+            .catch(function (err) { kMsg("kLiveMsg", err.message || "操作失敗。", "err"); })
+            .finally(function () { btn.disabled = false; });
+        });
+        $("kEnd").addEventListener("click", function () {
+          if (!confirm("確定結束遊戲？")) return;
+          api("game/control", "POST", { pin: K.pin, action: "end" }).then(kPoll)
+            .catch(function (err) { kMsg("kLiveMsg", err.message || "操作失敗。", "err"); });
+        });
+        $("kCancel").addEventListener("click", function () {
+          if (!confirm("確定取消遊戲？所有玩家會被移除。")) return;
+          api("game/control", "POST", { pin: K.pin, action: "cancel" })
+            .then(kReset)
+            .catch(function (err) { kMsg("kLiveMsg", err.message || "操作失敗。", "err"); });
         });
 
         /* ===================== 啟動 ===================== */
