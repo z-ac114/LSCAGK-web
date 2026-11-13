@@ -16,12 +16,12 @@
   --body-text: rgb(20 20 19 / 62%);
   --muted: rgb(20 20 19 / 45%);
   --muted-soft: rgb(20 20 19 / 34%);
-  --purple: #8f6b12;
-  --purple-deep: #6b500d;
+  --purple: #6b3a63;
+  --purple-deep: #4f2a49;
   --red: #d42522;
   --red-active: #ae0906;
   --lasalle-red-dark: #ae0906;
-  --plum-soft: #f0e6cd;
+  --plum-soft: #efe0ea;
   --rose-soft: #fdeceb;
   --surface: #fefdf6;
   --surface-soft: #f6f4e9;
@@ -892,7 +892,7 @@ main .rounded-xl.bg-surface h2 {
   --red: #e0524a;
   --red-active: #c74340;
   --school-gold: #e2bb62;
-  --plum-soft: #c9b587;
+  --plum-soft: #bfa6b8;
   --shadow-popover: 0 8px 24px rgb(0 0 0 / 45%), 0 2px 6px rgb(0 0 0 / 30%);
 }
 
@@ -927,7 +927,7 @@ main .rounded-xl.bg-surface h2 {
 }
 
 .dark-mode .text-purple {
-  color: #e6cd96;
+  color: #e3c6dc;
 }
 
 .dark-mode .ls-heading,
@@ -943,7 +943,7 @@ main .rounded-xl.bg-surface h2 {
 
 .dark-mode .hero-panel h2,
 .dark-mode .hero-panel a {
-  color: #e6cd96;
+  color: #e3c6dc;
 }
 
 .dark-mode .border-border {
