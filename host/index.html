@@ -266,6 +266,28 @@
               <h2>歷史遊戲</h2>
               <div id="kHistList"><div class="skel" style="width:70%;"></div><div class="skel" style="width:55%;"></div></div>
             </div>
+
+            <!-- 賽後報告 -->
+            <div class="card" id="vReports" style="display:none; margin-top:1.2rem;">
+              <h2>賽後報告</h2>
+              <p class="host-sub" style="margin:-0.4rem 0 0.8rem;">查看每場遊戲各題的答對率與答錯名單。</p>
+              <div id="krList"><div class="skel" style="width:60%;"></div></div>
+            </div>
+
+            <!-- 背景音樂 -->
+            <div class="card" id="vMusic" style="display:none; margin-top:1.2rem;">
+              <h2>背景音樂</h2>
+              <div id="ytHost" style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);"></div>
+              <p class="host-sub" style="margin:-0.4rem 0 0.9rem;">遊戲進行時播放，玩家裝置不會聽到。</p>
+              <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+                <button type="button" class="btn sm primary" id="ytToggle">播放</button>
+                <button type="button" class="btn sm" id="ytMute">靜音</button>
+                <label class="host-sub" style="display:flex; align-items:center; gap:0.5rem;">音量
+                  <input type="range" id="ytVol" min="0" max="100" value="40" style="width:130px;" />
+                </label>
+              </div>
+              <p class="form-msg" id="ytMsg"></p>
+            </div>
           </div>
         </div>
       </main>
@@ -308,6 +330,8 @@
         function showSection(which) {
           ["vSetup", "vLobby", "vLive", "vReport"].forEach(function (id) { $(id).style.display = id === which ? "block" : "none"; });
           $("vHistory").style.display = which === "vSetup" ? "block" : "none";
+          $("vReports").style.display = which === "vSetup" ? "block" : "none";
+          $("vMusic").style.display = "block";
         }
         function kMsg(el, text, cls) { var e = $(el); e.textContent = text || ""; e.className = "form-msg" + (cls ? " " + cls : ""); }
 
@@ -409,10 +433,10 @@
           K.offsetReady = true;
         }
         function kPoll() {
-          if (K.busy || !K.pin) return;
+          if (K.busy || !K.pin) return Promise.resolve();
           K.busy = true;
           var t0 = Date.now();
-          gameApi("host?pin=" + encodeURIComponent(K.pin))
+          return gameApi("host?pin=" + encodeURIComponent(K.pin))
             .then(function (d) { var t1 = Date.now(); noteOffset(d.now, t0, t1); K.last = d; kRender(d); })
             .catch(function (err) { kMsg("kLiveMsg", err.message || "", "err"); })
             .finally(function () { K.busy = false; });
@@ -592,14 +616,14 @@
           var btn = this;
           btn.disabled = true;
           gameApi("control", "POST", { pin: K.pin, action: "start" })
-            .then(kPoll)
+            .then(function () { return kPoll(); })
             .catch(function (err) { kMsg("kLiveMsg", err.message || "操作失敗。", "err"); })
             .finally(function () { btn.disabled = false; });
         });
         $("kNext").addEventListener("click", function () {
           var btn = this;
           var d = K.last;
-          if (!d) return;
+          if (!d || btn.disabled) return;
           var action = d.status === "question" ? "reveal" : d.status === "reveal" ? "next" : d.status === "board" ? "go" : null;
           if (!action) {
             kReset();
@@ -607,7 +631,7 @@
           }
           btn.disabled = true;
           gameApi("control", "POST", { pin: K.pin, action: action })
-            .then(kPoll)
+            .then(function () { return kPoll(); }) // 等最新狀態到達才解鎖，防連點造成過時操作
             .catch(function (err) { kMsg("kLiveMsg", err.message || "操作失敗。", "err"); })
             .finally(function () { btn.disabled = false; });
         });
@@ -615,7 +639,7 @@
           if (!confirm("確定結束遊戲？")) return;
           this.disabled = true;
           gameApi("control", "POST", { pin: K.pin, action: "end" })
-            .then(kPoll)
+            .then(function () { return kPoll(); })
             .catch(function (err) { kMsg("kLiveMsg", err.message || "操作失敗。", "err"); })
             .finally(function () { this.disabled = false; }.bind(this));
         });
@@ -634,13 +658,15 @@
           gameApi("history").then(function (r) {
             kHistRows = r.rows || [];
             renderHistory();
+            renderReportList();
           }).catch(function () {
             $("kHistList").innerHTML = '<p class="host-sub">無法載入歷史記錄。</p>';
+            $("krList").innerHTML = '<p class="host-sub">無法載入報告列表。</p>';
           });
         }
         function renderHistory() {
           var el = $("kHistList");
-          if (!kHistRows.length) { el.innerHTML = '<p class="host-sub">沒有歷史遊戲。</p>'; return; }
+          if (!kHistRows.length) { el.innerHTML = '<p class="host-sub">沒有歷史遊戲。</p>'; renderReportList(); return; }
           var STATUS = { lobby: "等待中", question: "進行中", reveal: "進行中", board: "進行中", ended: "已結束" };
           el.innerHTML = kHistRows.map(function (g) {
             var live = g.status !== "ended";
@@ -650,9 +676,22 @@
               (g.bank === "nschallenge" ? "國安" : "國情") + " · " + g.count + " 題 · " +
               (g.time_limit || 20) + " 秒 · " + (g.players || 0) + " 人 · " + (STATUS[g.status] || esc(g.status)) + "</span>" +
               '<span class="k-hist-actions">' +
-              (live ? '<button type="button" class="btn sm" data-resume="' + esc(g.pin) + '">接管</button>' : '<button type="button" class="btn sm" data-report="' + esc(g.pin) + '">報告</button>') +
+              (live ? '<button type="button" class="btn sm" data-resume="' + esc(g.pin) + '">接管</button>' : "") +
               '<button type="button" class="btn sm danger" data-delhist="' + esc(g.pin) + '">刪除</button>' +
               "</span></div>";
+          }).join("");
+        }
+        function renderReportList() {
+          var ended = (kHistRows || []).filter(function (g) { return g.status === "ended"; });
+          var el = $("krList");
+          if (!ended.length) { el.innerHTML = '<p class="host-sub">尚未有已完成的遊戲。</p>'; return; }
+          el.innerHTML = ended.map(function (g) {
+            return '<div class="k-hist-row">' +
+              '<span class="k-hist-pin">' + esc(g.pin) + "</span>" +
+              '<span class="k-hist-meta">' + esc(String(g.created_at || "").slice(0, 10)) + " · " +
+              (g.bank === "nschallenge" ? "國安" : "國情") + " · " + g.count + " 題 · " + (g.players || 0) + " 人</span>" +
+              '<span class="k-hist-actions"><button type="button" class="btn sm" data-report="' + esc(g.pin) + '">查看報告</button></span>' +
+              "</div>";
           }).join("");
         }
         $("kHistList").addEventListener("click", function (e) {
@@ -664,7 +703,6 @@
             kStartPoll();
             return;
           }
-          if (btn.dataset.report) { showReport(btn.dataset.report); return; }
           if (btn.dataset.delhist) {
             if (!confirm("確定刪除遊戲 " + btn.dataset.delhist + "？玩家與答案記錄會一併移除。")) return;
             btn.disabled = true;
@@ -672,6 +710,10 @@
               .then(loadHistory)
               .catch(function (err) { alert(err.message); btn.disabled = false; });
           }
+        });
+        $("krList").addEventListener("click", function (e) {
+          var btn = e.target.closest ? e.target.closest("button[data-report]") : null;
+          if (btn) showReport(btn.dataset.report);
         });
 
         /* ===================== 報告 ===================== */
@@ -724,6 +766,55 @@
             });
           }
         }
+
+        /* ===================== 背景音樂 ===================== */
+        var yt = null, ytLoading = false, ytWanted = false;
+        function ytInit() {
+          yt = new YT.Player("ytHost", {
+            videoId: "LK5M0_Blhzc",
+            playerVars: {
+              listType: "playlist", list: "RDLK5M0_Blhzc",
+              autoplay: 1, playsinline: 1, origin: location.origin
+            },
+            events: {
+              onReady: function () {
+                yt.setVolume(Number($("ytVol").value) || 40);
+                if (ytWanted) yt.playVideo();
+                $("ytToggle").textContent = "暫停";
+                kMsg("ytMsg", "");
+              },
+              onError: function () {
+                kMsg("ytMsg", "無法載入音樂（網絡或學校過濾可能封鎖 YouTube）。", "err");
+              }
+            }
+          });
+        }
+        function ytLoad() {
+          if (yt) return;
+          if (ytLoading) return;
+          ytLoading = true;
+          kMsg("ytMsg", "載入音樂…");
+          window.onYouTubeIframeAPIReady = ytInit;
+          var s = document.createElement("script");
+          s.src = "https://www.youtube.com/iframe_api";
+          s.onerror = function () { ytLoading = false; kMsg("ytMsg", "無法載入 YouTube 元件。", "err"); };
+          document.head.appendChild(s);
+        }
+        $("ytToggle").addEventListener("click", function () {
+          ytWanted = true;
+          if (!yt) { ytLoad(); return; }
+          var st = yt.getPlayerState && yt.getPlayerState();
+          if (st === 1) { yt.pauseVideo(); this.textContent = "播放"; }
+          else { yt.playVideo(); this.textContent = "暫停"; }
+        });
+        $("ytMute").addEventListener("click", function () {
+          if (!yt) { ytWanted = true; ytLoad(); this.textContent = "取消靜音"; return; }
+          if (yt.isMuted()) { yt.unMute(); this.textContent = "靜音"; }
+          else { yt.mute(); this.textContent = "取消靜音"; }
+        });
+        $("ytVol").addEventListener("input", function () {
+          if (yt && yt.setVolume) { yt.setVolume(Number(this.value)); yt.unMute(); $("ytMute").textContent = "靜音"; }
+        });
 
         /* ===================== 啟動 ===================== */
         if (getPass() && getUser()) {

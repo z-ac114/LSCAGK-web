@@ -35,7 +35,11 @@ module.exports = async (req, res) => {
 
     if (phase === "question") {
       const q = (game.questions || [])[game.q_index || 0];
-      if (!q) { json(res, 502, { error: "題目資料缺失。" }); return; }
+      if (!q || (game.q_index || 0) >= game.count) {
+        // 題號越界：不應發生，視為結束而非顯示新題
+        json(res, 200, Object.assign(base, { status: "ended", standings: [], podium: [], my: me ? { rank: null, score: me.score } : null }));
+        return;
+      }
       json(res, 200, Object.assign(base, {
         q: q.q,
         options: q.options,

@@ -45,7 +45,8 @@ module.exports = async (req, res) => {
       case "go": {
         if (game.status !== "board") { json(res, 400, { error: "目前不在排行榜階段。" }); return; }
         const nxt = (game.q_index || 0) + 1;
-        if (nxt >= game.count) patch = { status: "ended" };
+        // 下一題不存在（已問完最後一題）→ 直接結束，絕不開出新題
+        if (nxt >= game.count || !(game.questions || [])[nxt]) patch = { status: "ended" };
         else patch = { status: "question", q_index: nxt, q_started_at: now, q_ends_at: new Date(nowMs + game.time_limit * 1000).toISOString() };
         break;
       }
