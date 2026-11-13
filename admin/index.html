@@ -828,6 +828,21 @@
         });
 
         /* ===================== 問答競技場（主持） ===================== */
+        // 遊戲端點位於 /api/game/*（非 /api/admin/*），需獨立呼叫
+        function gameApi(path, method, body) {
+          return fetch("/api/game/" + path, {
+            method: method || "GET",
+            headers: { "Content-Type": "application/json", "x-admin-user": getUser(), "x-admin-pass": getPass() },
+            body: body ? JSON.stringify(body) : undefined
+          }).then(function (res) {
+            return res.json().catch(function () { return {}; }).then(function (data) {
+              if (res.status === 401) { logout(); throw new Error("密碼不正確或已登出。"); }
+              if (!res.ok) throw new Error(data.error || "請求失敗（" + res.status + "）");
+              return data;
+            });
+          });
+        }
+
         var K = { pin: null, poll: null, tick: null, last: null, busy: false };
 
         function kMsg(el, text, cls) { var e = $(el); e.textContent = text || ""; e.className = "form-msg" + (cls ? " " + cls : ""); }
@@ -872,7 +887,7 @@
               var e = bankArr[i];
               return { q: e.q, options: e.options, c: e.c };
             });
-            return api("game/create", "POST", { bank: bank, count: count, timeLimit: timeLimit, questions: qs });
+            return gameApi("create", "POST", { bank: bank, count: count, timeLimit: timeLimit, questions: qs });
           }).then(function (d) {
             K.pin = d.pin;
             $("kPin").textContent = d.pin;
@@ -897,7 +912,7 @@
         function kPoll() {
           if (K.busy || !K.pin) return;
           K.busy = true;
-          api("game/host?pin=" + encodeURIComponent(K.pin))
+          gameApi("host?pin=" + encodeURIComponent(K.pin))
             .then(function (d) { K.last = d; kRender(d); })
             .catch(function (err) { kMsg("kLiveMsg", err.message || "", "err"); })
             .finally(function () { K.busy = false; });
@@ -989,19 +1004,19 @@
           if (!d) return;
           var action = d.status === "question" ? "reveal" : d.status === "reveal" ? "next" : d.status === "board" ? "go" : "cancel";
           btn.disabled = true;
-          api("game/control", "POST", { pin: K.pin, action: action })
+          gameApi("control", "POST", { pin: K.pin, action: action })
             .then(function () { if (action === "cancel") kReset(); else kPoll(); })
             .catch(function (err) { kMsg("kLiveMsg", err.message || "操作失敗。", "err"); })
             .finally(function () { btn.disabled = false; });
         });
         $("kEnd").addEventListener("click", function () {
           if (!confirm("確定結束遊戲？")) return;
-          api("game/control", "POST", { pin: K.pin, action: "end" }).then(kPoll)
+          gameApi("control", "POST", { pin: K.pin, action: "end" }).then(kPoll)
             .catch(function (err) { kMsg("kLiveMsg", err.message || "操作失敗。", "err"); });
         });
         $("kCancel").addEventListener("click", function () {
           if (!confirm("確定取消遊戲？所有玩家會被移除。")) return;
-          api("game/control", "POST", { pin: K.pin, action: "cancel" })
+          gameApi("control", "POST", { pin: K.pin, action: "cancel" })
             .then(kReset)
             .catch(function (err) { kMsg("kLiveMsg", err.message || "操作失敗。", "err"); });
         });
