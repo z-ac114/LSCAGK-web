@@ -443,6 +443,9 @@
           lastFocus = document.activeElement;
           hidePreview();
           document.body.style.overflow = "hidden";
+          // 將背景設為 inert：鍵盤焦點不會逃出對話框（2.4.3）
+          var shell = document.querySelector(".flex.min-h-screen");
+          if (shell) { shell.setAttribute("inert", ""); shell.setAttribute("aria-hidden", "true"); }
           // Shared Element Transition：閱覽器從卡片morph展開
           if (card && document.startViewTransition) {
             card.style.viewTransitionName = "pdf-card";
@@ -461,6 +464,8 @@
             viewer.classList.remove("open");
             $("viewerFrame").src = "about:blank";
             document.body.style.overflow = "";
+            var shell = document.querySelector(".flex.min-h-screen");
+            if (shell) { shell.removeAttribute("inert"); shell.removeAttribute("aria-hidden"); }
             if (lastFocus && lastFocus.focus) lastFocus.focus();
           };
           // 反向morph：閱覽器縮回卡片

@@ -98,12 +98,12 @@
       .dark-mode .k-opt.correct .lab::after { color: #7bd39a; }
       .o-red .bar, .o-gold .bar, .o-plum .bar, .o-green .bar { background: #fff; }
       .o-red { background: #c0392b; color: #fff; border-color: transparent; }
-      .o-gold { background: #b3862c; color: #fff; border-color: transparent; }
+      .o-gold { background: #8a6511; color: #fff; border-color: transparent; }
       .o-plum { background: #6b3a63; color: #fff; border-color: transparent; }
       .o-green { background: #3e7d5a; color: #fff; border-color: transparent; }
       .o-red .lab::after, .o-gold .lab::after, .o-plum .lab::after, .o-green .lab::after { color: #fff !important; }
       .timer-track { height: 10px; border-radius: 9999px; background: var(--hairline); overflow: hidden; margin-bottom: 1rem; }
-      .timer-fill { height: 100%; width: 0; background: var(--school-gold); transition: width 300ms linear; }
+      .timer-fill { height: 100%; width: 0; background: #a07b1f; transition: width 300ms linear; }
       .timer-fill.low { background: var(--red); }
       .live-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 1.2rem; }
 
@@ -118,7 +118,7 @@
       @keyframes rowin { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
       .board-row .rk { width: 1.8em; color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; }
       .board-row .rk.m { width: 1.9em; height: 1.9em; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 0.9rem; }
-      .rk.m1 { background: var(--red); } .rk.m2 { background: var(--school-gold); } .rk.m3 { background: #9c7b52; }
+      .rk.m1 { background: var(--red); } .rk.m2 { background: #8a6511; } .rk.m3 { background: #7a5c38; }
       .board-row .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .board-row .sc { font-weight: 700; font-variant-numeric: tabular-nums; }
       .board-row.rise { background: rgb(62 125 90 / 14%); border-color: #3e7d5a; }
@@ -158,6 +158,13 @@
       .view-anim { animation: vfade 280ms ease; }
       @keyframes vfade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
       .center-spin { display: flex; justify-content: center; padding: 2.5rem 0; }
+      .k-qtext:focus { outline: none; }
+
+      @media (prefers-reduced-motion: reduce) {
+        .view-anim, .k-chips .chip, .board-row, .k-hist-row { animation: none !important; transition: none !important; }
+        .timer-fill { transition: none !important; }
+        .spinner, .skel { animation-duration: 2.4s !important; }
+      }
     </style>
   </head>
   <body>
@@ -233,10 +240,11 @@
               <div class="live-top">
                 <span class="live-phase" id="kPhase">進行中</span>
                 <span class="q-num" id="kIdx"></span>
+                <span class="q-num" id="kTimeNum" aria-hidden="false"></span>
               </div>
               <div class="timer-track" id="kTimerWrap"><div class="timer-fill" id="kTimerFill"></div></div>
               <p class="q-num" id="kAnswered" style="margin:0 0 0.4rem;"></p>
-              <p class="k-qtext" id="kQ"></p>
+              <p class="k-qtext" id="kQ" tabindex="-1"></p>
               <div id="kOptions"></div>
               <div id="kBoardWrap" style="display:none; margin-top:1.4rem;">
                 <h2 style="font-family:'Noto Serif TC',serif; font-size:1.15rem; color:var(--purple); margin:0 0 0.8rem;" id="kBoardTitle">即時排行</h2>
@@ -248,7 +256,7 @@
                 <button type="button" class="btn" id="kReportBtn" style="display:none;">查看報告</button>
                 <button type="button" class="btn danger" id="kEnd">結束遊戲</button>
               </div>
-              <p class="form-msg" id="kLiveMsg"></p>
+              <p class="form-msg" id="kLiveMsg" role="alert"></p>
             </div>
 
             <!-- 報告 -->
@@ -443,6 +451,7 @@
         }
 
         var OPT_CLS = ["o-red", "o-gold", "o-plum", "o-green"];
+        var REDUCE = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
         /* ===== 動態排行：FLIP 滑動 + 分數滾動 ===== */
         function renderBoardAnimated(el, standings) {
@@ -454,47 +463,52 @@
           el.innerHTML = rows.map(function (p, i) {
             var rk = i < 3 ? '<span class="rk m m' + (i + 1) + '">' + (i + 1) + "</span>" : '<span class="rk">' + (i + 1) + "</span>";
             var shown = prevScores[p.name] != null ? prevScores[p.name] : p.score;
-            var enter = hadPrev && prevRanks[p.name] == null ? " enter" : "";
+            var enter = !REDUCE && hadPrev && prevRanks[p.name] == null ? " enter" : "";
             return '<div class="board-row' + enter + '" data-name="' + esc(p.name) + '" data-score="' + p.score + '">' + rk +
               '<span class="nm">' + esc(p.name) + '</span><span class="sc">' + shown + "</span></div>";
           }).join("");
 
           var rowEls = Array.prototype.slice.call(el.children);
-          var rowH = rowEls.length > 1
-            ? (rowEls[1].offsetTop - rowEls[0].offsetTop)
-            : (rowEls[0] ? rowEls[0].offsetHeight + 8 : 50);
+          if (REDUCE) {
+            // 減少動態：直接顯示最終位置與分數
+            rowEls.forEach(function (r) { r.querySelector(".sc").textContent = r.dataset.score; });
+          } else {
+            var rowH = rowEls.length > 1
+              ? (rowEls[1].offsetTop - rowEls[0].offsetTop)
+              : (rowEls[0] ? rowEls[0].offsetHeight + 8 : 50);
 
-          // 1. 預位移（從舊位置出發）
-          rowEls.forEach(function (r, i) {
-            var old = prevRanks[r.dataset.name];
-            if (old != null && old !== i) {
-              r.style.transform = "translateY(" + ((old - i) * rowH) + "px)";
-              r.classList.add(old > i ? "rise" : "fall");
-            }
-          });
-          // 2. 強制重排後滑回原位
-          void el.offsetHeight;
-          rowEls.forEach(function (r) {
-            r.style.transition = "transform 520ms cubic-bezier(.22,.9,.36,1)";
-            r.style.transform = "";
-          });
-          setTimeout(function () {
-            rowEls.forEach(function (r) { r.style.transition = ""; r.classList.remove("rise", "fall"); });
-          }, 560);
+            // 1. 預位移（從舊位置出發）
+            rowEls.forEach(function (r, i) {
+              var old = prevRanks[r.dataset.name];
+              if (old != null && old !== i) {
+                r.style.transform = "translateY(" + ((old - i) * rowH) + "px)";
+                r.classList.add(old > i ? "rise" : "fall");
+              }
+            });
+            // 2. 強制重排後滑回原位
+            void el.offsetHeight;
+            rowEls.forEach(function (r) {
+              r.style.transition = "transform 520ms cubic-bezier(.22,.9,.36,1)";
+              r.style.transform = "";
+            });
+            setTimeout(function () {
+              rowEls.forEach(function (r) { r.style.transition = ""; r.classList.remove("rise", "fall"); });
+            }, 560);
 
-          // 3. 分數滾動
-          rowEls.forEach(function (r) {
-            var scEl = r.querySelector(".sc");
-            var target = Number(r.dataset.score);
-            var from = prevScores[r.dataset.name];
-            if (from == null || from === target) { scEl.textContent = target; return; }
-            var t0 = performance.now(), dur = 700;
-            (function tick(t) {
-              var k = Math.min(1, (t - t0) / dur);
-              scEl.textContent = Math.round(from + (target - from) * (1 - Math.pow(1 - k, 3)));
-              if (k < 1) requestAnimationFrame(tick);
-            })(t0);
-          });
+            // 3. 分數滾動
+            rowEls.forEach(function (r) {
+              var scEl = r.querySelector(".sc");
+              var target = Number(r.dataset.score);
+              var from = prevScores[r.dataset.name];
+              if (from == null || from === target) { scEl.textContent = target; return; }
+              var t0 = performance.now(), dur = 700;
+              (function tick(t) {
+                var k = Math.min(1, (t - t0) / dur);
+                scEl.textContent = Math.round(from + (target - from) * (1 - Math.pow(1 - k, 3)));
+                if (k < 1) requestAnimationFrame(tick);
+              })(t0);
+            });
+          }
 
           // 儲存快照
           var ranks = {}, scores = {};
@@ -515,6 +529,7 @@
           showSection("vLive");
           $("kPhase").textContent = d.status === "question" ? "作答中" : d.status === "reveal" ? "揭曉" : d.status === "board" ? "排行榜" : "已結束";
           $("kIdx").textContent = d.status === "ended" ? "遊戲結束" : "第 " + (d.index + 1) + " / " + d.total + " 題";
+          if (d.status !== "question") $("kTimeNum").textContent = "";
           $("kReportBtn").style.display = "none";
           $("kEnd").style.display = "";
 
@@ -532,6 +547,7 @@
               $("kHint").textContent = "時間到後自動揭曉，玩家裝置會即時切換。";
               $("kNext").textContent = "提前揭曉";
               $("kNext").style.display = "";
+              try { $("kQ").focus({ preventScroll: true }); } catch (e) { $("kQ").focus(); }
               kTicker(d);
             }
             // 即時排行：隨玩家得分即時滑動
@@ -547,6 +563,7 @@
           stopTickerK();
           $("kTimerWrap").style.visibility = d.status === "reveal" ? "visible" : "hidden";
           $("kTimerFill").style.width = "0";
+          try { $("kQ").focus({ preventScroll: true }); } catch (e) { $("kQ").focus(); }
 
           if (d.status === "reveal") {
             $("kBoardWrap").style.display = "none";
@@ -593,8 +610,11 @@
           K.tick = setInterval(function () {
             var fill = $("kTimerFill");
             if (!fill || !K.last || K.last.status !== "question") { stopTickerK(); return; }
-            var pct = Math.max(0, Math.min(100, (ends - Date.now()) / ((d.timeLimit || 20) * 1000) * 100));
+            var remain = Math.max(0, ends - Date.now());
+            var pct = Math.max(0, Math.min(100, remain / ((d.timeLimit || 20) * 1000) * 100));
             fill.style.width = pct + "%";
+            var num = $("kTimeNum");
+            if (num) num.textContent = Math.ceil(remain / 1000) + " 秒";
             if (pct < 25) fill.classList.add("low");
             if (pct <= 0) stopTickerK();
           }, 300);

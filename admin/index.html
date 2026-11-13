@@ -145,61 +145,9 @@
 
       .hidden { display: none !important; }
 
-      .hidden { display: none !important; }
-
-      /* ---- 問答競技場（主持） ---- */
-      .k-pin {
-        font-family: "Noto Serif TC", serif; font-size: 3.2rem; font-weight: 700;
-        letter-spacing: 0.14em; color: var(--purple); font-variant-numeric: tabular-nums; line-height: 1.1;
+      @media (prefers-reduced-motion: reduce) {
+        .skel { animation-duration: 2.4s !important; }
       }
-      .dark-mode .k-pin { color: #e3c6dc; }
-      .k-chips { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.9rem; }
-      .k-chips .chip {
-        padding: 0.35rem 0.85rem; border-radius: 9999px; border: 1px solid var(--hairline);
-        background: var(--cream, #fcfbf4); font-size: 0.86rem;
-      }
-      .dark-mode .k-chips .chip { background: rgb(255 255 255 / 5%); }
-      .k-qtext { font-family: "Noto Serif TC", serif; font-size: 1.15rem; font-weight: 700; line-height: 1.6; margin: 0 0 1rem; }
-      .k-opt {
-        display: flex; align-items: center; gap: 0.7rem; padding: 0.65rem 0.9rem;
-        border-radius: 10px; border: 1px solid var(--hairline); font-size: 0.95rem; position: relative; overflow: hidden;
-      }
-      .k-opt .bar { position: absolute; inset: 0; opacity: 0.18; }
-      .k-opt .lab { position: relative; flex: 1; min-width: 0; font-weight: 600; }
-      .k-opt .cnt { position: relative; font-weight: 700; font-variant-numeric: tabular-nums; }
-      .k-opt.correct { border-color: var(--school-gold); }
-      .k-opt.correct .lab::after { content: " · 正確答案"; color: #1b7f3b; font-weight: 700; font-size: 0.8rem; }
-      .o-red { background: #c0392b; } .o-gold { background: #b3862c; }
-      .o-plum { background: #6b3a63; } .o-green { background: #3e7d5a; }
-      .o-red .bar, .o-gold .bar, .o-plum .bar, .o-green .bar { background: #fff; }
-      .k-live-top { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
-      .q-num { color: var(--muted); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
-      .timer-track { height: 8px; border-radius: 9999px; background: var(--hairline); overflow: hidden; }
-      .timer-fill { height: 100%; width: 0; background: var(--school-gold); transition: width 300ms linear; }
-      .timer-fill.low { background: var(--red); }
-
-      /* 歷史遊戲 */
-      .k-hist-row {
-        display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap;
-        padding: 0.6rem 0; border-bottom: 1px solid var(--hairline); font-size: 0.88rem;
-      }
-      .k-hist-row:last-child { border-bottom: 0; }
-      .k-hist-pin { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--purple); }
-      .dark-mode .k-hist-pin { color: #e3c6dc; }
-      .k-hist-meta { flex: 1; min-width: 200px; color: var(--muted); }
-      .k-hist-actions { display: flex; gap: 0.4rem; }
-
-      /* 遊戲報告 */
-      .kr-q { border-top: 1px solid var(--hairline); padding: 0.9rem 0; }
-      .kr-q:first-child { border-top: 0; }
-      .kr-head { display: flex; justify-content: space-between; gap: 0.8rem; font-size: 0.88rem; font-weight: 700; }
-      .kr-head span { color: var(--muted); font-variant-numeric: tabular-nums; font-weight: 600; }
-      .kr-qt { margin: 0.35rem 0 0; font-size: 0.95rem; line-height: 1.6; }
-      .kr-ans { margin: 0.3rem 0 0; font-size: 0.85rem; color: #1b7f3b; }
-      .dark-mode .kr-ans { color: #7bd39a; }
-      .kr-wrong { margin: 0.25rem 0 0; font-size: 0.84rem; color: #b3261e; line-height: 1.6; }
-      .dark-mode .kr-wrong { color: #f28779; }
-      .kr-timeout { margin: 0.25rem 0 0; font-size: 0.84rem; color: var(--muted); line-height: 1.6; }
 
       @media (max-width: 640px) {
         .admin-wrap { padding: 1rem 0.85rem 3rem; }
@@ -238,14 +186,14 @@
               <button type="button" class="btn sm" id="logoutBtn">登出</button>
             </div>
 
-            <div class="tabs" role="tablist">
-              <button class="tab" role="tab" aria-selected="true" data-tab="pdfs">資源管理</button>
-              <button class="tab" role="tab" aria-selected="false" data-tab="board">排行榜記錄</button>
-              <button class="tab" role="tab" aria-selected="false" data-tab="kahoot">問答遊戲</button>
+            <div class="tabs" role="tablist" aria-label="管理後台分頁">
+              <button class="tab" role="tab" id="tabBtn-pdfs" aria-controls="tab-pdfs" aria-selected="true" data-tab="pdfs" tabindex="0">資源管理</button>
+              <button class="tab" role="tab" id="tabBtn-board" aria-controls="tab-board" aria-selected="false" data-tab="board" tabindex="-1">排行榜記錄</button>
+              <button class="tab" role="tab" id="tabBtn-kahoot" aria-controls="tab-kahoot" aria-selected="false" data-tab="kahoot" tabindex="-1">問答遊戲</button>
             </div>
 
             <!-- ======== 資源管理 ======== -->
-            <section id="tab-pdfs" role="tabpanel">
+            <section id="tab-pdfs" role="tabpanel" aria-labelledby="tabBtn-pdfs">
               <div class="card">
                 <h2>上傳 PDF</h2>
                 <div class="form-grid">
@@ -279,7 +227,7 @@
             </section>
 
             <!-- ======== 排行榜 ======== -->
-            <section id="tab-board" role="tabpanel" class="hidden">
+            <section id="tab-board" role="tabpanel" aria-labelledby="tabBtn-board" class="hidden">
               <div class="board-tools">
                 <select id="boardMode" aria-label="模式篩選">
                   <option value="all">全部模式</option>
@@ -312,7 +260,7 @@
             </section>
 
             <!-- ======== 問答遊戲 ======== -->
-            <section id="tab-kahoot" role="tabpanel" class="hidden">
+            <section id="tab-kahoot" role="tabpanel" aria-labelledby="tabBtn-kahoot" class="hidden">
               <div class="card soon">
                 <h2>問答競技場</h2>
                 <p>即時問答遊戲的主持台已移至獨立頁面。開啟後建立遊戲，玩家於 /play 以 6 位遊戲碼加入。</p>
@@ -394,14 +342,27 @@
         $("logoutBtn").addEventListener("click", logout);
 
         /* ===================== 分頁 ===================== */
-        var tabs = document.querySelectorAll(".tab");
-        tabs.forEach(function (t) {
-          t.addEventListener("click", function () {
-            tabs.forEach(function (x) { x.setAttribute("aria-selected", String(x === t)); });
-            ["pdfs", "board", "kahoot"].forEach(function (name) {
-              $("tab-" + name).classList.toggle("hidden", name !== t.dataset.tab);
-            });
-            if (t.dataset.tab === "board" && !boardLoaded) { loadBoard(); }
+        var tabs = Array.prototype.slice.call(document.querySelectorAll(".tab"));
+        function selectTab(t) {
+          tabs.forEach(function (x) {
+            var sel = x === t;
+            x.setAttribute("aria-selected", String(sel));
+            x.tabIndex = sel ? 0 : -1;
+          });
+          ["pdfs", "board", "kahoot"].forEach(function (name) {
+            $("tab-" + name).classList.toggle("hidden", name !== t.dataset.tab);
+          });
+          if (t.dataset.tab === "board" && !boardLoaded) { loadBoard(); }
+        }
+        tabs.forEach(function (t, i) {
+          t.addEventListener("click", function () { selectTab(t); });
+          t.addEventListener("keydown", function (e) {
+            var dir = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
+            if (!dir) return;
+            e.preventDefault();
+            var n = tabs[(i + dir + tabs.length) % tabs.length];
+            n.focus();
+            selectTab(n);
           });
         });
 

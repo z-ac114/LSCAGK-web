@@ -103,7 +103,7 @@
       .q-num { color: var(--muted); font-size: 0.88rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
       .t-num { color: var(--ink); font-weight: 700; font-size: 1.05rem; font-variant-numeric: tabular-nums; min-width: 1.6em; text-align: right; }
       .timer-track { flex: 1; height: 8px; border-radius: 9999px; background: var(--hairline); overflow: hidden; }
-      .timer-fill { height: 100%; width: 100%; background: var(--school-gold); border-radius: 9999px; transition: width 250ms linear; }
+      .timer-fill { height: 100%; width: 100%; background: #a07b1f; border-radius: 9999px; transition: width 250ms linear; }
       .timer-fill.low { background: var(--red); }
       .q-text {
         font-family: "Noto Serif TC", serif; font-size: 1.18rem; font-weight: 700; line-height: 1.6;
@@ -124,7 +124,7 @@
       .ans-btn:active { transform: scale(0.98); }
       .ans-btn:disabled { opacity: 0.55; cursor: default; }
       .ans-red { background: #c0392b; }
-      .ans-gold { background: #b3862c; }
+      .ans-gold { background: #8a6511; }
       .ans-plum { background: #6b3a63; }
       .ans-green { background: #3e7d5a; }
       .ans-btn.right { outline: 4px solid var(--school-gold); outline-offset: -4px; }
@@ -170,6 +170,19 @@
       .view-anim { animation: vfade 280ms ease; }
       @keyframes vfade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
+      /* 無障礙：螢幕閱讀器專用區 + 程式化焦點 */
+      .sr-only {
+        position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+        overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+      }
+      .q-text:focus, .verdict:focus, .board-title:focus { outline: none; }
+
+      @media (prefers-reduced-motion: reduce) {
+        .view-anim, .player-cloud .chip, .board-row, .verdict .v-big, .ans-btn { animation: none !important; transition: none !important; }
+        .timer-fill { transition: none !important; }
+        .spinner { animation-duration: 2.4s !important; }
+      }
+
       /* ---- 排行 ---- */
       .board-title { font-family: "Noto Serif TC", serif; text-align: center; font-size: 1.4rem; color: var(--purple); margin: 1.2rem 0 1rem; }
       .dark-mode .board-title { color: #e3c6dc; }
@@ -184,8 +197,8 @@
         align-items: center; justify-content: center; color: #fff; font-size: 0.82rem; flex-shrink: 0;
       }
       .rk.m1 { background: var(--red); }
-      .rk.m2 { background: var(--school-gold); }
-      .rk.m3 { background: #9c7b52; }
+      .rk.m2 { background: #8a6511; }
+      .rk.m3 { background: #7a5c38; }
       .board-row .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .board-row .sc { font-weight: 700; font-variant-numeric: tabular-nums; }
       .board-row.me { border-color: var(--red); background: var(--rose-soft); }
@@ -198,8 +211,8 @@
       .pod .p-score { color: var(--muted); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
       .pod .p-block { margin-top: 0.4rem; border-radius: 8px 8px 0 0; display: flex; align-items: center; justify-content: center; color: #fff; font-family: "Noto Serif TC", serif; font-weight: 700; }
       .pod.p1 .p-block { height: 88px; background: var(--red); font-size: 1.6rem; }
-      .pod.p2 .p-block { height: 60px; background: var(--school-gold); font-size: 1.3rem; }
-      .pod.p3 .p-block { height: 42px; background: #9c7b52; font-size: 1.1rem; }
+      .pod.p2 .p-block { height: 60px; background: #8a6511; font-size: 1.3rem; }
+      .pod.p3 .p-block { height: 42px; background: #7a5c38; font-size: 1.1rem; }
       .end-note { text-align: center; color: var(--muted); font-size: 0.92rem; margin: auto 0 1rem; }
       .conn { text-align: center; color: var(--muted); font-size: 0.78rem; padding: 0.4rem 0 0; }
     </style>
@@ -208,6 +221,8 @@
     <div class="play-wrap bg-cream text-ink">
       <div class="play-brand"><strong>LSCAGKT</strong> · 問答競技場</div>
       <div class="screen" id="app"></div>
+      <div id="srPolite" class="sr-only" aria-live="polite"></div>
+      <div id="srAssertive" class="sr-only" role="alert"></div>
       <div class="conn" id="conn"></div>
     </div>
 
@@ -230,9 +245,24 @@
         var pollBusy = false, answerBusy = false, pollTimer = null, tickTimer = null;
         var failCount = 0;
 
-        function setView(html) {
+        function setView(html, focusView) {
           app.innerHTML = html;
-          if (app.firstElementChild) app.firstElementChild.classList.add("view-anim");
+          if (app.firstElementChild) {
+            app.firstElementChild.classList.add("view-anim");
+            if (focusView) {
+              var h = app.querySelector("[data-view-focus]");
+              if (h) { h.setAttribute("tabindex", "-1"); try { h.focus({ preventScroll: true }); } catch (e) { h.focus(); } }
+            }
+          }
+        }
+
+        var srPolite = document.getElementById("srPolite");
+        var srAssertive = document.getElementById("srAssertive");
+        function announce(text, assertive) {
+          var el = assertive ? srAssertive : srPolite;
+          if (!el || !text) return;
+          el.textContent = "";
+          window.setTimeout(function () { el.textContent = text; }, 30);
         }
 
         function esc(s) {
@@ -266,16 +296,16 @@
             '<div class="join-box">' +
               '<h1 class="join-title">問答競技場</h1>' +
               '<p class="join-sub">輸入主持人螢幕上的遊戲碼加入</p>' +
-              '<p class="field-label">遊戲碼</p>' +
-              '<div class="pin-cells" id="pinCells">' +
+              '<p class="field-label" id="pinLabel">遊戲碼</p>' +
+              '<div class="pin-cells" id="pinCells" role="group" aria-labelledby="pinLabel">' +
                 Array.from({ length: 6 }, function (_, i) {
-                  return '<input class="pin-cell" data-i="' + i + '" inputmode="numeric" autocomplete="' + (i === 0 ? "one-time-code" : "off") + '" maxlength="1" aria-label="遊戲碼第 ' + (i + 1) + ' 位" />';
+                  return '<input class="pin-cell" data-i="' + i + '" inputmode="numeric" autocomplete="' + (i === 0 ? "one-time-code" : "off") + '" maxlength="1" aria-label="遊戲碼第 ' + (i + 1) + ' 位，共 6 位" />';
                 }).join("") +
               "</div>" +
-              '<p class="field-label" style="margin-top:0.4rem;">你的名字</p>' +
+              '<label class="field-label" for="jName" style="margin-top:0.4rem;">你的名字</label>' +
               '<input class="name-input" id="jName" maxlength="16" placeholder="例如：小明" value="' + esc(myName) + '" />' +
               '<button class="btn primary" id="jGo" style="min-height:3.2rem; font-size:1.05rem;">加入遊戲</button>' +
-              '<p class="play-msg ' + (isErr ? "err" : "") + '" id="jMsg">' + esc(msg || "") + "</p>" +
+              '<p class="play-msg ' + (isErr ? "err" : "") + '" id="jMsg" role="alert">' + esc(msg || "") + "</p>" +
             "</div>");
           var cells = Array.prototype.slice.call(app.querySelectorAll(".pin-cell"));
           cells.forEach(function (c, i) {
@@ -383,12 +413,12 @@
               SHAPES[i] + '<span class="txt">' + esc(o) + "</span></button>";
           }).join("");
           setView(
-            '<div class="dots">' + dots.join("") + "</div>" +
+            '<div class="dots" aria-hidden="true">' + dots.join("") + "</div>" +
             '<div class="q-top"><span class="q-num">第 ' + (d.index + 1) + " / " + d.total + " 題</span>" +
-              '<div class="timer-track"><div class="timer-fill" id="tFill"></div></div>' +
+              '<div class="timer-track" aria-hidden="true"><div class="timer-fill" id="tFill"></div></div>' +
               '<span class="t-num" id="tNum"></span></div>' +
-            '<p class="q-text">' + esc(d.q) + "</p>" +
-            '<div class="answers">' + opts + "</div>");
+            '<h2 class="q-text" data-view-focus tabindex="-1">' + esc(d.q) + "</h2>" +
+            '<div class="answers">' + opts + "</div>", true);
           if (!answered) {
             app.querySelectorAll(".ans-btn").forEach(function (b) {
               b.addEventListener("click", function () { submitAnswer(Number(b.dataset.opt)); });
@@ -401,6 +431,7 @@
           stopTicker();
           var ends = Date.parse(d.endsAt) - serverOffset;
           var dur = d.timeMs || 20000;
+          var milestone = null;
           tickTimer = setInterval(function () {
             var fill = document.getElementById("tFill");
             var num = document.getElementById("tNum");
@@ -408,7 +439,13 @@
             var remain = Math.max(0, ends - Date.now());
             var pct = Math.max(0, Math.min(100, remain / dur * 100));
             fill.style.width = pct + "%";
-            if (num) num.textContent = Math.ceil(remain / 1000);
+            var secs = Math.ceil(remain / 1000);
+            if (num) num.textContent = secs;
+            // 僅在關鍵秒數向螢幕閱讀器報時，避免洗版
+            if ((secs === 10 || secs === 5) && milestone !== secs) {
+              milestone = secs;
+              announce(secs + " 秒");
+            }
             if (remain <= 5000) fill.classList.add("low");
             if (remain <= 0) stopTicker();
           }, 250);
@@ -456,20 +493,24 @@
             : !mine.answered ? "這題沒有取得分數"
             : "再接再厲";
           var rankLine = "";
+          var rankText = "";
           if (mine.rank != null) {
-            rankLine += '<p class="v-rank">目前第 <strong>' + mine.rank + "</strong> 名 · " + (mine.score != null ? mine.score : 0) + " 分</p>";
+            rankText = "目前第 " + mine.rank + " 名，" + (mine.score != null ? mine.score : 0) + " 分";
             if (mine.aheadName != null) {
               var gap = Math.max(0, (mine.aheadScore || 0) - (mine.score || 0));
               rankLine += '<p class="v-gap">落後 ' + esc(mine.aheadName) + " " + gap + " 分</p>";
+              rankText += "，落後" + mine.aheadName + " " + gap + " 分";
             } else {
               rankLine += '<p class="v-gap">你是第一名！</p>';
+              rankText += "，你是第一名！";
             }
           }
           setView(
-            '<div class="verdict"><div class="v-big ' + vCls + '">' + vBig + "</div>" +
+            '<div class="verdict" data-view-focus tabindex="-1"><div class="v-big ' + vCls + '">' + vBig + "</div>" +
             '<p class="v-sub">' + sub + "</p>" +
             rankLine +
-            '<p class="v-score" style="display:none;"></p></div>');
+            '<p class="v-score" style="display:none;"></p></div>', true);
+          announce(vBig + (mine.answered && good ? "得 " + mine.points + " 分。" : "") + rankText, true);
         }
 
         /* ===================== 題間（排行榜只在主持台顯示） ===================== */
@@ -501,11 +542,11 @@
               '<div class="p-block">' + place + "</div></div>";
           }).join("");
           setView(
-            '<h2 class="board-title">遊戲結束</h2>' +
+            '<h2 class="board-title" data-view-focus tabindex="-1">遊戲結束</h2>' +
             '<div class="podium">' + blocks + "</div>" +
             '<div class="board-list">' + boardRows(d) + "</div>" +
             '<p class="end-note">感謝參與！</p>' +
-            '<button type="button" class="leave" id="againBtn" style="align-self:center;">離開</button>');
+            '<button type="button" class="leave" id="againBtn" style="align-self:center;">離開</button>', true);
           if (d.my) {
             var note = app.querySelector(".end-note");
             note.textContent = "你排第 " + d.my.rank + " 名 · " + d.my.score + " 分 · 感謝參與！";
@@ -555,6 +596,7 @@
               }
 
               if (d.status === "lobby") {
+                if (renderKey !== "lobby") announce("等待主持人開始");
                 renderKey = "lobby";
                 renderWait("等待主持人開始…", d.players);
               } else if (d.status === "question") {
@@ -562,8 +604,14 @@
                 var key = "q:" + d.index + ":" + (submitted ? "s" : "a");
                 if (renderKey !== key) {
                   renderKey = key;
-                  if (submitted) renderSubmitted();
-                  else renderQuestion(d);
+                  if (submitted) {
+                    renderSubmitted();
+                    announce("答案已提交，等待其他玩家");
+                  } else {
+                    renderQuestion(d);
+                    announce("第 " + (d.index + 1) + " 題，共 " + d.total + " 題。題目：" + d.q +
+                      "。選項：" + d.options.join("、") + "。" + (d.timeMs ? Math.round(d.timeMs / 1000) : 20) + " 秒作答", true);
+                  }
                 }
               } else if (d.status === "reveal") {
                 if (renderKey !== "r:" + d.index) {
@@ -574,11 +622,13 @@
                 if (renderKey !== "b") {
                   renderKey = "b";
                   renderIntermission();
+                  announce("本題結束，請留意主持人螢幕上的排行榜");
                 }
               } else if (d.status === "ended") {
                 if (renderKey !== "e") {
                   renderKey = "e";
                   renderEnded(d);
+                  announce(d.my ? "遊戲結束。你最終第 " + d.my.rank + " 名，得 " + d.my.score + " 分" : "遊戲結束", true);
                 }
               }
             })

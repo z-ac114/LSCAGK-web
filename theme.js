@@ -132,12 +132,30 @@ function setupNavToggle() {
     document.body.classList.toggle("nav-lock", open);
     toggle.setAttribute("aria-expanded", open ? "true" : "false");
     toggle.setAttribute("aria-label", open ? "關閉選單" : "開啟選單");
+    if (open) {
+      // 焦點移入選單
+      var first = header.querySelector(".site-nav a");
+      if (first) first.focus();
+    } else if (header.contains(document.activeElement)) {
+      toggle.focus();
+    }
   }
   toggle.addEventListener("click", function () {
     setOpen(!header.classList.contains("menu-open"));
   });
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && header.classList.contains("menu-open")) setOpen(false);
+    if (!header.classList.contains("menu-open")) return;
+    if (e.key === "Escape") { setOpen(false); return; }
+    // 焦點循環限制在標頭（切換鈕 + 選單連結）內
+    if (e.key !== "Tab") return;
+    var focusables = Array.prototype.slice.call(
+      header.querySelectorAll("a[href], button:not([disabled])")
+    ).filter(function (el) { return el.offsetParent !== null || el === toggle; });
+    if (!focusables.length) return;
+    var first = focusables[0];
+    var last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   });
   document.addEventListener("click", function (e) {
     if (!header.classList.contains("menu-open")) return;

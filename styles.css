@@ -14,7 +14,7 @@
   --ink: rgb(20 20 19 / 92%);
   --ink-solid: #141413;
   --body-text: rgb(20 20 19 / 62%);
-  --muted: rgb(20 20 19 / 45%);
+  --muted: rgb(20 20 19 / 62%);
   --muted-soft: rgb(20 20 19 / 34%);
   --purple: #6b3a63;
   --purple-deep: #4f2a49;
@@ -44,6 +44,11 @@
 
 * {
   box-sizing: border-box;
+}
+
+/* 2.4.11 Focus Not Obscured：鍵盤焦點移動時不被吸頂標題遮住 */
+a, button, input, select, textarea, summary, [tabindex] {
+  scroll-margin-top: calc(var(--nav-h) + 12px);
 }
 
 html {
@@ -881,7 +886,7 @@ main .rounded-xl.bg-surface h2 {
   --ink: rgb(250 249 245 / 94%);
   --ink-solid: #f0eee9;
   --body-text: rgb(250 249 245 / 62%);
-  --muted: rgb(250 249 245 / 45%);
+  --muted: rgb(250 249 245 / 52%);
   --muted-soft: rgb(250 249 245 / 34%);
   --surface: #22201c;
   --surface-tint: #1f1d19;
