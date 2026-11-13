@@ -393,13 +393,15 @@
           return loadPdfJs().then(function (pdfjsLib) {
             return pdfjsLib.getDocument({ data: buf }).promise.then(function (pdf) {
               var probes = [1, 2].filter(function (n) { return n <= pdf.numPages; });
-              return Promise.all(probes.map(function (n) {
+              var textP = Promise.all(probes.map(function (n) {
                 return pdf.getPage(n).then(function (p) { return p.getTextContent(); }).then(function (tc) {
                   return tc.items.map(function (it) { return it.str; }).join(" ");
                 });
-              })).then(function (texts) {
+              }));
+              var outlineP = pdf.getOutline().catch(function () { return null; });
+              return Promise.all([textP, outlineP]).then(function (arr) {
                 return pdf.getMetadata().catch(function () { return null; }).then(function (m) {
-                  return { pages: pdf.numPages, text: texts.join(" "), meta: m && m.info };
+                  return { pages: pdf.numPages, text: arr[0].join(" "), outline: arr[1] || [], meta: m && m.info };
                 });
               });
             });
@@ -407,17 +409,46 @@
         }
 
         function buildSuggestions(res) {
-          var full = res.pages + " 頁";
           var clean = String(res.text || "").replace(/\s+/g, " ").trim();
+
+          var qMatch = clean.match(/([0-9０-９][0-9０-９,，]*)\s*(?:道)?題/);
+          var catFromText = clean.match(/([0-9０-９][0-9０-９,，]*)\s*個(?:分類|類別|部分)/);
+
+          // 書籤（目錄）→ 分類數與「涵蓋…」
+          var topTitles = (res.outline || [])
+            .map(function (o) { return o && o.title ? String(o.title).replace(/\s+/g, "").trim() : ""; })
+            .filter(function (t) { return t && t.length <= 16; });
+          var useOutline = topTitles.length >= 2;
+
           var prefix = [];
-          var q = clean.match(/([0-9０-９][0-9０-９,，]*)\s*(?:道)?題/);
-          var cat = clean.match(/([0-9０-９][0-9０-９,，]*)\s*個(?:分類|類別|部分)/);
-          if (q) prefix.push(q[1].replace(/[,，]/g, "") + " 題");
-          if (cat) prefix.push(cat[1].replace(/[,，]/g, "") + " 個分類");
-          var desc = (prefix.length ? prefix.join(" · ") + (clean ? "，" : "") : "") + clean.slice(0, 110);
+          if (qMatch) prefix.push(qMatch[1].replace(/[,，]/g, "") + " 題");
+          if (useOutline) prefix.push(topTitles.length + " 個分類");
+          else if (catFromText) prefix.push(catFromText[1].replace(/[,，]/g, "") + " 個分類");
+
+          var body = "";
+          if (useOutline) {
+            body = "涵蓋" + topTitles.slice(0, 6).join("、") + (topTitles.length > 6 ? "等" : "");
+          } else {
+            var idx = qMatch ? clean.indexOf(qMatch[0]) : -1;
+            var head = idx > 0 ? clean.slice(0, idx).trim() : "";
+            if (head.length >= 6 && head.length <= 60) {
+              body = head;
+            } else {
+              var metaT = res.meta && res.meta.Title ? String(res.meta.Title).replace(/\s+/g, " ").trim() : "";
+              body = metaT.length >= 6 && metaT.length <= 60
+                ? metaT
+                : clean
+                    .replace(/[0-9０-９][0-9０-９,，]*\s*(?:道)?題/g, "")
+                    .replace(/[0-9０-９][0-9０-９,，]*\s*個(?:分類|類別|部分)/g, "")
+                    .trim()
+                    .slice(0, 60);
+            }
+          }
+
+          var desc = (prefix.length ? prefix.join(" · ") + "，" : "") + body + "。";
           var t = res.meta && res.meta.Title ? String(res.meta.Title).trim() : "";
           var title = t && t.length >= 4 && t.length <= 120 ? t : "";
-          return { pages: full, desc: desc, title: title };
+          return { pages: res.pages + " 頁", desc: desc.slice(0, 500), title: title };
         }
 
         function fmtSize(b) {
