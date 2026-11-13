@@ -1021,7 +1021,7 @@
                 </div>
                 <ul class="lobby-rules">
                   <li>
-                    <div><b>題目隨機</b><span>全港學界國家安全常識挑戰賽題庫（<span id="lobbyCount">–</span> 題，單選），題序與選項每次練習均隨機，一次過完整練習全部題目。</span></div>
+                    <div><b>題目隨機</b><span><span id="bankName">全民國情題庫</span>（<span id="lobbyCount">–</span> 題，單選），題序與選項每次練習均隨機，一次過完整練習全部題目。</span></div>
                   </li>
                 </ul>
                 <div class="lobby-actions">
@@ -1178,6 +1178,13 @@
         }
 
         var BANK_SOURCES = ["GQ_QUESTION_BANK"];
+        var BANK_META = {
+          GQ_QUESTION_BANK: "全民國情題庫",
+          NS_QUESTION_BANK: "全港學界國家安全常識挑戰賽題庫"
+        };
+        function bankDisplayName() {
+          return BANK_META[BANK_SOURCES[0]] || "題庫";
+        }
         var QUESTIONS = [];
 
         function buildQuestions() {
@@ -2045,6 +2052,7 @@
         }
         function refreshLobby() {
           if (buildQuestions()) {
+            $("bankName").textContent = bankDisplayName();
             $("lobbyCount").textContent = String(QUESTIONS.length);
             $("lobbyError").classList.add("hidden");
             $("startQuizBtn").disabled = false;
