@@ -2,7 +2,7 @@
 // ?pin=123456
 "use strict";
 const { checkAuth, json, serviceHeaders, sb } = require("../../lib/admin-util");
-const { fetchGame, effPhase } = require("../../lib/game-util");
+const { fetchGameInPhase, effPhase } = require("../../lib/game-util");
 
 module.exports = async (req, res) => {
   if (req.method !== "GET") { json(res, 405, { error: "Method not allowed" }); return; }
@@ -12,7 +12,7 @@ module.exports = async (req, res) => {
   try {
     const url = new URL(req.url, "http://x");
     const pin = String(url.searchParams.get("pin") || "");
-    const game = await fetchGame(pin);
+    const game = await fetchGameInPhase(pin);
     if (!game) { json(res, 404, { error: "找不到遊戲。" }); return; }
 
     const now = new Date().toISOString();

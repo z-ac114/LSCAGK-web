@@ -919,9 +919,30 @@
         }
 
         var OPT_CLS = ["o-red", "o-gold", "o-plum", "o-green"];
+        var kKey = "";
+        var kOffset = 0, kOffsetReady = false;
+
+        function noteKOffset(nowIso, t0, t1) {
+          if (!nowIso) return;
+          var off = Date.parse(nowIso) + Math.max(0, t1 - t0) / 2 - t1;
+          kOffset = kOffsetReady ? kOffset * 0.7 + off * 0.3 : off;
+          kOffsetReady = true;
+        }
+
+        function kPoll() {
+          if (K.busy || !K.pin) return;
+          K.busy = true;
+          var t0 = Date.now();
+          gameApi("host?pin=" + encodeURIComponent(K.pin))
+            .then(function (d) { var t1 = Date.now(); noteKOffset(d.now, t0, t1); K.last = d; kRender(d); })
+            .catch(function (err) { kMsg("kLiveMsg", err.message || "", "err"); })
+            .finally(function () { K.busy = false; });
+        }
 
         function kRender(d) {
+          var key = d.status + ":" + (d.index || 0);
           if (d.status === "lobby") {
+            if (kKey !== key) { kKey = key; stopTickerK(); }
             kShow("kLobby");
             $("kPlayers").innerHTML = (d.players || []).map(function (n) { return '<span class="chip">' + esc(n) + "</span>"; }).join("");
             $("kCount2").textContent = "已加入 " + (d.players || []).length + " 位玩家";
@@ -929,20 +950,34 @@
           }
           kShow("kLive");
           $("kIdx").textContent = d.status === "ended" ? "遊戲結束" : "第 " + (d.index + 1) + " / " + d.total + " 題";
-          $("kAnswered").textContent = d.status === "question" ? "已作答 " + (d.answered || 0) + " / " + (d.playerCount || 0) : "";
-          $("kTimerFill").style.width = "0";
 
           if (d.status === "question") {
-            $("kQ").textContent = d.q || "";
-            $("kOptions").innerHTML = (d.options || []).map(function (o, i) {
-              return '<div class="k-opt ' + (OPT_CLS[i] || "o-plum") + '"><span class="bar" style="width:0;"></span><span class="lab">' + esc(o) + "</span></div>";
-            }).join("");
-            $("kHint").textContent = "玩家作答中，時間到後自動揭曉。";
-            $("kNext").textContent = "提前揭曉";
-            $("kNext").style.display = "";
-            kTicker(d);
-          } else if (d.status === "reveal") {
-            stopTickerK();
+            // 每次輪詢只更新作答人數；畫面與計時條只在換題時重建（避免跳動）
+            $("kAnswered").textContent = "已作答 " + (d.answered || 0) + " / " + (d.playerCount || 0);
+            if (kKey !== key) {
+              kKey = key;
+              var fill = $("kTimerFill");
+              fill.style.width = "100%";
+              fill.classList.remove("low");
+              $("kQ").textContent = d.q || "";
+              $("kOptions").innerHTML = (d.options || []).map(function (o, i) {
+                return '<div class="k-opt ' + (OPT_CLS[i] || "o-plum") + '"><span class="bar" style="width:0;"></span><span class="lab">' + esc(o) + "</span></div>";
+              }).join("");
+              $("kHint").textContent = "玩家作答中，時間到後自動揭曉。";
+              $("kNext").textContent = "提前揭曉";
+              $("kNext").style.display = "";
+              kTicker(d);
+            }
+            return;
+          }
+
+          $("kAnswered").textContent = "";
+          if (kKey === key) return; // 揭曉／排行榜／結束的內容不會再變
+          kKey = key;
+          stopTickerK();
+          $("kTimerFill").style.width = "0";
+
+          if (d.status === "reveal") {
             $("kQ").textContent = d.q || "";
             var max = Math.max.apply(null, (d.counts || [0]).concat([1]));
             $("kOptions").innerHTML = (d.options || []).map(function (o, i) {
@@ -955,7 +990,6 @@
             $("kNext").textContent = "顯示排行榜";
             $("kNext").style.display = "";
           } else if (d.status === "board") {
-            stopTickerK();
             $("kQ").textContent = "目前排行";
             $("kOptions").innerHTML = (d.standings || []).slice(0, 10).map(function (p, i) {
               return '<div class="board-row"><span class="rk">' + (i + 1) + '</span><span class="nm">' + esc(p.name) + '</span><span class="sc">' + p.score + "</span></div>";
@@ -965,7 +999,6 @@
             $("kNext").textContent = last ? "查看最終結果" : "下一題";
             $("kNext").style.display = "";
           } else if (d.status === "ended") {
-            stopTickerK();
             $("kQ").textContent = "最終排名";
             $("kOptions").innerHTML = (d.standings || []).slice(0, 10).map(function (p, i) {
               return '<div class="board-row"><span class="rk">' + (i + 1) + '</span><span class="nm">' + esc(p.name) + '</span><span class="sc">' + p.score + "</span></div>";
@@ -979,11 +1012,11 @@
         function kTicker(d) {
           stopTickerK();
           if (d.status !== "question" || !d.endsAt) return;
-          var ends = Date.parse(d.endsAt) - (Date.parse(d.now) - Date.now());
+          var ends = Date.parse(d.endsAt) - kOffset;
           K.tick = setInterval(function () {
             var fill = $("kTimerFill");
             if (!fill || !K.last || K.last.status !== "question") { stopTickerK(); return; }
-            var pct = Math.max(0, Math.min(100, (ends - Date.now()) / (d.timeLimit * 1000) * 100));
+            var pct = Math.max(0, Math.min(100, (ends - Date.now()) / ((d.timeLimit || 20) * 1000) * 100));
             fill.style.width = pct + "%";
             if (pct < 25) fill.classList.add("low");
             if (pct <= 0) stopTickerK();
@@ -993,7 +1026,7 @@
 
         function kReset() {
           kStopPoll();
-          K.pin = null; K.last = null;
+          K.pin = null; K.last = null; kKey = "";
           kShow("kSetup");
           kMsg("kMsg", "");
         }

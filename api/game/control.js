@@ -2,7 +2,7 @@
 // body: { pin, action } — action: start | reveal | next | go | end | cancel
 "use strict";
 const { checkAuth, readBody, json, serviceHeaders, sb } = require("../../lib/admin-util");
-const { fetchGame } = require("../../lib/game-util");
+const { fetchGameInPhase } = require("../../lib/game-util");
 
 module.exports = async (req, res) => {
   if (req.method !== "POST") { json(res, 405, { error: "Method not allowed" }); return; }
@@ -13,7 +13,7 @@ module.exports = async (req, res) => {
     const body = await readBody(req);
     const pin = String(body.pin || "");
     const action = String(body.action || "");
-    const game = await fetchGame(pin);
+    const game = await fetchGameInPhase(pin);
     if (!game) { json(res, 404, { error: "找不到遊戲。" }); return; }
 
     if (action === "cancel") {

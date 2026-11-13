@@ -3,7 +3,7 @@
 // 正確答案只在伺服器比對，回應不洩露對錯（統一於 reveal 公佈）
 "use strict";
 const { readBody, json, serviceHeaders, sb } = require("../../lib/admin-util");
-const { fetchGame, effPhase, UUID_RE } = require("../../lib/game-util");
+const { fetchGameInPhase, effPhase, UUID_RE } = require("../../lib/game-util");
 
 module.exports = async (req, res) => {
   if (req.method !== "POST") { json(res, 405, { error: "Method not allowed" }); return; }
@@ -17,7 +17,7 @@ module.exports = async (req, res) => {
     const option = Number(body.option);
     if (!UUID_RE.test(playerId)) { json(res, 400, { error: "無效的玩家。" }); return; }
 
-    const game = await fetchGame(pin);
+    const game = await fetchGameInPhase(pin);
     if (!game) { json(res, 404, { error: "找不到此遊戲碼。" }); return; }
     if (effPhase(game, Date.now()) !== "question") { json(res, 400, { error: "現在不是作答時間。" }); return; }
     if (index !== game.q_index) { json(res, 400, { error: "題目已切換。" }); return; }

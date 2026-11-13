@@ -3,7 +3,7 @@
 // 注意：question 階段絕不回傳正確答案（防作弊）
 "use strict";
 const { json, serviceHeaders, sb } = require("../../lib/admin-util");
-const { fetchGame, effPhase, UUID_RE } = require("../../lib/game-util");
+const { fetchGameInPhase, effPhase, UUID_RE } = require("../../lib/game-util");
 
 module.exports = async (req, res) => {
   if (req.method !== "GET") { json(res, 405, { error: "Method not allowed" }); return; }
@@ -13,7 +13,7 @@ module.exports = async (req, res) => {
     const url = new URL(req.url, "http://x");
     const pin = String(url.searchParams.get("pin") || "").replace(/\D/g, "").slice(0, 6);
     const player = String(url.searchParams.get("player") || "");
-    const game = await fetchGame(pin);
+    const game = await fetchGameInPhase(pin);
     if (!game) { json(res, 404, { error: "找不到此遊戲碼。" }); return; }
 
     const nowMs = Date.now();
@@ -55,6 +55,8 @@ module.exports = async (req, res) => {
       const mine = me ? answers.find((a) => a.player_id === me.id) : null;
       const rank = me ? 1 + players.filter((p) => p.score > me.score).length : null;
       json(res, 200, Object.assign(base, {
+        q: q ? q.q : "",
+        options: q ? q.options : [],
         correct: q ? q.c : null,
         counts,
         my: {

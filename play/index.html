@@ -92,18 +92,19 @@
         color: var(--ink); margin: 0 0 1rem; min-height: 3.4em;
       }
       .answers { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; }
-      @media (max-width: 480px) { .answers { grid-template-columns: 1fr; } }
       .ans-btn {
         display: flex; align-items: center; gap: 0.7rem; text-align: left;
-        padding: 0.9rem 1rem; border-radius: 12px; border: 0;
+        min-height: 3.4rem; padding: 0.85rem 1rem; border-radius: 12px; border: 0;
         color: #fff; font: inherit; font-size: 1rem; font-weight: 700; line-height: 1.45;
         cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
         transition: transform 120ms ease, opacity 150ms ease;
       }
+      .ans-btn .txt { flex: 1; min-width: 0; word-break: break-word; }
+      @media (max-width: 480px) {
+        .ans-btn { font-size: 0.92rem; min-height: 3rem; padding: 0.75rem 0.85rem; }
+      }
       .ans-btn:active { transform: scale(0.98); }
       .ans-btn:disabled { opacity: 0.55; cursor: default; }
-      .ans-btn svg { flex-shrink: 0; }
-      .ans-btn .txt { flex: 1; min-width: 0; }
       .ans-red { background: #c0392b; }
       .ans-gold { background: #b3862c; }
       .ans-plum { background: #6b3a63; }
@@ -243,6 +244,7 @@
               pin = p; playerId = d.playerId; myName = n;
               sSet(K_PIN, pin); sSet(K_ID, playerId); sSet(K_NAME, myName);
               view = "game";
+              renderKey = "";
               renderWait("已加入，等待主持人開始…");
               startPolling();
             })
@@ -339,7 +341,7 @@
           var sub = mine.answered && good ? "+" + mine.points + " 分"
             : !mine.answered ? "這題沒有取得分數"
             : "再接再厲";
-          var opts = d.options.map(function (o, i) {
+          var opts = (d.options || []).map(function (o, i) {
             var cls = "ans-btn " + (CLS[i] || "ans-plum");
             if (i === d.correct) cls += " right";
             else if (mine.answered && mine.option === i) cls += " dim";
@@ -394,6 +396,17 @@
 
         /* ===================== 輪詢 ===================== */
         var lastData = null;
+        var renderKey = "";
+        var offsetReady = false;
+
+        // 伺服器時鐘校正：RTT/2 修正 + 指數平滑，避免進度條跳動
+        function noteOffset(nowIso, t0, t1) {
+          if (!nowIso) return;
+          var off = Date.parse(nowIso) + Math.max(0, t1 - t0) / 2 - t1;
+          serverOffset = offsetReady ? serverOffset * 0.7 + off * 0.3 : off;
+          offsetReady = true;
+        }
+
         function startPolling() {
           stopPolling();
           pollTimer = setInterval(poll, 1000);
@@ -404,25 +417,50 @@
         function poll() {
           if (busy) return;
           busy = true;
+          var t0 = Date.now();
           api("state?pin=" + encodeURIComponent(pin) + "&player=" + encodeURIComponent(playerId))
             .then(function (d) {
+              var t1 = Date.now();
               failCount = 0;
               connEl.textContent = "";
-              if (d.now) serverOffset = Date.parse(d.now) - Date.now();
-              var prevStatus = lastData ? lastData.status : null;
-              lastData = d;
-              if (d.timeMs == null && d.endsAt && d.startedAt) {
+              noteOffset(d.now, t0, t1);
+              if (d.endsAt && d.startedAt && d.timeMs == null) {
                 d.timeMs = Date.parse(d.endsAt) - Date.parse(d.startedAt);
               }
-              // 離開作答階段時重設本地提交狀態
-              if (d.index !== (lastData.index || 0)) answeredIndex = -1;
-              if (prevStatus !== d.status && d.status === "question") answeredIndex = -1;
+              var prev = lastData;
+              lastData = d;
+              // 換題或重新進入作答階段時重設本地提交狀態
+              if (prev && (d.index !== prev.index || (d.status === "question" && prev.status !== "question"))) {
+                answeredIndex = -1;
+              }
 
-              if (d.status === "lobby") renderWait("等待主持人開始…", d.players);
-              else if (d.status === "question") { if (answeredIndex === d.index) renderSubmitted(); else renderQuestion(d); }
-              else if (d.status === "reveal") renderReveal(d);
-              else if (d.status === "board") renderBoard(d, false);
-              else if (d.status === "ended") renderEnded(d);
+              if (d.status === "lobby") {
+                renderKey = "lobby";
+                renderWait("等待主持人開始…", d.players);
+              } else if (d.status === "question") {
+                var submitted = answeredIndex === d.index;
+                var key = "q:" + d.index + ":" + (submitted ? "s" : "a");
+                if (renderKey !== key) {
+                  renderKey = key;
+                  if (submitted) renderSubmitted();
+                  else renderQuestion(d);
+                }
+              } else if (d.status === "reveal") {
+                if (renderKey !== "r:" + d.index) {
+                  renderKey = "r:" + d.index;
+                  renderReveal(d);
+                }
+              } else if (d.status === "board") {
+                if (renderKey !== "b") {
+                  renderKey = "b";
+                  renderBoard(d, false);
+                }
+              } else if (d.status === "ended") {
+                if (renderKey !== "e") {
+                  renderKey = "e";
+                  renderEnded(d);
+                }
+              }
             })
             .catch(function (err) {
               failCount++;
