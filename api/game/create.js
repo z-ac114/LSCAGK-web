@@ -12,7 +12,7 @@ module.exports = async (req, res) => {
   try {
     const body = await readBody(req);
     const bank = body.bank === "nschallenge" ? "nschallenge" : "guoqing";
-    const count = Math.max(1, Math.min(50, Number(body.count) || 10));
+    const count = Math.max(1, Math.min(100, Number(body.count) || 10));
     const timeLimit = Math.max(5, Math.min(120, Number(body.timeLimit) || 20));
     const qs = (Array.isArray(body.questions) ? body.questions.map(sanitizeQuestion) : []);
     if (qs.length !== count || qs.some((q) => !q)) {
