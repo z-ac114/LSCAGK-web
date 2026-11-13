@@ -998,6 +998,15 @@
           kMsg("kMsg", "");
         }
 
+        $("kStart").addEventListener("click", function () {
+          var btn = this;
+          btn.disabled = true;
+          gameApi("control", "POST", { pin: K.pin, action: "start" })
+            .then(kPoll)
+            .catch(function (err) { kMsg("kLiveMsg", err.message || "操作失敗。", "err"); })
+            .finally(function () { btn.disabled = false; });
+        });
+
         $("kNext").addEventListener("click", function () {
           var btn = this;
           var d = K.last;
