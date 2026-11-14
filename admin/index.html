@@ -143,6 +143,40 @@
       .soon li { padding: 0.45rem 0; border-bottom: 1px solid var(--hairline); display: flex; gap: 0.6rem; }
       .soon li:last-child { border-bottom: 0; }
 
+      /* ---- 遊戲記錄 ---- */
+      .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.7rem; }
+      .stat-tile { background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius); padding: 0.85rem 1rem; }
+      .stat-num { font-family: "Noto Serif TC", serif; font-size: 1.45rem; font-weight: 700; color: var(--purple); line-height: 1.25; font-variant-numeric: tabular-nums; }
+      .dark-mode .stat-num { color: #e3c6dc; }
+      .stat-label { font-size: 0.76rem; color: var(--muted); margin-top: 0.1rem; }
+      .insight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+      @media (max-width: 640px) { .insight-grid { grid-template-columns: 1fr; } }
+      .insight-title { font-size: 0.85rem; font-weight: 700; color: var(--ink); margin: 0 0 0.4rem; }
+      .insight-list { list-style: none; padding: 0; margin: 0; font-size: 0.85rem; color: var(--muted); }
+      .insight-list li { padding: 0.4rem 0; border-bottom: 1px solid var(--hairline); display: flex; justify-content: space-between; align-items: baseline; gap: 0.8rem; }
+      .insight-list li:last-child { border-bottom: 0; }
+      .insight-list .acc { font-weight: 600; color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+      .badge.live { background: rgb(27 127 59 / 12%); color: #1b7f3b; }
+      .dark-mode .badge.live { background: rgb(123 211 154 / 14%); color: #7bd39a; }
+      .game-report { margin-top: 0.9rem; border-top: 1px dashed var(--hairline); padding-top: 0.9rem; }
+      .gr-sec-title { font-size: 0.85rem; font-weight: 700; color: var(--ink); margin: 0.4rem 0 0.5rem; }
+      .gr-players { overflow-x: auto; border: 1px solid var(--hairline); border-radius: 10px; }
+      table.gr-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; min-width: 420px; }
+      .gr-table th { text-align: left; padding: 0.5rem 0.8rem; font-size: 0.72rem; letter-spacing: 0.05em; color: var(--muted); border-bottom: 1px solid var(--hairline); white-space: nowrap; font-weight: 600; }
+      .gr-table td { padding: 0.45rem 0.8rem; border-bottom: 1px solid var(--hairline); }
+      .gr-table tr:last-child td { border-bottom: 0; }
+      .gr-table td.num, .gr-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+      .gr-table .name { font-weight: 600; }
+      .gr-q { border: 1px solid var(--hairline); border-radius: 10px; padding: 0.7rem 0.95rem; margin-top: 0.6rem; }
+      .gr-head { display: flex; justify-content: space-between; gap: 0.6rem; font-size: 0.75rem; color: var(--muted); flex-wrap: wrap; }
+      .gr-qt { font-weight: 600; font-size: 0.9rem; margin: 0.3rem 0; line-height: 1.5; }
+      .gr-ans { color: #1b7f3b; font-size: 0.82rem; margin: 0.15rem 0; }
+      .dark-mode .gr-ans { color: #7bd39a; }
+      .gr-wrong { color: #b3261e; font-size: 0.8rem; margin: 0.15rem 0; line-height: 1.5; }
+      .dark-mode .gr-wrong { color: #f28779; }
+      .gr-timeout { color: var(--muted); font-size: 0.8rem; margin: 0.15rem 0; line-height: 1.5; }
+      .gr-load { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 1rem 0; }
+
       .hidden { display: none !important; }
 
       @media (prefers-reduced-motion: reduce) {
@@ -181,7 +215,7 @@
             <div class="admin-head">
               <div>
                 <h1 class="admin-title">管理後台</h1>
-                <p class="admin-sub">管理資源庫 PDF、排行榜記錄與問答遊戲。</p>
+                <p class="admin-sub">管理資源庫 PDF、排行榜記錄與問答遊戲記錄。</p>
               </div>
               <button type="button" class="btn sm" id="logoutBtn">登出</button>
             </div>
@@ -189,7 +223,7 @@
             <div class="tabs" role="tablist" aria-label="管理後台分頁">
               <button class="tab" role="tab" id="tabBtn-pdfs" aria-controls="tab-pdfs" aria-selected="true" data-tab="pdfs" tabindex="0">資源管理</button>
               <button class="tab" role="tab" id="tabBtn-board" aria-controls="tab-board" aria-selected="false" data-tab="board" tabindex="-1">排行榜記錄</button>
-              <button class="tab" role="tab" id="tabBtn-kahoot" aria-controls="tab-kahoot" aria-selected="false" data-tab="kahoot" tabindex="-1">問答遊戲</button>
+              <button class="tab" role="tab" id="tabBtn-games" aria-controls="tab-games" aria-selected="false" data-tab="games" tabindex="-1">遊戲記錄</button>
             </div>
 
             <!-- ======== 資源管理 ======== -->
@@ -259,13 +293,32 @@
               <p class="admin-sub" id="boardCount" style="margin-top: 0.8rem;"></p>
             </section>
 
-            <!-- ======== 問答遊戲 ======== -->
-            <section id="tab-kahoot" role="tabpanel" aria-labelledby="tabBtn-kahoot" class="hidden">
-              <div class="card soon">
-                <h2>問答競技場</h2>
-                <p>即時問答遊戲的主持台已移至獨立頁面。開啟後建立遊戲，玩家於 /play 以 6 位遊戲碼加入。</p>
-                <a class="btn primary" href="/host">開啟主持台</a>
+            <!-- ======== 遊戲記錄 ======== -->
+            <section id="tab-games" role="tabpanel" aria-labelledby="tabBtn-games" class="hidden">
+              <div class="board-tools">
+                <a class="btn sm" href="/host">開啟主持台 →</a>
+                <span class="spacer"></span>
+                <button type="button" class="btn sm" id="gamesRefresh">重新載入</button>
               </div>
+
+              <div class="stat-grid" id="gamesStats"><div class="empty" style="grid-column: 1 / -1;">載入中…</div></div>
+
+              <div class="card" id="insightCard" style="display: none; margin-top: 1.2rem;">
+                <h2>題目難度洞察</h2>
+                <div class="insight-grid">
+                  <div>
+                    <h3 class="insight-title">最難題目（答對率最低）</h3>
+                    <ul class="insight-list" id="hardestList"></ul>
+                  </div>
+                  <div>
+                    <h3 class="insight-title">最易題目（答對率最高）</h3>
+                    <ul class="insight-list" id="easiestList"></ul>
+                  </div>
+                </div>
+              </div>
+
+              <h2 class="admin-title" style="font-size: 1.15rem; margin: 1.8rem 0 0.8rem;">過往遊戲</h2>
+              <div class="list" id="gamesList"><div class="empty">載入中…</div></div>
             </section>
           </div>
         </div>
@@ -349,10 +402,11 @@
             x.setAttribute("aria-selected", String(sel));
             x.tabIndex = sel ? 0 : -1;
           });
-          ["pdfs", "board", "kahoot"].forEach(function (name) {
+          ["pdfs", "board", "games"].forEach(function (name) {
             $("tab-" + name).classList.toggle("hidden", name !== t.dataset.tab);
           });
           if (t.dataset.tab === "board" && !boardLoaded) { loadBoard(); }
+          if (t.dataset.tab === "games" && !gamesLoaded) { loadGames(); }
         }
         tabs.forEach(function (t, i) {
           t.addEventListener("click", function () { selectTab(t); });
@@ -763,6 +817,169 @@
             .catch(function (err) { alert(err.message); })
             .finally(function () { updateDeleteBtn(); });
         });
+
+        /* ===================== 遊戲記錄 ===================== */
+        var gamesLoaded = false;
+        var gameRows = [];
+        var statsData = null;
+        var GAME_STATUS = { lobby: "等待中", question: "進行中", reveal: "進行中", board: "進行中", ended: "已結束" };
+        var BANK_NAME = { guoqing: "全民國情", nschallenge: "國安挑戰賽" };
+
+        function gameApi(path, method, body) {
+          return fetch("/api/game/" + path, {
+            method: method || "GET",
+            headers: { "Content-Type": "application/json", "x-admin-user": getUser(), "x-admin-pass": getPass() },
+            body: body ? JSON.stringify(body) : undefined
+          }).then(function (res) {
+            return res.json().catch(function () { return {}; }).then(function (data) {
+              if (res.status === 401) { logout(); throw new Error("密碼不正確或已登出。"); }
+              if (!res.ok) throw new Error(data.error || "請求失敗（" + res.status + "）");
+              return data;
+            });
+          });
+        }
+
+        function loadGames() {
+          $("gamesList").innerHTML = '<div class="empty">載入中…</div>';
+          $("gamesStats").innerHTML = '<div class="empty" style="grid-column: 1 / -1;">載入中…</div>';
+          $("insightCard").style.display = "none";
+          Promise.all([gameApi("history"), gameApi("stats")]).then(function (arr) {
+            gameRows = arr[0].rows || [];
+            statsData = arr[1] || null;
+            gamesLoaded = true;
+            renderGamesStats();
+            renderGames();
+          }).catch(function (err) {
+            $("gamesStats").innerHTML = "";
+            $("gamesList").innerHTML = '<div class="empty">' + esc(err.message) + "</div>";
+          });
+        }
+
+        function statTile(num, label) {
+          return '<div class="stat-tile"><div class="stat-num">' + num + '</div><div class="stat-label">' + esc(label) + "</div></div>";
+        }
+
+        function renderGamesStats() {
+          var el = $("gamesStats");
+          var t = statsData && statsData.totals;
+          if (!t) { el.innerHTML = ""; return; }
+          el.innerHTML =
+            statTile(t.games, "遊戲總數") +
+            statTile(t.ended, "已完成") +
+            statTile(t.players, "玩家人次") +
+            statTile(t.answers, "作答次數") +
+            statTile((t.accuracy || 0) + "%", "總答對率") +
+            statTile(t.avgScore, "全場平均分");
+          var h = (statsData && statsData.hardest) || [];
+          var e = (statsData && statsData.easiest) || [];
+          if (h.length || e.length) {
+            $("insightCard").style.display = "";
+            $("hardestList").innerHTML = h.length
+              ? h.map(function (x) { return '<li><span>' + esc(x.q) + '</span><span class="acc">' + x.accuracy + "%</span></li>"; }).join("")
+              : '<li>暫無資料</li>';
+            $("easiestList").innerHTML = e.length
+              ? e.map(function (x) { return '<li><span>' + esc(x.q) + '</span><span class="acc">' + x.accuracy + "%</span></li>"; }).join("")
+              : '<li>暫無資料</li>';
+          }
+        }
+
+        function renderGames() {
+          var el = $("gamesList");
+          if (!gameRows.length) { el.innerHTML = '<div class="empty">還沒有任何遊戲記錄。</div>'; return; }
+          var perPin = {};
+          ((statsData && statsData.perGame) || []).forEach(function (g) { perPin[g.pin] = g; });
+          el.innerHTML = gameRows.map(function (g) {
+            var s = perPin[g.pin] || {};
+            var live = g.status !== "ended";
+            var meta = ['<span>' + (g.players || 0) + " 位玩家</span>", "<span>" + fmtBoardDate(g.created_at) + "</span>"];
+            if (s.accuracy != null) meta.push("<span>答對率 " + s.accuracy + "%</span>");
+            if (s.players && s.avgScore != null) meta.push("<span>平均分 " + s.avgScore + "</span>");
+            return '<div class="item" data-pin="' + esc(g.pin) + '">' +
+              '<div class="item-top"><div style="min-width:0;">' +
+                '<p class="item-title">遊戲碼 ' + esc(g.pin) + ' <span class="badge' + (live ? " live" : "") + '">' + (GAME_STATUS[g.status] || esc(g.status)) + "</span></p>" +
+                '<p class="item-desc">' + esc(BANK_NAME[g.bank] || g.bank || "—") + " · " + g.count + " 題 · 每題 " + (g.time_limit || 20) + " 秒</p>" +
+                '<div class="item-meta">' + meta.join("") + "</div>" +
+              "</div>" +
+              '<div class="item-actions">' +
+                '<button type="button" class="btn sm" data-act="report">查看報告</button>' +
+                '<button type="button" class="btn sm danger" data-act="del">刪除</button>' +
+              "</div></div>" +
+              '<div class="game-report hidden"></div>' +
+            "</div>";
+          }).join("");
+        }
+
+        $("gamesList").addEventListener("click", function (e) {
+          var btn = e.target.closest ? e.target.closest("button[data-act]") : null;
+          if (!btn) return;
+          var itemEl = btn.closest(".item");
+          var pin = itemEl && itemEl.dataset.pin;
+          if (!pin) return;
+
+          if (btn.dataset.act === "del") {
+            if (!confirm("確定刪除遊戲 " + pin + "？玩家與答案記錄會一併移除，無法復原。")) return;
+            btn.disabled = true;
+            gameApi("history", "DELETE", { pin: pin })
+              .then(loadGames)
+              .catch(function (err) { alert(err.message); btn.disabled = false; });
+            return;
+          }
+
+          if (btn.dataset.act === "report") toggleReport(itemEl, pin);
+        });
+
+        function toggleReport(itemEl, pin) {
+          var box = itemEl.querySelector(".game-report");
+          if (!box.classList.contains("hidden")) { box.classList.add("hidden"); return; }
+          box.classList.remove("hidden");
+          box.innerHTML = '<div class="gr-load">載入報告中…</div>';
+          gameApi("report?pin=" + encodeURIComponent(pin)).then(function (r) {
+            box.innerHTML = renderReport(r);
+          }).catch(function (err) {
+            box.classList.add("hidden");
+            alert(err.message || "無法載入報告。");
+          });
+        }
+
+        function renderReport(r) {
+          var players = (r.players || []).slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
+          var qs = r.questions || [];
+          var html = "";
+
+          if (players.length) {
+            html += '<p class="gr-sec-title">玩家成績（' + players.length + '）</p>' +
+              '<div class="gr-players"><table class="gr-table"><thead><tr>' +
+              "<th>#</th><th>名字</th><th class=\"num\">得分</th><th class=\"num\">作答</th><th class=\"num\">答對</th><th class=\"num\">答對率</th>" +
+              "</tr></thead><tbody>" +
+              players.map(function (p, i) {
+                var acc = p.answered ? Math.round((p.correct || 0) / p.answered * 100) + "%" : "—";
+                return "<tr><td>" + (i + 1) + '</td><td class="name">' + esc(p.name) + "</td>" +
+                  '<td class="num">' + (p.score || 0) + "</td>" +
+                  '<td class="num">' + (p.answered || 0) + "</td>" +
+                  '<td class="num">' + (p.correct || 0) + "</td>" +
+                  '<td class="num">' + acc + "</td></tr>";
+              }).join("") +
+              "</tbody></table></div>";
+          }
+
+          if (qs.length) {
+            html += '<p class="gr-sec-title" style="margin-top: 1rem;">逐題表現（' + qs.length + ' 題）</p>' +
+              qs.map(function (q, i) {
+                var pct = q.answered ? Math.round((q.correctCount || 0) / q.answered * 100) : 0;
+                return '<div class="gr-q">' +
+                  '<div class="gr-head"><span>第 ' + (i + 1) + " 題</span><span>" + (q.correctCount || 0) + " / " + q.answered + " 正確（" + pct + "%）</span></div>" +
+                  '<p class="gr-qt">' + esc(q.q) + "</p>" +
+                  '<p class="gr-ans">正確答案：' + esc((q.options || [])[q.correct] || "—") + "</p>" +
+                  (q.wrong && q.wrong.length ? '<p class="gr-wrong">答錯：' + q.wrong.map(function (w) { return esc(w.name) + "（" + esc(w.picked) + "）"; }).join("、") + "</p>" : "") +
+                  (q.timeout && q.timeout.length ? '<p class="gr-timeout">未作答：' + q.timeout.map(esc).join("、") + "</p>" : "") +
+                  "</div>";
+              }).join("");
+          }
+
+          return html || '<p class="gr-load">沒有遊戲資料。</p>';
+        }
+
+        $("gamesRefresh").addEventListener("click", loadGames);
 
         /* ===================== 啟動 ===================== */
         if (getPass() && getUser()) {
