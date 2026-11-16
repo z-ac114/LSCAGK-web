@@ -13,11 +13,13 @@
     <title>主持台 | LSCAGKT 問答競技場</title>
     <meta name="robots" content="noindex" />
     <style>
+      /* ===== 控制台（儀表板） ===== */
       .host-wrap { max-width: 920px; margin: 0 auto; padding: 1.5rem 1.2rem 4rem; }
       .host-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
       .host-title { font-family: "Noto Serif TC", serif; font-size: 1.7rem; font-weight: 700; color: var(--purple); margin: 0; }
       .dark-mode .host-title { color: #e3c6dc; }
       .host-sub { color: var(--muted); font-size: 0.88rem; margin: 0.2rem 0 0; }
+      .q-num { color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
 
       /* 登入 */
       .login-box { max-width: 380px; margin: 3.5rem auto 0; padding: 2.2rem 2rem; background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius); }
@@ -58,75 +60,121 @@
       .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0 1.2rem; }
       @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
       .form-msg { font-size: 0.85rem; margin: 0.7rem 0 0; min-height: 1.2em; }
-      .form-msg.err { color: #b3261e; }
-      .dark-mode .form-msg.err { color: #f28779; }
-      .form-msg.ok { color: #1b7f3b; }
-      .dark-mode .form-msg.ok { color: #7bd39a; }
+      .form-msg.err { color: #f28779; }
+      .form-msg.ok { color: #7bd39a; }
       .hidden { display: none !important; }
 
-      /* 大廳 */
-      .lobby-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 1.4rem; align-items: start; }
-      @media (max-width: 720px) { .lobby-grid { grid-template-columns: 1fr; } }
-      .k-pin {
-        font-family: "Noto Serif TC", serif; font-size: 4.2rem; font-weight: 700; line-height: 1.1;
-        letter-spacing: 0.12em; color: var(--purple); font-variant-numeric: tabular-nums;
+      /* ===== 舞台（投影機輸出） ===== */
+      .stage {
+        position: relative; display: flex; flex-direction: column;
+        min-height: 100vh; min-height: 100dvh;
+        background:
+          radial-gradient(130% 65% at 50% 0%, rgb(226 187 98 / 9%), transparent 55%),
+          linear-gradient(168deg, #57304e 0%, #402238 55%, #2b1728 100%);
+        color: #f5efe2;
       }
-      .dark-mode .k-pin { color: #e3c6dc; }
-      .k-url { color: var(--muted); font-size: 0.95rem; margin: 0.4rem 0 0; word-break: break-all; }
-      .k-url strong { color: var(--ink); }
-      .k-chips { display: flex; flex-wrap: wrap; gap: 0.45rem; min-height: 2rem; }
-      .k-chips .chip { padding: 0.35rem 0.85rem; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--cream, #fcfbf4); font-size: 0.88rem; animation: chipin 240ms ease; }
-      .dark-mode .k-chips .chip { background: rgb(255 255 255 / 5%); }
-      @keyframes chipin { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: none; } }
-      .k-count { color: var(--muted); font-size: 0.88rem; margin: 0.8rem 0 1rem; font-variant-numeric: tabular-nums; }
+      .stage-top { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; padding: 0.8rem 1.3rem; border-bottom: 1px solid rgb(245 239 226 / 10%); }
+      .stage-brand { font-size: 0.88rem; letter-spacing: 0.08em; color: rgb(245 239 226 / 55%); }
+      .stage-brand strong { font-family: "Noto Serif TC", serif; color: #e2bb62; letter-spacing: 0.02em; font-size: 1rem; }
+      .stage-pin { margin-left: auto; font-weight: 700; letter-spacing: 0.14em; color: rgb(245 239 226 / 72%); font-size: 0.95rem; font-variant-numeric: tabular-nums; }
+      .stage-phase { font-size: 0.92rem; font-weight: 700; letter-spacing: 0.16em; color: #e2bb62; }
+      .stage-body { flex: 1; display: flex; flex-direction: column; justify-content: center; width: 100%; max-width: 1180px; margin: 0 auto; padding: 1.4rem 2rem 1rem; box-sizing: border-box; }
+      .stage-controls { display: flex; align-items: center; justify-content: center; gap: 0.7rem; flex-wrap: wrap; padding: 0.9rem 1.3rem calc(0.9rem + env(safe-area-inset-bottom)); border-top: 1px solid rgb(245 239 226 / 10%); }
+      .sc-vol { display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; color: rgb(245 239 226 / 60%); }
+      .sc-vol input { width: 110px; accent-color: #e2bb62; }
+      .stage .form-msg { margin: 0; min-height: 0; }
+      .stage .form-msg:empty { display: none; }
 
-      /* 進行中 */
-      .live-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.7rem; }
-      .live-phase { font-size: 0.85rem; font-weight: 700; letter-spacing: 0.12em; color: var(--red); }
-      .q-num { color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
-      .k-qtext { font-family: "Noto Serif TC", serif; font-size: 1.7rem; font-weight: 700; line-height: 1.55; margin: 0.6rem 0 1.3rem; }
-      .k-opt {
-        position: relative; display: flex; align-items: center; gap: 0.8rem; overflow: hidden;
-        padding: 0.85rem 1.1rem; border-radius: 12px; border: 1px solid var(--hairline);
-        font-size: 1.05rem; font-weight: 600; margin-bottom: 0.6rem;
+      /* 舞台按鈕 */
+      .stage .btn { background: rgb(255 255 255 / 9%); border-color: rgb(245 239 226 / 24%); color: #f5efe2; }
+      .stage .btn:hover { border-color: rgb(245 239 226 / 50%); }
+      .stage .btn.primary { background: var(--red); border-color: var(--red); color: #fff; box-shadow: 0 6px 22px rgb(0 0 0 / 32%); }
+      .stage .btn.primary:hover { background: var(--red-active, #ae0906); border-color: var(--red-active, #ae0906); }
+      .stage .btn.danger { color: #f28779; border-color: rgb(242 135 121 / 45%); }
+      .stage .btn.danger:hover { border-color: #f28779; background: rgb(242 135 121 / 12%); }
+
+      /* 舞台大廳 */
+      .lobby-stage { text-align: center; }
+      .s-kicker { letter-spacing: 0.32em; font-size: 0.95rem; color: rgb(245 239 226 / 62%); margin: 0 0 0.7rem; }
+      .s-url { font-size: clamp(1.05rem, 2.6vw, 1.5rem); font-weight: 600; word-break: break-all; margin-bottom: 0.5rem; }
+      .s-pin {
+        font-family: "Noto Serif TC", serif; font-size: clamp(4rem, 15vw, 8.5rem); font-weight: 700; line-height: 1.05;
+        letter-spacing: 0.1em; color: #e2bb62; font-variant-numeric: tabular-nums;
+        text-shadow: 0 4px 34px rgb(0 0 0 / 35%);
       }
-      .k-opt .bar { position: absolute; inset: 0; width: 0; opacity: 0.22; transition: width 500ms ease; }
+      .lobby-stage .k-chips { justify-content: center; margin-top: 1.7rem; }
+      .stage .k-chips .chip { padding: 0.5rem 1.1rem; border-radius: 9999px; border: 1px solid rgb(245 239 226 / 22%); background: rgb(255 255 255 / 8%); color: #f5efe2; font-size: 1.02rem; animation: chipin 240ms ease; }
+      .lobby-stage .k-count { color: rgb(245 239 226 / 62%); font-size: 1rem; margin: 0.9rem 0 0; }
+      .lobby-actions { margin-top: 1.7rem; display: flex; gap: 0.7rem; justify-content: center; flex-wrap: wrap; }
+
+      /* 舞台進行中 */
+      .live-meta { display: flex; align-items: baseline; gap: 1.2rem; flex-wrap: wrap; margin-bottom: 0.55rem; }
+      .live-meta .q-num { color: rgb(245 239 226 / 68%); font-size: clamp(1rem, 2vw, 1.25rem); }
+      .s-tnum { margin-left: auto; font-family: "Noto Serif TC", serif; font-weight: 700; font-size: clamp(1.6rem, 4vw, 2.6rem); color: #e2bb62; font-variant-numeric: tabular-nums; line-height: 1; }
+      .stage .timer-track { height: 14px; border-radius: 9999px; background: rgb(245 239 226 / 15%); overflow: hidden; margin-bottom: 1.1rem; }
+      .stage .timer-fill { height: 100%; width: 0; background: #e2bb62; transition: width 300ms linear; }
+      .stage .timer-fill.low { background: #ff6b61; }
+      .s-qtext {
+        font-family: "Noto Serif TC", serif; font-size: clamp(1.8rem, 4.6vw, 3.4rem); font-weight: 700;
+        line-height: 1.45; margin: 0 0 1.2rem; text-wrap: balance; min-height: 1.45em;
+      }
+      .s-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
+      @media (max-width: 640px) { .s-opts { grid-template-columns: 1fr; } }
+      .stage .k-opt {
+        position: relative; display: flex; align-items: center; gap: 0.9rem; overflow: hidden;
+        padding: clamp(0.9rem, 2vw, 1.3rem) clamp(1rem, 2.4vw, 1.5rem); border-radius: 16px; border: 0;
+        font-size: clamp(1.1rem, 2.3vw, 1.6rem); font-weight: 700;
+        box-shadow: inset 0 -4px 0 rgb(0 0 0 / 25%), inset 0 1px 0 rgb(255 255 255 / 18%), 0 6px 20px rgb(0 0 0 / 22%);
+      }
+      .k-opt .bar { position: absolute; inset: 0; width: 0; opacity: 0.25; transition: width 500ms ease; }
       .k-opt .lab { position: relative; flex: 1; min-width: 0; }
       .k-opt .cnt { position: relative; font-weight: 700; font-variant-numeric: tabular-nums; }
-      .k-opt.correct { border-color: var(--school-gold); }
-      .k-opt.correct .lab::after { content: " — 正確答案"; color: #1b7f3b; font-weight: 700; font-size: 0.85rem; }
-      .dark-mode .k-opt.correct .lab::after { color: #7bd39a; }
+      .k-opt.correct { box-shadow: inset 0 0 0 3px #e2bb62, inset 0 -4px 0 rgb(0 0 0 / 25%), 0 6px 20px rgb(0 0 0 / 22%); }
+      .k-opt.correct .lab::after { content: "正確答案"; margin-left: 0.6rem; padding: 0.12rem 0.6rem; border-radius: 9999px; background: #e2bb62; color: #402238; font-weight: 700; font-size: 0.78em; vertical-align: 2px; }
       .o-red .bar, .o-gold .bar, .o-plum .bar, .o-green .bar { background: #fff; }
-      .o-red { background: #c0392b; color: #fff; border-color: transparent; }
-      .o-gold { background: #8a6511; color: #fff; border-color: transparent; }
-      .o-plum { background: #6b3a63; color: #fff; border-color: transparent; }
-      .o-green { background: #3e7d5a; color: #fff; border-color: transparent; }
-      .o-red .lab::after, .o-gold .lab::after, .o-plum .lab::after, .o-green .lab::after { color: #fff !important; }
-      .timer-track { height: 10px; border-radius: 9999px; background: var(--hairline); overflow: hidden; margin-bottom: 1rem; }
-      .timer-fill { height: 100%; width: 0; background: #a07b1f; transition: width 300ms linear; }
-      .timer-fill.low { background: var(--red); }
-      .live-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 1.2rem; }
+      .o-red { background: #c22f2c; color: #fff; }
+      .o-gold { background: #a07b1f; color: #fff; }
+      .o-plum { background: #7d4273; color: #fff; }
+      .o-green { background: #2f7a52; color: #fff; }
 
-      /* 排行 */
+      /* 舞台頒獎台 */
+      .s-podium { display: flex; align-items: flex-end; justify-content: center; gap: clamp(0.7rem, 2vw, 1.4rem); margin: 0.4rem 0 1.2rem; }
+      .s-pod { width: 33%; max-width: 210px; text-align: center; }
+      .s-pod .p-name { font-weight: 700; font-size: clamp(1rem, 2.1vw, 1.45rem); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .s-pod .p-score { color: rgb(245 239 226 / 65%); font-size: clamp(0.85rem, 1.6vw, 1.05rem); font-variant-numeric: tabular-nums; }
+      .s-pod .p-block {
+        margin-top: 0.5rem; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: center;
+        color: #402238; font-family: "Noto Serif TC", serif; font-weight: 700;
+        box-shadow: inset 0 2px 0 rgb(255 255 255 / 25%);
+        animation: podup 420ms cubic-bezier(.22,.9,.36,1) backwards;
+      }
+      @keyframes podup { from { transform: scaleY(0); transform-origin: bottom; } to { transform: scaleY(1); } }
+      .s-pod.p1 .p-block { height: clamp(80px, 13vh, 140px); background: #e2bb62; font-size: 2.2rem; animation-delay: 200ms; }
+      .s-pod.p2 .p-block { height: clamp(55px, 9vh, 95px); background: rgb(245 239 226 / 55%); font-size: 1.7rem; animation-delay: 100ms; }
+      .s-pod.p3 .p-block { height: clamp(40px, 6.5vh, 70px); background: #b08d57; color: #fff; font-size: 1.4rem; }
+
+      /* 舞台排行 */
+      .s-boardtitle { font-family: "Noto Serif TC", serif; text-align: center; color: #e2bb62; font-size: clamp(1.2rem, 2.6vw, 1.7rem); margin: 1.4rem 0 0.7rem; }
+      #kBoardWrap { max-height: 40vh; overflow-y: auto; }
       .board-list { display: flex; flex-direction: column; gap: 0.5rem; }
       .board-row {
-        display: flex; align-items: center; gap: 0.9rem; padding: 0.7rem 1rem;
-        border-radius: 10px; border: 1px solid var(--hairline); background: var(--cream, #fcfbf4);
-        font-size: 1rem; animation: rowin 300ms ease backwards;
+        display: flex; align-items: center; gap: 0.9rem; padding: 0.7rem 1.1rem;
+        border-radius: 12px; border: 1px solid rgb(245 239 226 / 14%); background: rgb(255 255 255 / 7%);
+        font-size: clamp(0.98rem, 1.9vw, 1.22rem); color: #f5efe2; animation: rowin 300ms ease backwards;
       }
-      .dark-mode .board-row { background: rgb(255 255 255 / 4%); }
       @keyframes rowin { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
-      .board-row .rk { width: 1.8em; color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; }
-      .board-row .rk.m { width: 1.9em; height: 1.9em; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 0.9rem; }
-      .rk.m1 { background: var(--red); } .rk.m2 { background: #8a6511; } .rk.m3 { background: #7a5c38; }
+      .board-row .rk { width: 1.8em; color: rgb(245 239 226 / 60%); font-weight: 700; font-variant-numeric: tabular-nums; }
+      .board-row .rk.m { width: 1.9em; height: 1.9em; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #402238; font-size: 0.9em; flex-shrink: 0; }
+      .rk.m1 { background: #e2bb62; } .rk.m2 { background: rgb(245 239 226 / 55%); } .rk.m3 { background: #b08d57; color: #fff; }
       .board-row .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .board-row .sc { font-weight: 700; font-variant-numeric: tabular-nums; }
-      .board-row.rise { background: rgb(62 125 90 / 14%); border-color: #3e7d5a; }
-      .board-row.fall { background: rgb(179 38 30 / 10%); border-color: rgb(179 38 30 / 35%); }
+      .board-row.rise { background: rgb(123 211 154 / 14%); border-color: rgb(123 211 154 / 50%); }
+      .board-row.fall { background: rgb(242 135 121 / 12%); border-color: rgb(242 135 121 / 40%); }
       .board-row.enter { animation: chipin 260ms ease backwards; }
       .board-list .board-row { will-change: transform; }
+      .s-hint { text-align: center; color: rgb(245 239 226 / 62%); font-size: clamp(0.95rem, 1.8vw, 1.1rem); margin: 1rem 0 0; }
 
-      /* 報告 */
+      /* 報告（控制台） */
       .kr-q { border-top: 1px solid var(--hairline); padding: 1rem 0; }
       .kr-q:first-child { border-top: 0; }
       .kr-head { display: flex; justify-content: space-between; gap: 0.8rem; font-size: 0.9rem; font-weight: 700; }
@@ -138,7 +186,7 @@
       .dark-mode .kr-wrong { color: #f28779; }
       .kr-timeout { margin: 0.25rem 0 0; font-size: 0.86rem; color: var(--muted); line-height: 1.7; }
 
-      /* 歷史 */
+      /* 歷史（控制台） */
       .k-hist-row { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; padding: 0.7rem 0; border-bottom: 1px solid var(--hairline); font-size: 0.9rem; }
       .k-hist-row:last-child { border-bottom: 0; }
       .k-hist-pin { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--purple); }
@@ -158,10 +206,11 @@
       .view-anim { animation: vfade 280ms ease; }
       @keyframes vfade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
       .center-spin { display: flex; justify-content: center; padding: 2.5rem 0; }
-      .k-qtext:focus { outline: none; }
+      .s-qtext:focus { outline: none; }
+      @keyframes chipin { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: none; } }
 
       @media (prefers-reduced-motion: reduce) {
-        .view-anim, .k-chips .chip, .board-row, .k-hist-row { animation: none !important; transition: none !important; }
+        .view-anim, .k-chips .chip, .board-row, .k-hist-row, .s-pod .p-block { animation: none !important; transition: none !important; }
         .timer-fill { transition: none !important; }
         .spinner, .skel { animation-duration: 2.4s !important; }
       }
@@ -172,6 +221,64 @@
       <header class="site-header"><div class="site-header-inner"><a class="brand" href="/"><img class="brand-icon" src="/assets/agk-icon.png" width="30" height="30" alt="LSCAGKT 校徽標誌" /><span class="brand-name">LSC<span class="accent">AGKT</span></span><span class="brand-zh">問答競技場 · 主持台</span></a><nav class="site-nav" id="siteNav"><a href="/">首頁</a><a href="/admin">管理後台</a></nav><button type="button" class="nav-toggle" aria-expanded="false" aria-label="開啟選單"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h16"></path><path d="M4 18h16"></path><path d="M4 6h16"></path></svg></button></div></header>
 
       <main class="flex-1">
+        <!-- 舞台：投影機／大螢幕輸出 -->
+        <div class="stage hidden" id="stageView">
+          <div class="stage-top">
+            <span class="stage-brand"><strong>LSCAGKT</strong> 問答競技場</span>
+            <span class="stage-phase" id="kPhase">—</span>
+            <span class="stage-pin" id="kStagePin"></span>
+            <button type="button" class="btn sm" id="stageExit">離開舞台</button>
+          </div>
+          <div class="stage-body">
+            <!-- 大廳 -->
+            <section id="vLobby" style="display:none;">
+              <div class="lobby-stage">
+                <p class="s-kicker">前往加入</p>
+                <div class="s-url" id="kUrl"></div>
+                <div class="s-pin" id="kPin">------</div>
+                <div class="k-chips" id="kPlayers"></div>
+                <p class="k-count" id="kCount2">已加入 0 位玩家</p>
+                <div class="lobby-actions">
+                  <button type="button" class="btn primary big" id="kStart">開始遊戲</button>
+                  <button type="button" class="btn danger" id="kCancel">取消遊戲</button>
+                </div>
+              </div>
+            </section>
+
+            <!-- 進行中 -->
+            <section id="vLive" style="display:none;">
+              <div class="live-meta">
+                <span class="q-num" id="kIdx"></span>
+                <span class="q-num" id="kAnswered"></span>
+                <span class="s-tnum" id="kTimeNum"></span>
+              </div>
+              <div class="timer-track" id="kTimerWrap"><div class="timer-fill" id="kTimerFill"></div></div>
+              <p class="s-qtext" id="kQ" tabindex="-1"></p>
+              <div id="kOptions" class="s-opts"></div>
+              <div id="kPodium" class="s-podium" style="display:none;"></div>
+              <div id="kBoardWrap" style="display:none;">
+                <p class="s-boardtitle" id="kBoardTitle">即時排行</p>
+                <div class="board-list" id="kBoard"></div>
+              </div>
+              <p class="s-hint" id="kHint"></p>
+            </section>
+          </div>
+          <div class="stage-controls">
+            <button type="button" class="btn primary big" id="kNext" style="display:none;">繼續</button>
+            <button type="button" class="btn" id="kReportBtn" style="display:none;">查看報告</button>
+            <button type="button" class="btn danger" id="kEnd" style="display:none;">結束遊戲</button>
+            <span class="sc-vol">音樂
+              <button type="button" class="btn sm" id="ytToggle">播放</button>
+              <button type="button" class="btn sm" id="ytMute">靜音</button>
+              <input type="range" id="ytVol" min="0" max="100" value="40" aria-label="音量" />
+            </span>
+            <span class="form-msg" id="ytMsg"></span>
+            <span class="form-msg" id="kLiveMsg" role="alert"></span>
+          </div>
+          <div id="ytHost" style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);"></div>
+        </div>
+
+        <!-- 控制台 -->
         <div class="host-wrap">
           <!-- 登入 -->
           <div class="login-box" id="loginView">
@@ -190,7 +297,7 @@
             <div class="host-head">
               <div>
                 <h1 class="host-title">問答競技場 · 主持台</h1>
-                <p class="host-sub">玩家到 <strong id="joinUrlHint"></strong> 以 6 位遊戲碼加入。</p>
+                <p class="host-sub">玩家到 <strong id="joinUrlHint"></strong> 以 6 位遊戲碼加入。建立後舞台會全螢幕顯示，適合投影。</p>
               </div>
               <button type="button" class="btn sm" id="logoutBtn">登出</button>
             </div>
@@ -216,49 +323,6 @@
               <button type="button" class="btn primary big" id="kCreate">建立遊戲</button>
             </div>
 
-            <!-- 大廳 -->
-            <div class="card" id="vLobby" style="display:none; margin-top:1.5rem;">
-              <h2>等待玩家加入</h2>
-              <div class="lobby-grid">
-                <div>
-                  <div class="k-pin" id="kPin">------</div>
-                  <p class="k-url">加入頁：<strong id="kUrl"></strong></p>
-                </div>
-                <div>
-                  <div class="k-chips" id="kPlayers"></div>
-                  <p class="k-count" id="kCount2">已加入 0 位玩家</p>
-                  <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
-                    <button type="button" class="btn primary big" id="kStart">開始遊戲</button>
-                    <button type="button" class="btn danger" id="kCancel">取消遊戲</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 進行中 -->
-            <div class="card" id="vLive" style="display:none; margin-top:1.5rem;">
-              <div class="live-top">
-                <span class="live-phase" id="kPhase">進行中</span>
-                <span class="q-num" id="kIdx"></span>
-                <span class="q-num" id="kTimeNum" aria-hidden="false"></span>
-              </div>
-              <div class="timer-track" id="kTimerWrap"><div class="timer-fill" id="kTimerFill"></div></div>
-              <p class="q-num" id="kAnswered" style="margin:0 0 0.4rem;"></p>
-              <p class="k-qtext" id="kQ" tabindex="-1"></p>
-              <div id="kOptions"></div>
-              <div id="kBoardWrap" style="display:none; margin-top:1.4rem;">
-                <h2 style="font-family:'Noto Serif TC',serif; font-size:1.15rem; color:var(--purple); margin:0 0 0.8rem;" id="kBoardTitle">即時排行</h2>
-                <div class="board-list" id="kBoard"></div>
-              </div>
-              <p class="host-sub" id="kHint" style="margin:0.8rem 0 0;"></p>
-              <div class="live-actions">
-                <button type="button" class="btn primary big" id="kNext">繼續</button>
-                <button type="button" class="btn" id="kReportBtn" style="display:none;">查看報告</button>
-                <button type="button" class="btn danger" id="kEnd">結束遊戲</button>
-              </div>
-              <p class="form-msg" id="kLiveMsg" role="alert"></p>
-            </div>
-
             <!-- 報告 -->
             <div class="card" id="vReport" style="display:none; margin-top:1.5rem;">
               <div style="display:flex; align-items:center; justify-content:space-between; gap:0.8rem; flex-wrap:wrap; margin-bottom:0.4rem;">
@@ -280,21 +344,6 @@
               <h2>賽後報告</h2>
               <p class="host-sub" style="margin:-0.4rem 0 0.8rem;">查看每場遊戲各題的答對率與答錯名單。</p>
               <div id="krList"><div class="skel" style="width:60%;"></div></div>
-            </div>
-
-            <!-- 背景音樂 -->
-            <div class="card" id="vMusic" style="display:none; margin-top:1.2rem;">
-              <h2>背景音樂</h2>
-              <div id="ytHost" style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0);"></div>
-              <p class="host-sub" style="margin:-0.4rem 0 0.9rem;">遊戲進行時播放，玩家裝置不會聽到。</p>
-              <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
-                <button type="button" class="btn sm primary" id="ytToggle">播放</button>
-                <button type="button" class="btn sm" id="ytMute">靜音</button>
-                <label class="host-sub" style="display:flex; align-items:center; gap:0.5rem;">音量
-                  <input type="range" id="ytVol" min="0" max="100" value="40" style="width:130px;" />
-                </label>
-              </div>
-              <p class="form-msg" id="ytMsg"></p>
             </div>
           </div>
         </div>
@@ -335,11 +384,19 @@
         function setView(id) {
           ["loginView", "panelView"].forEach(function (x) { $(x).classList.toggle("hidden", x !== id); });
         }
+        /* vSetup/vHistory/vReports/vReport → 控制台；vLobby/vLive → 舞台 */
         function showSection(which) {
+          var inStage = which === "vLobby" || which === "vLive";
+          $("stageView").classList.toggle("hidden", !inStage);
+          $("panelView").classList.toggle("hidden", inStage);
           ["vSetup", "vLobby", "vLive", "vReport"].forEach(function (id) { $(id).style.display = id === which ? "block" : "none"; });
           $("vHistory").style.display = which === "vSetup" ? "block" : "none";
           $("vReports").style.display = which === "vSetup" ? "block" : "none";
-          $("vMusic").style.display = "block";
+          if (!inStage) {
+            $("kNext").style.display = "none";
+            $("kReportBtn").style.display = "none";
+            $("kEnd").style.display = "none";
+          }
         }
         function kMsg(el, text, cls) { var e = $(el); e.textContent = text || ""; e.className = "form-msg" + (cls ? " " + cls : ""); }
 
@@ -378,7 +435,7 @@
         $("logoutBtn").addEventListener("click", logout);
 
         /* ===================== 建立 ===================== */
-        var K = { pin: null, poll: null, tick: null, last: null, busy: false, key: "", offset: 0, offsetReady: false };
+        var K = { pin: null, poll: null, tick: null, last: null, busy: false, key: "", offset: 0, offsetReady: false, dash: false };
 
         function loadBank(name) {
           return new Promise(function (resolve, reject) {
@@ -413,6 +470,7 @@
             return gameApi("create", "POST", { bank: bank, count: count, timeLimit: timeLimit, questions: qs });
           }).then(function (d) {
             K.pin = d.pin;
+            K.dash = false;
             K.boardRanks = {}; K.boardScores = {};
             try { sessionStorage.setItem("agkLivePin", d.pin); } catch (e) {}
             $("kPin").textContent = d.pin;
@@ -445,7 +503,14 @@
           K.busy = true;
           var t0 = Date.now();
           return gameApi("host?pin=" + encodeURIComponent(K.pin))
-            .then(function (d) { var t1 = Date.now(); noteOffset(d.now, t0, t1); K.last = d; kRender(d); })
+            .then(function (d) {
+              var t1 = Date.now();
+              noteOffset(d.now, t0, t1);
+              K.last = d;
+              if (K.dash) return; // 主持人在控制台時不強制跳回舞台
+              $("kStagePin").textContent = K.pin || "";
+              kRender(d);
+            })
             .catch(function (err) { kMsg("kLiveMsg", err.message || "", "err"); })
             .finally(function () { K.busy = false; });
         }
@@ -522,6 +587,7 @@
           if (d.status === "lobby") {
             if (K.key !== key) { K.key = key; stopTickerK(); }
             showSection("vLobby");
+            $("kPhase").textContent = "等待中";
             $("kPlayers").innerHTML = (d.players || []).map(function (n) { return '<span class="chip">' + esc(n) + "</span>"; }).join("");
             $("kCount2").textContent = "已加入 " + (d.players || []).length + " 位玩家";
             return;
@@ -535,6 +601,7 @@
 
           if (d.status === "question") {
             $("kAnswered").textContent = "已作答 " + (d.answered || 0) + " / " + (d.playerCount || 0) + " 位玩家";
+            $("kPodium").style.display = "none";
             if (K.key !== key) {
               K.key = key;
               var fill = $("kTimerFill");
@@ -566,6 +633,7 @@
           try { $("kQ").focus({ preventScroll: true }); } catch (e) { $("kQ").focus(); }
 
           if (d.status === "reveal") {
+            $("kPodium").style.display = "none";
             $("kBoardWrap").style.display = "none";
             $("kQ").textContent = d.q || "";
             var max = Math.max.apply(null, (d.counts || [0]).concat([1]));
@@ -579,6 +647,7 @@
             $("kNext").textContent = "顯示排行榜";
             $("kNext").style.display = "";
           } else if (d.status === "board") {
+            $("kPodium").style.display = "none";
             $("kBoardWrap").style.display = "";
             $("kBoardTitle").textContent = "目前排行";
             $("kQ").textContent = "";
@@ -593,6 +662,15 @@
             $("kBoardTitle").textContent = "最終排名";
             $("kQ").textContent = "";
             $("kOptions").innerHTML = "";
+            var pod = d.podium || [];
+            var order = [pod[1], pod[0], pod[2]]; // 2 1 3
+            $("kPodium").style.display = "";
+            $("kPodium").innerHTML = order.map(function (p, i) {
+              var place = i === 1 ? 1 : i === 0 ? 2 : 3;
+              return '<div class="s-pod p' + place + '"><div class="p-name">' + esc(p ? p.name : "") + "</div>" +
+                '<div class="p-score">' + (p ? p.score + " 分" : "") + "</div>" +
+                '<div class="p-block">' + place + "</div></div>";
+            }).join("");
             renderBoardAnimated($("kBoard"), d.standings);
             $("kHint").textContent = "玩家裝置已顯示頒獎台。記錄保留在「歷史遊戲」。";
             $("kNext").textContent = "完成";
@@ -624,13 +702,21 @@
         /* ===================== 控制 ===================== */
         function kReset() {
           kStopPoll();
-          K.pin = null; K.last = null; K.key = "";
+          K.pin = null; K.last = null; K.key = ""; K.dash = false;
           K.boardRanks = {}; K.boardScores = {};
           try { sessionStorage.removeItem("agkLivePin"); } catch (e) {}
           showSection("vSetup");
           kMsg("kMsg", "");
           loadHistory();
         }
+
+        /* 離開舞台：回到控制台，遊戲繼續在背景進行，可由「歷史 → 接管」返回 */
+        $("stageExit").addEventListener("click", function () {
+          K.dash = true;
+          stopTickerK();
+          showSection("vSetup");
+          loadHistory();
+        });
 
         $("kStart").addEventListener("click", function () {
           var btn = this;
@@ -719,6 +805,7 @@
           if (!btn) return;
           if (btn.dataset.resume) {
             K.pin = btn.dataset.resume;
+            K.dash = false;
             try { sessionStorage.setItem("agkLivePin", K.pin); } catch (e2) {}
             kStartPoll();
             return;
@@ -763,7 +850,9 @@
         }
         $("krBack").addEventListener("click", function () {
           if (K.pin && K.last && K.last.status && K.last.status !== "ended") {
+            K.dash = false;
             showSection("vLive");
+            kPoll();
           } else {
             kReset();
           }
@@ -777,6 +866,7 @@
             gameApi("host?pin=" + encodeURIComponent(saved)).then(function (d) {
               if (d.status && d.status !== "ended") {
                 K.pin = saved;
+                K.dash = false;
                 kStartPoll();
               } else {
                 try { sessionStorage.removeItem("agkLivePin"); } catch (e) {}
