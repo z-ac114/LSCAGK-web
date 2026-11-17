@@ -167,6 +167,17 @@
       .submitted {
         margin: auto 0; text-align: center; display: flex; flex-direction: column; gap: 0.6rem; align-items: center;
       }
+      /* ===== 每題開始前的 3·2·1 倒數 ===== */
+      .cd-wrap { margin: auto 0; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
+      .cd-kicker { color: rgb(250 249 245 / 62%); font-size: 0.95rem; letter-spacing: 0.28em; margin: 0; }
+      .cd-num {
+        font-family: "Noto Serif TC", serif; font-weight: 500; font-size: clamp(5rem, 30vw, 8rem);
+        line-height: 1; color: #e2bb62; font-variant-numeric: tabular-nums;
+        text-shadow: 0 4px 34px rgb(0 0 0 / 35%);
+      }
+      .cd-num.cd-pop { animation: cdpop 900ms cubic-bezier(.22, .9, .36, 1); }
+      @keyframes cdpop { 0% { transform: scale(1.35); opacity: 0.25; } 45% { transform: scale(1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+      .cd-sub { color: rgb(250 249 245 / 62%); margin: 0; letter-spacing: 0.4em; font-size: 0.9rem; }
       .submitted .big { font-family: "Noto Serif TC", serif; font-size: 1.7rem; font-weight: 500; color: #e2bb62; }
       .submitted p { color: rgb(250 249 245 / 68%); margin: 0; font-size: 0.94rem; }
       .submitted .pick {
@@ -238,7 +249,7 @@
       .q-text:focus, .verdict:focus, .board-title:focus { outline: none; }
 
       @media (prefers-reduced-motion: reduce) {
-        .view-anim, .player-cloud .chip, .board-row, .verdict .v-big, .ans-btn, .v-streak, .streak-chip { animation: none !important; transition: none !important; }
+        .view-anim, .player-cloud .chip, .board-row, .verdict .v-big, .ans-btn, .v-streak, .streak-chip, .cd-num { animation: none !important; transition: none !important; }
         .timer-fill, .rv-opt .bar { transition: none !important; }
         .spinner { animation-duration: 2.4s !important; }
       }
@@ -509,7 +520,7 @@
         function startTicker(d) {
           stopTicker();
           var ends = Date.parse(d.endsAt) - serverOffset;
-          var dur = d.timeMs || 20000;
+          var dur = d.timeLimit ? d.timeLimit * 1000 : (d.timeMs || 20000);
           var milestone = null;
           tickTimer = setInterval(function () {
             var fill = document.getElementById("tFill");
@@ -530,6 +541,56 @@
           }, 250);
         }
         function stopTicker() { if (tickTimer) { clearInterval(tickTimer); tickTimer = null; } }
+
+        /* ===================== 每題前的 3·2·1 倒數 ===================== */
+        function renderCountdown(d, answerMs) {
+          stage(true);
+          stopTicker();
+          var dots = [];
+          for (var di = 0; di < d.total; di++) {
+            dots.push('<span class="dot' + (di < d.index ? " done" : di === d.index ? " cur" : "") + '"></span>');
+          }
+          setView(
+            '<div class="dots" aria-hidden="true">' + dots.join("") + "</div>" +
+            '<div class="cd-wrap" data-view-focus tabindex="-1">' +
+              '<p class="cd-kicker">第 ' + (d.index + 1) + " / " + d.total + " 題</p>" +
+              '<div class="cd-num" id="cdNum" aria-hidden="true">3</div>' +
+              '<p class="cd-sub">準備</p>' +
+            "</div>", true);
+          startCdTicker(d, answerMs);
+        }
+
+        function startCdTicker(d, answerMs) {
+          stopTicker();
+          var answerStart = Date.parse(d.endsAt) - serverOffset - answerMs;
+          var shown = null;
+          tickTimer = setInterval(function () {
+            var el = document.getElementById("cdNum");
+            if (!el) { stopTicker(); return; }
+            var remain = answerStart - Date.now();
+            if (remain <= 0) { cdExpire(d); return; }
+            var n = Math.max(1, Math.ceil(remain / 1000));
+            if (n !== shown) {
+              shown = n;
+              el.textContent = n;
+              el.classList.remove("cd-pop");
+              void el.offsetWidth;
+              el.classList.add("cd-pop");
+              announce(n + " 秒後開始");
+            }
+          }, 200);
+        }
+
+        function cdExpire(d) {
+          stopTicker();
+          if (!pollBusy && lastData && lastData.status === "question" && lastData.index === d.index && answeredIndex !== d.index) {
+            renderKey = "q:" + d.index + ":a";
+            renderQuestion(lastData);
+          } else {
+            renderKey = "";
+            if (!pollBusy) poll();
+          }
+        }
 
         function renderSubmitted(chosenText) {
           stage(true);
@@ -555,9 +616,13 @@
               answeredIndex = -1; chosen = -1;
               renderKey = "";
               connEl.textContent = err.message || "提交失敗";
-              if (lastData) renderQuestion(lastData);
+              if (lastData && lastData.status === "question") renderQuestion(lastData);
             })
-            .finally(function () { answerBusy = false; });
+            .finally(function () {
+              answerBusy = false;
+              // 若揭曉已到但剛才被作答鎖擋住，立即補一次輪詢顯示最新結果
+              if (lastData && lastData.status === "reveal" && renderKey !== "r:" + lastData.index) poll();
+            });
         }
 
         /* ===================== 揭曉（判定 + 分佈 + 連擊） ===================== */
@@ -723,20 +788,30 @@
                 renderWait("等待主持人開始…", d.players);
               } else if (d.status === "question") {
                 var submitted = answeredIndex === d.index;
-                var key = "q:" + d.index + ":" + (submitted ? "s" : "a");
+                /* 每題前的倒數緩衝：endsAt−startedAt 多出的部分就是準備時間 */
+                var bufferMs = Math.max(0, (d.timeMs || 0) - (d.timeLimit || 20) * 1000);
+                var answerMs = Math.max(1000, (d.timeMs || (d.timeLimit || 20) * 1000) - bufferMs);
+                var remainMs = Date.parse(d.endsAt) - serverOffset - Date.now();
+                var inBuffer = !submitted && bufferMs > 0 && remainMs > answerMs;
+                var key = inBuffer ? "cd:" + d.index : "q:" + d.index + ":" + (submitted ? "s" : "a");
                 if (renderKey !== key) {
                   renderKey = key;
-                  if (submitted) {
+                  if (inBuffer) {
+                    renderCountdown(d, answerMs);
+                    announce("第 " + (d.index + 1) + " 題，準備開始", true);
+                  } else if (submitted) {
                     renderSubmitted();
                     announce("答案已提交，等待其他玩家");
                   } else {
                     renderQuestion(d);
                     announce("第 " + (d.index + 1) + " 題，共 " + d.total + " 題。題目：" + d.q +
-                      "。選項：" + d.options.join("、") + "。" + (d.timeMs ? Math.round(d.timeMs / 1000) : 20) + " 秒作答", true);
+                      "。選項：" + d.options.join("、") + "。" + Math.round(answerMs / 1000) + " 秒作答", true);
                   }
                 }
               } else if (d.status === "reveal") {
-                if (renderKey !== "r:" + d.index) {
+                /* 作答請求還在途中時先不渲染揭曉，避免誤顯示「未作答」；
+                   提交完成後會立即補一次輪詢 */
+                if (renderKey !== "r:" + d.index && !answerBusy) {
                   renderKey = "r:" + d.index;
                   renderReveal(d);
                 }

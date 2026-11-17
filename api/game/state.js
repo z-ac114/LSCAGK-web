@@ -44,7 +44,8 @@ module.exports = async (req, res) => {
         q: q.q,
         options: q.options,
         endsAt: game.q_ends_at,
-        startedAt: game.q_started_at
+        startedAt: game.q_started_at,
+        timeLimit: game.time_limit
       }));
       return;
     }

@@ -120,6 +120,14 @@
       }
       .s-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
       @media (max-width: 640px) { .s-opts { grid-template-columns: 1fr; } }
+      .s-cdnum {
+        font-family: "Noto Serif TC", serif; font-weight: 500; text-align: center;
+        font-size: clamp(5rem, 18vw, 11rem); line-height: 1; color: #e2bb62;
+        font-variant-numeric: tabular-nums; text-shadow: 0 4px 34px rgb(0 0 0 / 35%);
+        margin: 0.4rem 0 1rem;
+      }
+      .s-cdnum.cd-pop { animation: cdpop 900ms cubic-bezier(.22, .9, .36, 1); }
+      @keyframes cdpop { 0% { transform: scale(1.35); opacity: 0.25; } 45% { transform: scale(1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
       .stage .k-opt {
         position: relative; display: flex; align-items: center; gap: 0.9rem; overflow: hidden;
         padding: clamp(0.9rem, 2vw, 1.3rem) clamp(1rem, 2.4vw, 1.5rem); border-radius: 16px; border: 0;
@@ -254,6 +262,7 @@
               </div>
               <div class="timer-track" id="kTimerWrap"><div class="timer-fill" id="kTimerFill"></div></div>
               <p class="s-qtext" id="kQ" tabindex="-1"></p>
+              <div class="s-cdnum" id="kCd" style="display:none;" aria-hidden="true"></div>
               <div id="kOptions" class="s-opts"></div>
               <div id="kPodium" class="s-podium" style="display:none;"></div>
               <div id="kBoardWrap" style="display:none;">
@@ -602,20 +611,38 @@
           if (d.status === "question") {
             $("kAnswered").textContent = "已作答 " + (d.answered || 0) + " / " + (d.playerCount || 0) + " 位玩家";
             $("kPodium").style.display = "none";
+            /* 每題前的倒數緩衝：endsAt−startedAt 多出的部分 */
+            var totalMs = d.startedAt ? (Date.parse(d.endsAt) - Date.parse(d.startedAt)) : 0;
+            var timeLimitMs = (d.timeLimit || 20) * 1000;
+            var bufferMs = Math.max(0, (totalMs || 0) - timeLimitMs);
+            var remainMs = Date.parse(d.endsAt) - K.offset - Date.now();
+            var inCd = bufferMs > 0 && remainMs > (totalMs - bufferMs);
+            key = key + (inCd ? ":cd" : "");
             if (K.key !== key) {
               K.key = key;
               var fill = $("kTimerFill");
               fill.style.width = "100%";
               fill.classList.remove("low");
-              $("kQ").textContent = d.q || "";
-              $("kOptions").innerHTML = (d.options || []).map(function (o, i) {
-                return '<div class="k-opt ' + (OPT_CLS[i] || "o-plum") + '"><span class="bar"></span><span class="lab">' + esc(o) + "</span></div>";
-              }).join("");
-              $("kHint").textContent = "時間到後自動揭曉，玩家裝置會即時切換。";
-              $("kNext").textContent = "提前揭曉";
-              $("kNext").style.display = "";
-              try { $("kQ").focus({ preventScroll: true }); } catch (e) { $("kQ").focus(); }
-              kTicker(d);
+              if (inCd) {
+                $("kCd").style.display = "";
+                $("kQ").textContent = "";
+                $("kOptions").innerHTML = "";
+                $("kTimeNum").textContent = "";
+                $("kHint").textContent = "準備開始…";
+                $("kNext").style.display = "none";
+                kCdTicker(d, totalMs - bufferMs);
+              } else {
+                $("kCd").style.display = "none";
+                $("kQ").textContent = d.q || "";
+                $("kOptions").innerHTML = (d.options || []).map(function (o, i) {
+                  return '<div class="k-opt ' + (OPT_CLS[i] || "o-plum") + '"><span class="bar"></span><span class="lab">' + esc(o) + "</span></div>";
+                }).join("");
+                $("kHint").textContent = "時間到後自動揭曉，玩家裝置會即時切換。";
+                $("kNext").textContent = "提前揭曉";
+                $("kNext").style.display = "";
+                try { $("kQ").focus({ preventScroll: true }); } catch (e) { $("kQ").focus(); }
+                kTicker(d);
+              }
             }
             // 即時排行：隨玩家得分即時滑動
             $("kBoardWrap").style.display = "";
@@ -628,6 +655,7 @@
           if (K.key === key) return; // 揭曉／排行／結束內容靜態
           K.key = key;
           stopTickerK();
+          $("kCd").style.display = "none";
           $("kTimerWrap").style.visibility = d.status === "reveal" ? "visible" : "hidden";
           $("kTimerFill").style.width = "0";
           try { $("kQ").focus({ preventScroll: true }); } catch (e) { $("kQ").focus(); }
@@ -698,6 +726,32 @@
           }, 300);
         }
         function stopTickerK() { if (K.tick) { clearInterval(K.tick); K.tick = null; } }
+
+        /* ===== 倒數緩衝（每題開始前 3·2·1） ===== */
+        function kCdTicker(d, answerMs) {
+          stopTickerK();
+          var answerStart = Date.parse(d.endsAt) - K.offset - answerMs;
+          var shown = null;
+          K.tick = setInterval(function () {
+            var el = $("kCd");
+            if (!el || !K.last || K.last.status !== "question") { stopTickerK(); return; }
+            var remain = answerStart - Date.now();
+            if (remain <= 0) {
+              stopTickerK();
+              K.key = "";
+              if (!K.busy) kPoll(); // 立即切入題目畫面
+              return;
+            }
+            var n = Math.max(1, Math.ceil(remain / 1000));
+            if (n !== shown) {
+              shown = n;
+              el.textContent = n;
+              el.classList.remove("cd-pop");
+              void el.offsetWidth;
+              el.classList.add("cd-pop");
+            }
+          }, 200);
+        }
 
         /* ===================== 控制 ===================== */
         function kReset() {

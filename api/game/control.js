@@ -27,12 +27,14 @@ module.exports = async (req, res) => {
 
     const nowMs = Date.now();
     const now = new Date(nowMs).toISOString();
+    // 每題開始前的倒數準備時間（玩家畫面顯示 3·2·1）
+    const BUFFER_MS = 3000;
     let patch = null;
 
     switch (action) {
       case "start":
         if (game.status !== "lobby") { json(res, 400, { error: "遊戲已開始。" }); return; }
-        patch = { status: "question", q_index: 0, q_started_at: now, q_ends_at: new Date(nowMs + game.time_limit * 1000).toISOString() };
+        patch = { status: "question", q_index: 0, q_started_at: now, q_ends_at: new Date(nowMs + BUFFER_MS + game.time_limit * 1000).toISOString() };
         break;
       case "reveal":
         if (game.status !== "question") { json(res, 400, { error: "目前不在作答階段。" }); return; }
@@ -47,7 +49,7 @@ module.exports = async (req, res) => {
         const nxt = (game.q_index || 0) + 1;
         // 下一題不存在（已問完最後一題）→ 直接結束，絕不開出新題
         if (nxt >= game.count || !(game.questions || [])[nxt]) patch = { status: "ended" };
-        else patch = { status: "question", q_index: nxt, q_started_at: now, q_ends_at: new Date(nowMs + game.time_limit * 1000).toISOString() };
+        else patch = { status: "question", q_index: nxt, q_started_at: now, q_ends_at: new Date(nowMs + BUFFER_MS + game.time_limit * 1000).toISOString() };
         break;
       }
       case "end":

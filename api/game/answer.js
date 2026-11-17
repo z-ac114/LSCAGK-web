@@ -20,11 +20,20 @@ module.exports = async (req, res) => {
 
     const game = await fetchGameInPhase(pin);
     if (!game) { json(res, 404, { error: "找不到此遊戲碼。" }); return; }
-    if (effPhase(game, Date.now()) !== "question") { json(res, 400, { error: "現在不是作答時間。" }); return; }
     if (index !== game.q_index) { json(res, 400, { error: "題目已切換。" }); return; }
 
-    // 1.5 秒寬限（網絡延遲）
-    if (Date.now() > Date.parse(game.q_ends_at) + 1500) { json(res, 400, { error: "時間已到。" }); return; }
+    // 寬限期：逾時後 2 秒內仍接受（網絡與無伺服器冷啟動延遲）。
+    // 注意 effPhase() 會在時間到的一刻把 phase 視為 reveal，
+    // 因此寬限判定必須獨立於 phase，否則永遠不會生效。
+    const GRACE_MS = 2000;
+    const endsMs = Date.parse(game.q_ends_at) || 0;
+    const withinGrace = Date.now() <= endsMs + GRACE_MS;
+    const phase = effPhase(game, Date.now());
+    if (phase !== "question" && !(phase === "reveal" && withinGrace)) {
+      json(res, 400, { error: "現在不是作答時間。" });
+      return;
+    }
+    if (!withinGrace) { json(res, 400, { error: "時間已到。" }); return; }
 
     // 玩家存在（連分數一併讀取，用於累加）
     const pr = await sb("/rest/v1/players?select=id,score&game_id=eq." + game.id + "&limit=300", { headers: serviceHeaders() });
