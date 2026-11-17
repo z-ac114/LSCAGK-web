@@ -7,7 +7,7 @@
         <link rel="preconnect" href="https://oajvxavzsomymqunpgxx.supabase.co" />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link rel="preload" as="image" href="/assets/agk-icon.png" />
-    <style>html{background:#fcfbf4}html.dark-mode{background:#181715}</style>
+    <style>html{background:#faf9f5}html.dark-mode{background:#181715}</style>
     <script type="speculationrules">
       {"prefetch": [{"source": "list", "urls": ["/", "/training", "/competition/", "/leaderboard/"], "eagerness": "immediate"}]}
     </script>
@@ -103,7 +103,7 @@
       position: absolute;
       bottom: calc(100% + 6px);
       left: 0;
-      background: #26251e;
+      background: #252320;
       color: #faf9f5;
       padding: 4px 10px;
       border-radius: 0.25rem;
@@ -116,7 +116,7 @@
     .leaderboard-rank {
       font-weight: 700;
       font-size: 1.02rem;
-      color: #4a4f58;
+      color: #6c6a64;
       font-variant-numeric: tabular-nums;
     }
     .lb-star {
@@ -141,7 +141,7 @@
     }
     .leaderboard-meta {
       font-size: 0.88rem;
-      color: #4a4f58;
+      color: #6c6a64;
       text-align: right;
       font-variant-numeric: tabular-nums;
     }
@@ -246,7 +246,7 @@
       transition: border-color 0.15s ease;
     }
     .page-btn:hover:not(:disabled) { border-color: var(--red); }
-    .page-btn:disabled { color: #c3c3c3; cursor: not-allowed; }
+    .page-btn:disabled { color: #a09d96; cursor: not-allowed; }
     .page-indicator {
       font-size: 0.85rem;
       font-weight: 700;
@@ -307,9 +307,9 @@
     .dark-mode .leaderboard-meta,
     .dark-mode .leaderboard-rank,
     .dark-mode .leaderboard-cat {
-      color: #c5cad4;
+      color: #a09d96;
     }
-    .dark-mode .page-btn:disabled { color: #6a7180; }
+    .dark-mode .page-btn:disabled { color: #6a6963; }
     .shared-entry {
       margin-bottom: 1.5rem;
       background: var(--surface);
@@ -321,7 +321,7 @@
     .shared-entry .shared-name {
       font-family: "Noto Serif TC", serif;
       font-size: 1.4rem;
-      font-weight: 700;
+      font-weight: 500;
       color: var(--ink);
     }
     .shared-entry .shared-score {
@@ -350,7 +350,7 @@
 
     /* ---- Dark mode readability fixes ---- */
     .dark-mode .leaderboard-title {
-      color: #eef0f4;
+      color: #faf9f5;
     }
     .dark-mode .leaderboard-score {
       color: #f28779;

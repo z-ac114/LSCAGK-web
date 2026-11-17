@@ -1,21 +1,23 @@
 /* =====================================================================
-   LSCAGKT · 喇沙書院學術時事及常識問答隊 — 設計系統 v5（Claude 風格）
+   LSCAGKT · 喇沙書院學術時事及常識問答隊 — 設計系統 v5.1（Claude 風格 · 對齊規範色值）
    參考：getdesign.md「Claude」DESIGN.md 規範
-   · 暖調米色畫布 #faf9f5 · 深暖墨 #141413
-   · 襯線顯示標題（字重 400、負字距）＋ 人文無襯線內文 —— 文學編排感
-   · 品牌電壓 = 校徽紅 #d42522（CTA／品牌重音），用得克制
-   · 三種表面：米色畫布 / 淺米卡 #efe9de / 深色面板 #181715
+   · 畫布 canvas #faf9f5 · 淺米卡 surface-card #efe9de · 強米 #e8e0d2
+   · 髮絲線 hairline #e6dfd8 / #ebe6df（暖米色，非灰階）
+   · 深暖墨 ink #141413 · 內文 body #3d3d3a · 次要 muted #6c6a64
+   · 襯線顯示標題（字重 400、負字距）＋ 人文無襯線內文
+   · 品牌電壓 = 校徽紅 #d42522（CTA／品牌重音，保留校隊識別）
+   · 深色面板 surface-dark #181715 / elevated #252320（dark: on-dark #faf9f5）
    · 圓角層級：8px 按鈕 · 12px 卡片 · 16px 主視覺 · 96px 段落節奏
    ===================================================================== */
 
 :root {
-  --cream: #fcfbf4;
-  --canvas-soft: #f6f4e9;
-  --ink: rgb(20 20 19 / 92%);
+  --cream: #faf9f5;              /* canvas */
+  --canvas-soft: #f5f0e8;        /* surface-soft */
+  --ink: #141413;
   --ink-solid: #141413;
-  --body-text: rgb(20 20 19 / 62%);
-  --muted: rgb(20 20 19 / 62%);
-  --muted-soft: rgb(20 20 19 / 34%);
+  --body-text: #3d3d3a;
+  --muted: #6c6a64;
+  --muted-soft: #8e8b82;
   --purple: #6b3a63;
   --purple-deep: #4f2a49;
   --red: #d42522;
@@ -23,14 +25,14 @@
   --lasalle-red-dark: #ae0906;
   --plum-soft: #efe0ea;
   --rose-soft: #fdeceb;
-  --surface: #fefdf6;
-  --surface-soft: #f6f4e9;
-  --surface-tint: #f3f1de;
+  --surface: #efe9de;            /* surface-card */
+  --surface-soft: #f5f0e8;
+  --surface-tint: #e8e0d2;       /* surface-cream-strong */
   --surface-dark: #181715;
   --surface-dark-elevated: #252320;
-  --hairline: rgb(20 20 19 / 8%);
-  --hairline-soft: rgb(20 20 19 / 5%);
-  --hairline-strong: rgb(20 20 19 / 16%);
+  --hairline: #e6dfd8;
+  --hairline-soft: #ebe6df;
+  --hairline-strong: #d9d0c3;
   --school-gold: #c69a3a;
   --space-unit: 0.25rem;
   --font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", -apple-system, "Segoe UI", sans-serif;
@@ -53,7 +55,7 @@ a, button, input, select, textarea, summary, [tabindex] {
 
 html {
   scroll-behavior: smooth;
-  background: #fcfbf4;
+  background: #faf9f5;
 }
 html.dark-mode {
   background: #181715;
@@ -882,14 +884,15 @@ main .rounded-xl.bg-surface h2 {
 
 .dark-mode {
   --cream: #181715;
-  --canvas-soft: #1f1d19;
+  --canvas-soft: #1f1e1b;
   --ink: rgb(250 249 245 / 94%);
   --ink-solid: #f0eee9;
   --body-text: rgb(250 249 245 / 62%);
   --muted: rgb(250 249 245 / 52%);
   --muted-soft: rgb(250 249 245 / 34%);
-  --surface: #22201c;
-  --surface-tint: #1f1d19;
+  --surface: #252320;
+  --surface-soft: #1f1e1b;
+  --surface-tint: #1f1e1b;
   --surface-dark: #11100e;
   --hairline: rgb(250 249 245 / 9%);
   --hairline-soft: rgb(250 249 245 / 5%);
@@ -918,7 +921,7 @@ main .rounded-xl.bg-surface h2 {
 
 .dark-mode .bg-surface,
 .dark-mode .profile-card-light {
-  background: #1d1b15;
+  background: #252320;
   border-color: var(--hairline);
   color: var(--ink);
 }
@@ -941,7 +944,7 @@ main .rounded-xl.bg-surface h2 {
 }
 
 .dark-mode .hero-panel {
-  background: #1d1b15;
+  background: #252320;
   color: var(--ink);
   border-color: var(--hairline);
 }

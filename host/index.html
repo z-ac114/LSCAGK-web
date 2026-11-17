@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="../styles.css" />
-    <style>html{background:#fcfbf4}html.dark-mode{background:#181715}</style>
+    <style>html{background:#faf9f5}html.dark-mode{background:#181715}</style>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="icon" type="image/png" href="../assets/agk-icon.png" />
@@ -16,14 +16,14 @@
       /* ===== 控制台（儀表板） ===== */
       .host-wrap { max-width: 920px; margin: 0 auto; padding: 1.5rem 1.2rem 4rem; }
       .host-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
-      .host-title { font-family: "Noto Serif TC", serif; font-size: 1.7rem; font-weight: 700; color: var(--purple); margin: 0; }
+      .host-title { font-family: "Noto Serif TC", serif; font-size: 1.7rem; font-weight: 500; letter-spacing: -0.015em; color: var(--purple); margin: 0; }
       .dark-mode .host-title { color: #e3c6dc; }
       .host-sub { color: var(--muted); font-size: 0.88rem; margin: 0.2rem 0 0; }
       .q-num { color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
 
       /* 登入 */
       .login-box { max-width: 380px; margin: 3.5rem auto 0; padding: 2.2rem 2rem; background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius); }
-      .login-box h1 { font-family: "Noto Serif TC", serif; font-size: 1.4rem; font-weight: 700; color: var(--purple); margin: 0 0 0.3rem; }
+      .login-box h1 { font-family: "Noto Serif TC", serif; font-size: 1.4rem; font-weight: 500; color: var(--purple); margin: 0 0 0.3rem; }
       .dark-mode .login-box h1 { color: #e3c6dc; }
       .login-box p { color: var(--muted); font-size: 0.88rem; margin: 0 0 1.4rem; }
       .field { display: block; margin-bottom: 1rem; }
@@ -31,7 +31,7 @@
       .field input, .field select, .field textarea {
         width: 100%; box-sizing: border-box; padding: 0.6rem 0.8rem;
         border: 1px solid var(--hairline-strong, var(--hairline)); border-radius: 8px;
-        background: var(--cream, #fcfbf4); color: var(--ink); font: inherit; font-size: 0.95rem;
+        background: var(--cream, #faf9f5); color: var(--ink); font: inherit; font-size: 0.95rem;
       }
       .dark-mode .field input, .dark-mode .field select { background: rgb(255 255 255 / 4%); }
       .field input:focus, .field select:focus { outline: 2px solid var(--school-gold, #c9a227); outline-offset: 1px; }
@@ -55,7 +55,7 @@
 
       .card { background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius); padding: 1.5rem; }
       .card + .card { margin-top: 1.2rem; }
-      .card h2 { font-family: "Noto Serif TC", serif; font-size: 1.2rem; font-weight: 700; color: var(--purple); margin: 0 0 1rem; }
+      .card h2 { font-family: "Noto Serif TC", serif; font-size: 1.2rem; font-weight: 500; color: var(--purple); margin: 0 0 1rem; }
       .dark-mode .card h2 { color: #e3c6dc; }
       .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0 1.2rem; }
       @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
@@ -70,24 +70,24 @@
         min-height: 100vh; min-height: 100dvh;
         background:
           radial-gradient(130% 65% at 50% 0%, rgb(226 187 98 / 9%), transparent 55%),
-          linear-gradient(168deg, #57304e 0%, #402238 55%, #2b1728 100%);
-        color: #f5efe2;
+          linear-gradient(168deg, #252320 0%, #1f1e1b 55%, #181715 100%);
+        color: #faf9f5;
       }
-      .stage-top { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; padding: 0.8rem 1.3rem; border-bottom: 1px solid rgb(245 239 226 / 10%); }
-      .stage-brand { font-size: 0.88rem; letter-spacing: 0.08em; color: rgb(245 239 226 / 55%); }
+      .stage-top { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; padding: 0.8rem 1.3rem; border-bottom: 1px solid rgb(250 249 245 / 10%); }
+      .stage-brand { font-size: 0.88rem; letter-spacing: 0.08em; color: rgb(250 249 245 / 55%); }
       .stage-brand strong { font-family: "Noto Serif TC", serif; color: #e2bb62; letter-spacing: 0.02em; font-size: 1rem; }
-      .stage-pin { margin-left: auto; font-weight: 700; letter-spacing: 0.14em; color: rgb(245 239 226 / 72%); font-size: 0.95rem; font-variant-numeric: tabular-nums; }
+      .stage-pin { margin-left: auto; font-weight: 700; letter-spacing: 0.14em; color: rgb(250 249 245 / 72%); font-size: 0.95rem; font-variant-numeric: tabular-nums; }
       .stage-phase { font-size: 0.92rem; font-weight: 700; letter-spacing: 0.16em; color: #e2bb62; }
       .stage-body { flex: 1; display: flex; flex-direction: column; justify-content: center; width: 100%; max-width: 1180px; margin: 0 auto; padding: 1.4rem 2rem 1rem; box-sizing: border-box; }
-      .stage-controls { display: flex; align-items: center; justify-content: center; gap: 0.7rem; flex-wrap: wrap; padding: 0.9rem 1.3rem calc(0.9rem + env(safe-area-inset-bottom)); border-top: 1px solid rgb(245 239 226 / 10%); }
-      .sc-vol { display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; color: rgb(245 239 226 / 60%); }
+      .stage-controls { display: flex; align-items: center; justify-content: center; gap: 0.7rem; flex-wrap: wrap; padding: 0.9rem 1.3rem calc(0.9rem + env(safe-area-inset-bottom)); border-top: 1px solid rgb(250 249 245 / 10%); }
+      .sc-vol { display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; color: rgb(250 249 245 / 60%); }
       .sc-vol input { width: 110px; accent-color: #e2bb62; }
       .stage .form-msg { margin: 0; min-height: 0; }
       .stage .form-msg:empty { display: none; }
 
       /* 舞台按鈕 */
-      .stage .btn { background: rgb(255 255 255 / 9%); border-color: rgb(245 239 226 / 24%); color: #f5efe2; }
-      .stage .btn:hover { border-color: rgb(245 239 226 / 50%); }
+      .stage .btn { background: rgb(255 255 255 / 9%); border-color: rgb(250 249 245 / 24%); color: #faf9f5; }
+      .stage .btn:hover { border-color: rgb(250 249 245 / 50%); }
       .stage .btn.primary { background: var(--red); border-color: var(--red); color: #fff; box-shadow: 0 6px 22px rgb(0 0 0 / 32%); }
       .stage .btn.primary:hover { background: var(--red-active, #ae0906); border-color: var(--red-active, #ae0906); }
       .stage .btn.danger { color: #f28779; border-color: rgb(242 135 121 / 45%); }
@@ -95,27 +95,27 @@
 
       /* 舞台大廳 */
       .lobby-stage { text-align: center; }
-      .s-kicker { letter-spacing: 0.32em; font-size: 0.95rem; color: rgb(245 239 226 / 62%); margin: 0 0 0.7rem; }
+      .s-kicker { letter-spacing: 0.32em; font-size: 0.95rem; color: rgb(250 249 245 / 62%); margin: 0 0 0.7rem; }
       .s-url { font-size: clamp(1.05rem, 2.6vw, 1.5rem); font-weight: 600; word-break: break-all; margin-bottom: 0.5rem; }
       .s-pin {
-        font-family: "Noto Serif TC", serif; font-size: clamp(4rem, 15vw, 8.5rem); font-weight: 700; line-height: 1.05;
+        font-family: "Noto Serif TC", serif; font-size: clamp(4rem, 15vw, 8.5rem); font-weight: 500; line-height: 1.05;
         letter-spacing: 0.1em; color: #e2bb62; font-variant-numeric: tabular-nums;
         text-shadow: 0 4px 34px rgb(0 0 0 / 35%);
       }
       .lobby-stage .k-chips { justify-content: center; margin-top: 1.7rem; }
-      .stage .k-chips .chip { padding: 0.5rem 1.1rem; border-radius: 9999px; border: 1px solid rgb(245 239 226 / 22%); background: rgb(255 255 255 / 8%); color: #f5efe2; font-size: 1.02rem; animation: chipin 240ms ease; }
-      .lobby-stage .k-count { color: rgb(245 239 226 / 62%); font-size: 1rem; margin: 0.9rem 0 0; }
+      .stage .k-chips .chip { padding: 0.5rem 1.1rem; border-radius: 9999px; border: 1px solid rgb(250 249 245 / 22%); background: rgb(255 255 255 / 8%); color: #faf9f5; font-size: 1.02rem; animation: chipin 240ms ease; }
+      .lobby-stage .k-count { color: rgb(250 249 245 / 62%); font-size: 1rem; margin: 0.9rem 0 0; }
       .lobby-actions { margin-top: 1.7rem; display: flex; gap: 0.7rem; justify-content: center; flex-wrap: wrap; }
 
       /* 舞台進行中 */
       .live-meta { display: flex; align-items: baseline; gap: 1.2rem; flex-wrap: wrap; margin-bottom: 0.55rem; }
-      .live-meta .q-num { color: rgb(245 239 226 / 68%); font-size: clamp(1rem, 2vw, 1.25rem); }
-      .s-tnum { margin-left: auto; font-family: "Noto Serif TC", serif; font-weight: 700; font-size: clamp(1.6rem, 4vw, 2.6rem); color: #e2bb62; font-variant-numeric: tabular-nums; line-height: 1; }
-      .stage .timer-track { height: 14px; border-radius: 9999px; background: rgb(245 239 226 / 15%); overflow: hidden; margin-bottom: 1.1rem; }
+      .live-meta .q-num { color: rgb(250 249 245 / 68%); font-size: clamp(1rem, 2vw, 1.25rem); }
+      .s-tnum { margin-left: auto; font-family: "Noto Serif TC", serif; font-weight: 500; font-size: clamp(1.6rem, 4vw, 2.6rem); color: #e2bb62; font-variant-numeric: tabular-nums; line-height: 1; }
+      .stage .timer-track { height: 14px; border-radius: 9999px; background: rgb(250 249 245 / 15%); overflow: hidden; margin-bottom: 1.1rem; }
       .stage .timer-fill { height: 100%; width: 0; background: #e2bb62; transition: width 300ms linear; }
       .stage .timer-fill.low { background: #ff6b61; }
       .s-qtext {
-        font-family: "Noto Serif TC", serif; font-size: clamp(1.8rem, 4.6vw, 3.4rem); font-weight: 700;
+        font-family: "Noto Serif TC", serif; font-size: clamp(1.8rem, 4.6vw, 3.4rem); font-weight: 500; letter-spacing: -0.015em;
         line-height: 1.45; margin: 0 0 1.2rem; text-wrap: balance; min-height: 1.45em;
       }
       .s-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; }
@@ -130,9 +130,9 @@
       .k-opt .lab { position: relative; flex: 1; min-width: 0; }
       .k-opt .cnt { position: relative; font-weight: 700; font-variant-numeric: tabular-nums; }
       .k-opt.correct { box-shadow: inset 0 0 0 3px #e2bb62, inset 0 -4px 0 rgb(0 0 0 / 25%), 0 6px 20px rgb(0 0 0 / 22%); }
-      .k-opt.correct .lab::after { content: "正確答案"; margin-left: 0.6rem; padding: 0.12rem 0.6rem; border-radius: 9999px; background: #e2bb62; color: #402238; font-weight: 700; font-size: 0.78em; vertical-align: 2px; }
+      .k-opt.correct .lab::after { content: "正確答案"; margin-left: 0.6rem; padding: 0.12rem 0.6rem; border-radius: 9999px; background: #e2bb62; color: #1f1e1b; font-weight: 700; font-size: 0.78em; vertical-align: 2px; }
       .o-red .bar, .o-gold .bar, .o-plum .bar, .o-green .bar { background: #fff; }
-      .o-red { background: #c22f2c; color: #fff; }
+      .o-red { background: #c64545; color: #fff; }
       .o-gold { background: #a07b1f; color: #fff; }
       .o-plum { background: #7d4273; color: #fff; }
       .o-green { background: #2f7a52; color: #fff; }
@@ -141,38 +141,38 @@
       .s-podium { display: flex; align-items: flex-end; justify-content: center; gap: clamp(0.7rem, 2vw, 1.4rem); margin: 0.4rem 0 1.2rem; }
       .s-pod { width: 33%; max-width: 210px; text-align: center; }
       .s-pod .p-name { font-weight: 700; font-size: clamp(1rem, 2.1vw, 1.45rem); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .s-pod .p-score { color: rgb(245 239 226 / 65%); font-size: clamp(0.85rem, 1.6vw, 1.05rem); font-variant-numeric: tabular-nums; }
+      .s-pod .p-score { color: rgb(250 249 245 / 65%); font-size: clamp(0.85rem, 1.6vw, 1.05rem); font-variant-numeric: tabular-nums; }
       .s-pod .p-block {
         margin-top: 0.5rem; border-radius: 12px 12px 0 0; display: flex; align-items: center; justify-content: center;
-        color: #402238; font-family: "Noto Serif TC", serif; font-weight: 700;
+        color: #1f1e1b; font-family: "Noto Serif TC", serif; font-weight: 500;
         box-shadow: inset 0 2px 0 rgb(255 255 255 / 25%);
         animation: podup 420ms cubic-bezier(.22,.9,.36,1) backwards;
       }
       @keyframes podup { from { transform: scaleY(0); transform-origin: bottom; } to { transform: scaleY(1); } }
       .s-pod.p1 .p-block { height: clamp(80px, 13vh, 140px); background: #e2bb62; font-size: 2.2rem; animation-delay: 200ms; }
-      .s-pod.p2 .p-block { height: clamp(55px, 9vh, 95px); background: rgb(245 239 226 / 55%); font-size: 1.7rem; animation-delay: 100ms; }
+      .s-pod.p2 .p-block { height: clamp(55px, 9vh, 95px); background: rgb(250 249 245 / 55%); font-size: 1.7rem; animation-delay: 100ms; }
       .s-pod.p3 .p-block { height: clamp(40px, 6.5vh, 70px); background: #b08d57; color: #fff; font-size: 1.4rem; }
 
       /* 舞台排行 */
-      .s-boardtitle { font-family: "Noto Serif TC", serif; text-align: center; color: #e2bb62; font-size: clamp(1.2rem, 2.6vw, 1.7rem); margin: 1.4rem 0 0.7rem; }
+      .s-boardtitle { font-family: "Noto Serif TC", serif; font-weight: 500; text-align: center; color: #e2bb62; font-size: clamp(1.2rem, 2.6vw, 1.7rem); margin: 1.4rem 0 0.7rem; }
       #kBoardWrap { max-height: 40vh; overflow-y: auto; }
       .board-list { display: flex; flex-direction: column; gap: 0.5rem; }
       .board-row {
         display: flex; align-items: center; gap: 0.9rem; padding: 0.7rem 1.1rem;
-        border-radius: 12px; border: 1px solid rgb(245 239 226 / 14%); background: rgb(255 255 255 / 7%);
-        font-size: clamp(0.98rem, 1.9vw, 1.22rem); color: #f5efe2; animation: rowin 300ms ease backwards;
+        border-radius: 12px; border: 1px solid rgb(250 249 245 / 14%); background: rgb(255 255 255 / 7%);
+        font-size: clamp(0.98rem, 1.9vw, 1.22rem); color: #faf9f5; animation: rowin 300ms ease backwards;
       }
       @keyframes rowin { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
-      .board-row .rk { width: 1.8em; color: rgb(245 239 226 / 60%); font-weight: 700; font-variant-numeric: tabular-nums; }
-      .board-row .rk.m { width: 1.9em; height: 1.9em; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #402238; font-size: 0.9em; flex-shrink: 0; }
-      .rk.m1 { background: #e2bb62; } .rk.m2 { background: rgb(245 239 226 / 55%); } .rk.m3 { background: #b08d57; color: #fff; }
+      .board-row .rk { width: 1.8em; color: rgb(250 249 245 / 60%); font-weight: 700; font-variant-numeric: tabular-nums; }
+      .board-row .rk.m { width: 1.9em; height: 1.9em; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #1f1e1b; font-size: 0.9em; flex-shrink: 0; }
+      .rk.m1 { background: #e2bb62; } .rk.m2 { background: rgb(250 249 245 / 55%); } .rk.m3 { background: #b08d57; color: #fff; }
       .board-row .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .board-row .sc { font-weight: 700; font-variant-numeric: tabular-nums; }
       .board-row.rise { background: rgb(123 211 154 / 14%); border-color: rgb(123 211 154 / 50%); }
       .board-row.fall { background: rgb(242 135 121 / 12%); border-color: rgb(242 135 121 / 40%); }
       .board-row.enter { animation: chipin 260ms ease backwards; }
       .board-list .board-row { will-change: transform; }
-      .s-hint { text-align: center; color: rgb(245 239 226 / 62%); font-size: clamp(0.95rem, 1.8vw, 1.1rem); margin: 1rem 0 0; }
+      .s-hint { text-align: center; color: rgb(250 249 245 / 62%); font-size: clamp(0.95rem, 1.8vw, 1.1rem); margin: 1rem 0 0; }
 
       /* 報告（控制台） */
       .kr-q { border-top: 1px solid var(--hairline); padding: 1rem 0; }
