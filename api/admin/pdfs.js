@@ -13,7 +13,7 @@ function bad(msg) { return { ok: false, msg }; }
 
 module.exports = async (req, res) => {
   if (!process.env.SUPABASE_SERVICE_KEY) { envError(res, "SUPABASE_SERVICE_KEY"); return; }
-  if (!checkAuth(req)) { json(res, 401, { error: "密碼不正確。" }); return; }
+  if (!checkAuth(req)) { json(res, 401, { error: "帳號或密碼不正確。" }); return; }
 
   try {
     /* ---------- GET：清單 ---------- */

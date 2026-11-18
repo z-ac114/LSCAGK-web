@@ -102,6 +102,18 @@ button {
   font: inherit;
 }
 
+/* ===================== 按鈕微互動（全站） ===================== */
+/* 按下即時縮放回饋；已有自身 transition 的 .btn 類會補上 transform */
+button {
+  transition: transform 120ms ease;
+}
+button:active {
+  transform: scale(0.985);
+}
+@media (prefers-reduced-motion: reduce) {
+  button:active { transform: none; }
+}
+
 .antialiased {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -528,10 +540,13 @@ button {
   font-size: 0.875rem;
   font-weight: 500;
   letter-spacing: -0.01em;
-  transition: background 140ms ease;
+  transition: background 140ms ease, transform 120ms ease;
 }
 .ls-btn:hover {
   background: var(--red-active);
+}
+.ls-btn:active {
+  transform: scale(0.985);
 }
 
 /* 兩大入口卡（Cursor feature-card：髮絲線、無影） */

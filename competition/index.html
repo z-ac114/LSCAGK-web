@@ -110,7 +110,7 @@
         color: var(--ink);
         touch-action: manipulation;
         -webkit-tap-highlight-color: transparent;
-        transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+        transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
       }
       .mode-card:hover { border-color: var(--purple); }
       .mode-card.active {
@@ -143,7 +143,7 @@
         touch-action: manipulation;
         -webkit-tap-highlight-color: transparent;
         user-select: none;
-        transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
       }
       .btn-primary {
         background: var(--red);
@@ -239,7 +239,7 @@
         font-weight: 700;
         font-size: 0.85rem;
         font-variant-numeric: tabular-nums;
-        transition: background 0.2s ease;
+        transition: background 0.2s ease, transform 0.12s ease;
       }
       /* 連擊色階（里程碑）：×1 玫瑰 → ×5 紅 → ×10 深紅 → ×20 金 → ×25+ 紅金漸層（白熱） */
       .combo-badge[data-level="1"] {
@@ -382,7 +382,7 @@
         touch-action: manipulation;
         -webkit-tap-highlight-color: transparent;
         user-select: none;
-        transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+        transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
       }
       .q-option:active { transform: scale(0.995); }
       @media (hover: hover) {
@@ -1820,51 +1820,34 @@
             details: runDetails,
             exam_style: optStyle === "compact"
           };
-          if (!supabaseClient) {
-            alert("成績保存功能暫不可用（Supabase 未載入）。");
-            return;
-          }
-          // Optimistic Update：先假設成功，失敗才回滾
+          // 經伺服器端 /api/score 寫入（防偽造；速率限制 10 次／分鐘）
           saveBtn.disabled = true;
           var originalLabel = saveBtn.textContent;
           saveBtn.textContent = "保存中…";
-          var attempt = function (p) {
-            return supabaseClient.from("leaderboard").insert(p).select().single();
-          };
-          attempt(payload)
-            .then(function (result) {
-              var data = result.data, error = result.error;
-              if (error) throw error;
-              saveBtn.textContent = "已保存 ✓";
+          fetch("/api/score", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          }).then(function (res) {
+            return res.json().catch(function () { return {}; }).then(function (d) {
+              if (!res.ok) throw new Error(d.error || "保存失敗（" + res.status + "）");
+              return d;
+            });
+          }).then(function (d) {
+            saveBtn.textContent = "已保存 ✓";
+            var data = d && d.entry;
+            if (data && data.id) {
               var shareUrl = window.location.origin + "/leaderboard/?entry=" + data.id;
               $("shareLinkInput").value = shareUrl;
               $("shareLinkRow").classList.remove("hidden");
-              showToast("成績已保存，可複製連結分享");
-            })
-            .catch(function (err) {
-              // 資料表未加 exam_style 欄時：退回不含旗標的保存（成績仍會保存，只是無星標）
-              var msg = String(err && err.message || "");
-              if (/exam_style/i.test(msg)) {
-                var fallback = Object.assign({}, payload);
-                delete fallback.exam_style;
-                attempt(fallback)
-                  .then(function () {
-                    saveBtn.textContent = "已保存 ✓";
-                    showToast("成績已保存（未加星標：資料表尚未啟用考試模式欄）");
-                  })
-                  .catch(function (e2) {
-                    console.error(e2);
-                    saveBtn.disabled = false;
-                    saveBtn.textContent = originalLabel;
-                    alert("保存失敗，請稍後再試");
-                  });
-                return;
-              }
-              saveBtn.disabled = false;
-              saveBtn.textContent = originalLabel;
-              console.error(err);
-              alert("保存失敗，請稍後再試");
-            });
+            }
+            showToast("成績已保存，可複製連結分享");
+          }).catch(function (err) {
+            saveBtn.disabled = false;
+            saveBtn.textContent = originalLabel;
+            console.error(err);
+            alert(err.message || "保存失敗，請稍後再試");
+          });
         });
 
         $("copyShareLinkBtn").addEventListener("click", function () {

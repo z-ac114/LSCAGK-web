@@ -6,7 +6,7 @@ const { checkAuth, json, serviceHeaders, sb } = require("../../lib/admin-util");
 module.exports = async (req, res) => {
   if (req.method !== "GET") { json(res, 405, { error: "Method not allowed" }); return; }
   if (!process.env.SUPABASE_SERVICE_KEY) { json(res, 500, { error: "伺服器未設定 SUPABASE_SERVICE_KEY。" }); return; }
-  if (!checkAuth(req)) { json(res, 401, { error: "密碼不正確。" }); return; }
+  if (!checkAuth(req)) { json(res, 401, { error: "帳號或密碼不正確。" }); return; }
 
   try {
     const g = await sb("/rest/v1/games?select=id,pin,status,bank,count,time_limit,created_at,questions&order=created_at.desc&limit=100", { headers: serviceHeaders() });

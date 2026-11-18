@@ -6,7 +6,7 @@ const { checkAuth, readBody, json, serviceHeaders, sb } = require("../../lib/adm
 
 module.exports = async (req, res) => {
   if (!process.env.SUPABASE_SERVICE_KEY) { json(res, 500, { error: "伺服器未設定 SUPABASE_SERVICE_KEY。" }); return; }
-  if (!checkAuth(req)) { json(res, 401, { error: "密碼不正確。" }); return; }
+  if (!checkAuth(req)) { json(res, 401, { error: "帳號或密碼不正確。" }); return; }
 
   try {
     if (req.method === "GET") {

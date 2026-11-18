@@ -163,6 +163,7 @@
       .ans-plum { background: #7d4273; }
       .ans-green { background: #2f7a52; }
       .ans-btn.right { outline: 4px solid #e2bb62; outline-offset: -4px; }
+      .ans-btn.picked { outline: 4px solid #e2bb62; outline-offset: -4px; transform: scale(0.98); }
       .ans-btn.dim { opacity: 0.35; }
       .submitted {
         margin: auto 0; text-align: center; display: flex; flex-direction: column; gap: 0.6rem; align-items: center;
@@ -200,6 +201,14 @@
       @keyframes vpop { 0% { transform: scale(0.72); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
       .verdict .v-good { color: #7bd39a; }
       .verdict .v-bad { color: #f28779; }
+      /* 揭曉全螢幕色調閃動（正確＝綠／錯誤＝紅） */
+      body.flash-good::after, body.flash-bad::after {
+        content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 6;
+        animation: tintflash 700ms ease forwards;
+      }
+      body.flash-good::after { background: radial-gradient(circle at 50% 55%, rgb(123 211 154 / 25%), transparent 62%); }
+      body.flash-bad::after { background: radial-gradient(circle at 50% 55%, rgb(242 135 121 / 22%), transparent 62%); }
+      @keyframes tintflash { 0% { opacity: 0; } 30% { opacity: 1; } 100% { opacity: 0; } }
       .verdict .v-sub { color: rgb(250 249 245 / 68%); font-size: 1rem; margin: 0.35rem 0 0; font-variant-numeric: tabular-nums; }
       .verdict .v-rank, .verdict .v-gap {
         margin: 0.5rem 0 0; font-size: 0.98rem; color: #faf9f5; font-variant-numeric: tabular-nums;
@@ -252,6 +261,7 @@
         .view-anim, .player-cloud .chip, .board-row, .verdict .v-big, .ans-btn, .v-streak, .streak-chip, .cd-num { animation: none !important; transition: none !important; }
         .timer-fill, .rv-opt .bar { transition: none !important; }
         .spinner { animation-duration: 2.4s !important; }
+        body.flash-good::after, body.flash-bad::after { display: none !important; }
       }
 
       /* ===== 排行（結束畫面，舞台） ===== */
@@ -511,7 +521,7 @@
             '<div class="answers">' + opts + "</div>", true);
           if (!answered) {
             app.querySelectorAll(".ans-btn").forEach(function (b) {
-              b.addEventListener("click", function () { submitAnswer(Number(b.dataset.opt)); });
+              b.addEventListener("click", function () { submitAnswer(Number(b.dataset.opt), b); });
             });
           }
           startTicker(d);
@@ -601,28 +611,38 @@
             '<div class="spinner"></div></div>');
         }
 
-        function submitAnswer(opt) {
+        function submitAnswer(opt, btn) {
           // 只受作答鎖限制（輪詢不會吃掉點擊）
           if (answerBusy || answeredIndex !== -1 || !lastData) return;
           answerBusy = true;
           chosen = opt;
           answeredIndex = lastData.index;
-          var chosenText = lastData.options ? lastData.options[opt] : "";
-          // 樂觀回饋：即時顯示已選，再送出
-          renderKey = "q:" + lastData.index + ":s";
-          renderSubmitted(chosenText);
-          api("answer", "POST", { pin: pin, player: playerId, index: lastData.index, option: opt })
-            .catch(function (err) {
-              answeredIndex = -1; chosen = -1;
-              renderKey = "";
-              connEl.textContent = err.message || "提交失敗";
-              if (lastData && lastData.status === "question") renderQuestion(lastData);
-            })
-            .finally(function () {
-              answerBusy = false;
-              // 若揭曉已到但剛才被作答鎖擋住，立即補一次輪詢顯示最新結果
-              if (lastData && lastData.status === "reveal" && renderKey !== "r:" + lastData.index) poll();
+          // 0.1 秒即時回饋：先在被點的按鈕顯示選中狀態（NN/g 反饋時限），隨後切至已提交畫面
+          if (btn) {
+            btn.classList.add("picked");
+            app.querySelectorAll(".ans-btn").forEach(function (x) {
+              x.disabled = true;
+              if (x !== btn) x.classList.add("dim");
             });
+          }
+          window.setTimeout(function () {
+            var chosenText = lastData && lastData.options ? lastData.options[opt] : "";
+            // 樂觀回饋：即時顯示已選，再送出
+            renderKey = "q:" + lastData.index + ":s";
+            renderSubmitted(chosenText);
+            api("answer", "POST", { pin: pin, player: playerId, index: lastData.index, option: opt })
+              .catch(function (err) {
+                answeredIndex = -1; chosen = -1;
+                renderKey = "";
+                connEl.textContent = err.message || "提交失敗";
+                if (lastData && lastData.status === "question") renderQuestion(lastData);
+              })
+              .finally(function () {
+                answerBusy = false;
+                // 若揭曉已到但剛才被作答鎖擋住，立即補一次輪詢顯示最新結果
+                if (lastData && lastData.status === "reveal" && renderKey !== "r:" + lastData.index) poll();
+              });
+          }, 140);
         }
 
         /* ===================== 揭曉（判定 + 分佈 + 連擊） ===================== */
@@ -641,6 +661,12 @@
             : good ? "正確！"
             : "錯誤";
           var vCls = good ? "v-good" : "v-bad";
+          /* 全螢幕色調閃動：只對已作答的反饋（未作答保持中性） */
+          if (mine.answered) {
+            document.body.classList.remove("flash-good", "flash-bad");
+            void document.body.offsetWidth;
+            document.body.classList.add(good ? "flash-good" : "flash-bad");
+          }
           var sub = mine.answered && good ? "+" + mine.points + " 分"
             : !mine.answered ? "這題沒有取得分數"
             : "再接再厲";

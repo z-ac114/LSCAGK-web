@@ -3,11 +3,13 @@
 // 注意：question 階段絕不回傳正確答案（防作弊）
 "use strict";
 const { json, serviceHeaders, sb } = require("../../lib/admin-util");
-const { fetchGameInPhase, effPhase, UUID_RE } = require("../../lib/game-util");
+const { fetchGameInPhase, effPhase, UUID_RE, rateLimit } = require("../../lib/game-util");
 
 module.exports = async (req, res) => {
   if (req.method !== "GET") { json(res, 405, { error: "Method not allowed" }); return; }
   if (!process.env.SUPABASE_SERVICE_KEY) { json(res, 500, { error: "伺服器未設定 SUPABASE_SERVICE_KEY。" }); return; }
+  // 600/分鐘/IP：玩家每秒輪詢一次綽綽有餘；防止 6 位遊戲碼被高速列舉
+  if (!rateLimit(req, 600, 60000)) { json(res, 429, { error: "請稍後再試。" }); return; }
 
   try {
     const url = new URL(req.url, "http://x");

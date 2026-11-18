@@ -22,24 +22,9 @@ function addThemeButton() {
 }
 
 function protectPastPapers() {
-  const pastPapersLink = document.getElementById("past-papers-link");
-
-  if (!pastPapersLink) {
-    return;
-  }
-
-  pastPapersLink.addEventListener("click", (event) => {
-    const password = window.prompt("請輸入密碼以開啟歷屆試題：");
-
-    if (password !== "agk2627") {
-      event.preventDefault();
-      window.alert("密碼不正確。");
-    }
-  });
+  // 已移除：此客戶端密碼閘沒有實際保護力（密碼在公開 JS 內，檔案本身亦是公開連結）。
+  // 若歷屆試題需要真正的保護，應改以 Supabase signed URL 或登入機制提供。
 }
-
-
-
 
 function setupPageTransitions() {
   // 原生 View Transitions（Chrome／Edge）已由 CSS @view-transition 處理

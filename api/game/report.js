@@ -7,7 +7,7 @@ const { fetchGame } = require("../../lib/game-util");
 module.exports = async (req, res) => {
   if (req.method !== "GET") { json(res, 405, { error: "Method not allowed" }); return; }
   if (!process.env.SUPABASE_SERVICE_KEY) { json(res, 500, { error: "伺服器未設定 SUPABASE_SERVICE_KEY。" }); return; }
-  if (!checkAuth(req)) { json(res, 401, { error: "密碼不正確。" }); return; }
+  if (!checkAuth(req)) { json(res, 401, { error: "帳號或密碼不正確。" }); return; }
 
   try {
     const url = new URL(req.url, "http://x");
