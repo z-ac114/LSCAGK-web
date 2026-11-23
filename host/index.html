@@ -429,7 +429,7 @@
           var pass = $("loginPass").value;
           $("loginBtn").disabled = true;
           $("loginMsg").textContent = "";
-          fetch("/api/admin/verify", {
+          fetch("/api/admin?op=verify", {
             method: "POST",
             headers: { "Content-Type": "application/json", "x-admin-user": user, "x-admin-pass": pass }
           }).then(function (res) { return res.json().then(function (d) { return { ok: res.ok, d: d }; }); })
@@ -476,7 +476,7 @@
               var t = idx[i]; idx[i] = idx[j]; idx[j] = t;
             }
             var qs = idx.slice(0, count).map(function (i) { return { q: bankArr[i].q, options: bankArr[i].options, c: bankArr[i].c }; });
-            return gameApi("create", "POST", { bank: bank, count: count, timeLimit: timeLimit, questions: qs });
+            return gameApi("control", "POST", { op: "create", bank: bank, count: count, timeLimit: timeLimit, questions: qs });
           }).then(function (d) {
             K.pin = d.pin;
             K.dash = false;
@@ -982,7 +982,7 @@
 
         /* ===================== 啟動 ===================== */
         if (getPass() && getUser()) {
-          fetch("/api/admin/verify", { method: "POST", headers: { "Content-Type": "application/json", "x-admin-user": getUser(), "x-admin-pass": getPass() } })
+          fetch("/api/admin?op=verify", { method: "POST", headers: { "Content-Type": "application/json", "x-admin-user": getUser(), "x-admin-pass": getPass() } })
             .then(function (res) { if (res.ok) showPanel(); else logout(); })
             .catch(function () {});
         }

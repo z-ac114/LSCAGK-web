@@ -447,7 +447,7 @@
 
         /* 資源庫密碼閘：密碼只存於伺服器環境變數 LIBRARY_PASSWORD，
            驗證成功後取得 24 小時 HMAC 憑證（sessionStorage）；
-           資源清單與檔案連結一律經 /api/library/*（伺服器端驗證）取得 */
+           資源清單與檔案連結一律經 /api/library（伺服器端驗證）取得 */
         var TOKEN_KEY = "agkLibToken";
         var token = "";
         try { token = sessionStorage.getItem(TOKEN_KEY) || ""; } catch (e) { /* 私密模式 */ }
@@ -471,7 +471,7 @@
         function loadCloud() {
           if (typeof fetch !== "function") { render(); return; }
           if (!token) { showLock(); return; }
-          fetch("/api/library/list", { headers: { "x-library-token": token } })
+          fetch("/api/library", { headers: { "x-library-token": token } })
             .then(function (r) {
               if (r.status === 401) return Promise.reject({ auth: true });
               return r.ok ? r.json() : [];
@@ -566,7 +566,7 @@
           gateBusy = true;
           $("gateGo").disabled = true;
           $("gateErr").textContent = "";
-          fetch("/api/library/verify", {
+          fetch("/api/library", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ password: pass })
@@ -614,7 +614,7 @@
           }
           $("viewerClose").focus();
           // 經伺服器取得 1 小時有效之簽名連結後載入（配合私密 bucket 為唯一取檔途徑）
-          fetch("/api/library/file?path=" + encodeURIComponent(item.path || ""), { headers: { "x-library-token": token } })
+          fetch("/api/library?path=" + encodeURIComponent(item.path || ""), { headers: { "x-library-token": token } })
             .then(function (r) {
               return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, status: r.status, d: d }; });
             })

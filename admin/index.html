@@ -346,7 +346,7 @@
         }
 
         function api(path, method, body) {
-          return fetch("/api/admin/" + path, {
+          return fetch("/api/admin?op=" + path, {
             method: method || "GET",
             headers: { "Content-Type": "application/json", "x-admin-user": getUser(), "x-admin-pass": getPass() },
             body: body ? JSON.stringify(body) : undefined
@@ -379,7 +379,7 @@
           var pass = $("loginPass").value;
           $("loginBtn").disabled = true;
           $("loginMsg").textContent = "";
-          fetch("/api/admin/verify", {
+          fetch("/api/admin?op=verify", {
             method: "POST",
             headers: { "Content-Type": "application/json", "x-admin-user": user, "x-admin-pass": pass }
           }).then(function (res) { return res.json().then(function (d) { return { ok: res.ok, d: d }; }); })
@@ -679,7 +679,7 @@
           msg.className = "form-msg"; msg.textContent = "準備上傳…";
           $("upProg").classList.add("show"); $("upBar").style.width = "0%";
 
-          api("pdfs?op=sign", "POST", { filename: chosenFile.name, size: chosenFile.size })
+          api("sign", "POST", { filename: chosenFile.name, size: chosenFile.size })
             .then(function (r) {
               msg.textContent = "上傳中…";
               return putFile(r.uploadUrl, chosenFile, function (p) { $("upBar").style.width = Math.round(p * 100) + "%"; })
@@ -687,7 +687,7 @@
             })
             .then(function (r) {
               msg.textContent = "寫入記錄…";
-              return api("pdfs?op=finalize", "POST", {
+              return api("finalize", "POST", {
                 path: r.path, title: title,
                 description: $("pdfDesc").value.trim(),
                 tag: $("pdfTag").value.trim() || "競賽資料",
@@ -843,7 +843,7 @@
           $("gamesList").innerHTML = '<div class="empty">載入中…</div>';
           $("gamesStats").innerHTML = '<div class="empty" style="grid-column: 1 / -1;">載入中…</div>';
           $("insightCard").style.display = "none";
-          Promise.all([gameApi("history"), gameApi("stats")]).then(function (arr) {
+          Promise.all([gameApi("history"), gameApi("history?op=stats")]).then(function (arr) {
             gameRows = arr[0].rows || [];
             statsData = arr[1] || null;
             gamesLoaded = true;
@@ -984,7 +984,7 @@
         /* ===================== 啟動 ===================== */
         if (getPass() && getUser()) {
           // 已有帳密：靜默驗證
-          fetch("/api/admin/verify", { method: "POST", headers: { "Content-Type": "application/json", "x-admin-user": getUser(), "x-admin-pass": getPass() } })
+          fetch("/api/admin?op=verify", { method: "POST", headers: { "Content-Type": "application/json", "x-admin-user": getUser(), "x-admin-pass": getPass() } })
             .then(function (res) { if (res.ok) showPanel(); else logout(); })
             .catch(function () {});
         }
