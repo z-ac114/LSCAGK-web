@@ -242,8 +242,6 @@
       .rv-skip { color: #b3261e; font-weight: 700; }
       .dark-mode .rv-skip { color: #f28779; }
       .rv-note { color: var(--muted); font-size: 0.82rem; }
-      .bank-upload-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
-      .bank-upload-row select { padding: 0.45rem 0.7rem; border: 1px solid var(--hairline); border-radius: 8px; background: var(--surface); color: var(--ink); font: inherit; font-size: 0.88rem; }
       .bank-actions { display: flex; gap: 0.4rem; margin-top: 0.5rem; }
       .bank-edit { margin-top: 0.7rem; padding-top: 0.7rem; border-top: 1px dashed var(--hairline); }
       .bank-edit .be-q { margin-bottom: 0.6rem; }
@@ -450,22 +448,6 @@
                 <button type="button" class="btn primary sm" id="bankGen">產出更新後的檔案</button>
               </div>
               <div class="bank-list" id="bankList"><div class="empty">尚未載入題庫。</div></div>
-
-              <div class="card" style="margin-top: 1.4rem;">
-                <h2>上傳整份題庫（成為線上資料庫）</h2>
-                <p class="admin-sub" style="margin: -0.4rem 0 0.8rem;">選擇 competition/guoqing.js 或「匯出 JSON」的檔案，同步後即成為線上題庫 — 無需經 GitHub。上傳前請先載入題庫。</p>
-                <div class="bank-upload-row">
-                  <input type="file" id="bankFile" accept=".js,.json,application/json,text/javascript" class="hidden" />
-                  <button type="button" class="btn sm" id="bankFilePick">選擇檔案</button>
-                  <span class="admin-sub" id="bankFileName" style="margin:0;">未選擇檔案</span>
-                  <select id="bankSyncMode" aria-label="同步模式">
-                    <option value="merge">合併到現有題庫</option>
-                    <option value="replace">完全取代現有題庫</option>
-                  </select>
-                  <button type="button" class="btn primary sm" id="bankUploadBtn">上傳並同步</button>
-                </div>
-                <p class="form-msg" id="bankUploadMsg" role="status"></p>
-              </div>
 
               <div class="card" style="margin-top: 1.4rem;">
                 <h2>匯入選項（Quiz Helper 選項庫 JSON）</h2>
@@ -1662,105 +1644,6 @@
           renderBank();
           autoSave();
         }
-
-        /* ---- 上傳整份題庫 ---- */
-        var bankUploadParsed = null;
-
-        function parseUploaded(text, name) {
-          // 支援兩種格式：guoqing.js（逐行 {"q":...}）與 匯出 JSON（{ 題目: { options, answer } }）
-          var t = text.trim();
-          if (t.charAt(0) === "{") {
-            var obj = JSON.parse(t);
-            var list = [];
-            Object.keys(obj).forEach(function (q) {
-              var e = obj[q];
-              if (!e || !Array.isArray(e.options)) return;
-              var c = -1;
-              var ans = e.answer != null ? String(e.answer).trim() : "";
-              if (ans) {
-                for (var i = 0; i < e.options.length; i++) {
-                  if (fold(e.options[i]) === fold(ans)) { c = i; break; }
-                }
-              }
-              list.push({ q: q, options: e.options.map(String), c: c });
-            });
-            return list;
-          }
-          var parsed = parseBank(text);
-          return parsed.list.map(function (b) { return { q: b.q, options: b.options, c: b.c }; });
-        }
-
-        $("bankFilePick").addEventListener("click", function () { $("bankFile").click(); });
-        $("bankFile").addEventListener("change", function () {
-          var f = this.files && this.files[0];
-          if (!f) return;
-          $("bankFileName").textContent = f.name + "（" + fmtSize(f.size) + "）";
-          if (f.size > 4 * 1024 * 1024) {
-            bankUploadMsg("檔案超過 4MB 上限。", "err"); bankUploadParsed = null; return;
-          }
-          var reader = new FileReader();
-          reader.onload = function () {
-            try {
-              bankUploadParsed = parseUploaded(String(reader.result), f.name);
-              if (!bankUploadParsed.length) { bankUploadMsg("檔案內找不到題目。", "err"); bankUploadParsed = null; return; }
-              var withAns = bankUploadParsed.filter(function (x) { return x.c >= 0; }).length;
-              bankUploadMsg("已解析 " + bankUploadParsed.length + " 題（其中 " + withAns + " 題可確認答案）。按「上傳並同步」繼續。", "ok");
-            } catch (e) {
-              bankUploadParsed = null;
-              bankUploadMsg("解析失敗：" + e.message, "err");
-            }
-          };
-          reader.onerror = function () { bankUploadMsg("讀取檔案失敗。", "err"); };
-          reader.readAsText(f, "utf-8");
-        });
-
-        function bankUploadMsg(text, cls) {
-          var e = $("bankUploadMsg");
-          e.textContent = text || "";
-          e.className = "form-msg" + (cls ? " " + cls : "");
-        }
-
-        $("bankUploadBtn").addEventListener("click", function () {
-          if (!bankLoaded) { bankUploadMsg("請先載入題庫。", "err"); return; }
-          if (!bankUploadParsed) { bankUploadMsg("請先選擇並解析檔案。", "err"); return; }
-          var mode = $("bankSyncMode").value;
-          var replace = mode === "replace";
-          if (replace && !confirm("完全取代會刪除現有題庫中不在此檔案內的所有題目（共 " + bankLive().length + " 題 → " + bankUploadParsed.length + " 題）。確定？")) return;
-
-          var byFold = {};
-          bankLive().forEach(function (b) { var k = fold(b.origQ || b.q); if (!byFold[k]) byFold[k] = b; });
-          var updates = [], adds = [], deletes = [], skips = 0;
-          var seenFold = {};
-          bankUploadParsed.forEach(function (u) {
-            var k = fold(u.q);
-            seenFold[k] = true;
-            if (u.options.length < 2 || new Set(u.options).size !== u.options.length) { skips++; return; }
-            var existing = byFold[k];
-            var ansText = u.c >= 0 ? u.options[u.c] : "";
-            if (existing) {
-              var newC = u.c;
-              if (newC < 0) {
-                var fo = fold(existing.options[existing.c]);
-                for (var j = 0; j < u.options.length; j++) if (fold(u.options[j]) === fo) { newC = j; break; }
-                if (newC < 0) newC = existing.c;
-              }
-              updates.push({ key: existing.key, q: existing.origQ || existing.q, bankQ: existing.q, newOpts: u.options.slice(), newC: newC, how: "上傳同步" });
-            } else if (u.c >= 0) {
-              adds.push({ q: u.q, opts: u.options.slice(), c: u.c });
-            } else {
-              skips++;
-            }
-          });
-          if (replace) {
-            bankLive().forEach(function (b) {
-              if (!seenFold[fold(b.origQ || b.q)]) deletes.push({ key: b.key, q: b.q });
-            });
-          }
-
-          bankReviewData = { updates: updates, adds: adds, skips: [], deletes: deletes };
-          renderReview();
-          bankUploadMsg("已產生同步計劃：更新 " + updates.length + " · 新增 " + adds.length + " · 刪除 " + deletes.length + (skips ? " · 略過 " + skips : "") + " — 確認後按「套用」。", "ok");
-        });
 
         /* ---- 事件 ---- */
         $("bankLoad").addEventListener("click", loadBank);
