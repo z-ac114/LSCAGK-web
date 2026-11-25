@@ -242,6 +242,34 @@
       .rv-skip { color: #b3261e; font-weight: 700; }
       .dark-mode .rv-skip { color: #f28779; }
       .rv-note { color: var(--muted); font-size: 0.82rem; }
+      .bank-upload-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+      .bank-upload-row select { padding: 0.45rem 0.7rem; border: 1px solid var(--hairline); border-radius: 8px; background: var(--surface); color: var(--ink); font: inherit; font-size: 0.88rem; }
+      .bank-actions { display: flex; gap: 0.4rem; margin-top: 0.5rem; }
+      .bank-edit { margin-top: 0.7rem; padding-top: 0.7rem; border-top: 1px dashed var(--hairline); }
+      .bank-edit .be-q { margin-bottom: 0.6rem; }
+      .bank-edit textarea.be-qin {
+        width: 100%; box-sizing: border-box; min-height: 60px; resize: vertical;
+        padding: 0.55rem 0.75rem; border: 1px solid var(--hairline-strong, var(--hairline)); border-radius: 8px;
+        background: var(--cream, #faf9f5); color: var(--ink); font: 0.9rem/1.55 inherit;
+      }
+      .dark-mode .bank-edit textarea.be-qin { background: rgb(255 255 255 / 4%); }
+      .bank-opt-row { display: flex; align-items: center; gap: 0.45rem; margin-bottom: 0.4rem; }
+      .bank-opt-row input[type="text"] {
+        flex: 1; min-width: 0; padding: 0.45rem 0.7rem;
+        border: 1px solid var(--hairline-strong, var(--hairline)); border-radius: 8px;
+        background: var(--cream, #faf9f5); color: var(--ink); font: inherit; font-size: 0.88rem;
+      }
+      .dark-mode .bank-opt-row input[type="text"] { background: rgb(255 255 255 / 4%); }
+      .bank-opt-row input[type="radio"] { width: 16px; height: 16px; accent-color: var(--school-gold, #c9a227); flex-shrink: 0; }
+      .bank-opt-row .opt-x {
+        width: 28px; height: 28px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+        background: none; border: 0; border-radius: 6px; color: var(--muted); cursor: pointer;
+        touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+      }
+      .bank-opt-row .opt-x:hover { color: #b3261e; background: rgb(179 38 30 / 8%); }
+      .dark-mode .bank-opt-row .opt-x:hover { color: #f28779; }
+      .be-hint { font-size: 0.76rem; color: var(--muted); margin: 0.2rem 0 0.5rem; }
+      .be-deleted { opacity: 0.55; }
 
       .hidden { display: none !important; }
 
@@ -416,7 +444,28 @@
                 <button type="button" class="btn sm" id="bankExport">匯出 JSON</button>
               </div>
               <p class="admin-sub" id="bankStats" style="margin: 0.7rem 0 0.8rem;"></p>
+              <div class="board-tools" id="bankChangeBar" style="display: none;">
+                <span class="admin-sub" id="bankChangeText"></span>
+                <span class="spacer"></span>
+                <button type="button" class="btn primary sm" id="bankGen">產出更新後的檔案</button>
+              </div>
               <div class="bank-list" id="bankList"><div class="empty">尚未載入題庫。</div></div>
+
+              <div class="card" style="margin-top: 1.4rem;">
+                <h2>上傳整份題庫（成為線上資料庫）</h2>
+                <p class="admin-sub" style="margin: -0.4rem 0 0.8rem;">選擇 competition/guoqing.js 或「匯出 JSON」的檔案，同步後即成為線上題庫 — 無需經 GitHub。上傳前請先載入題庫。</p>
+                <div class="bank-upload-row">
+                  <input type="file" id="bankFile" accept=".js,.json,application/json,text/javascript" class="hidden" />
+                  <button type="button" class="btn sm" id="bankFilePick">選擇檔案</button>
+                  <span class="admin-sub" id="bankFileName" style="margin:0;">未選擇檔案</span>
+                  <select id="bankSyncMode" aria-label="同步模式">
+                    <option value="merge">合併到現有題庫</option>
+                    <option value="replace">完全取代現有題庫</option>
+                  </select>
+                  <button type="button" class="btn primary sm" id="bankUploadBtn">上傳並同步</button>
+                </div>
+                <p class="form-msg" id="bankUploadMsg" role="status"></p>
+              </div>
 
               <div class="card" style="margin-top: 1.4rem;">
                 <h2>匯入選項（Quiz Helper 選項庫 JSON）</h2>
@@ -1190,13 +1239,19 @@
 
         $("gamesRefresh").addEventListener("click", loadGames);
 
-        /* ===================== 題庫（檢視＋匯入選項） ===================== */
+        /* ===================== 題庫（檢視／編輯／刪除／匯入選項） ===================== */
         var bankLoaded = false;
-        var bankLines = [];      // 原始檔逐行
-        var bankQStart = -1;     // 第一題所在行
-        var bankQEnd = -1;       // 題目結尾（];）行
-        var bank = [];           // { idx, q, options, c, line }
+        var bankLines = [];      // 原始檔逐行（載入後不變）
+        var bankHeaderEnd = 0;   // 第一題所在行（= 檔頭長度）
+        var bankFooterStart = 0; // 「];」行（= 檔尾起點）
+        var bank = [];           // { key, q, options, c, line, modified, added, deleted, wasEdited, wasDeleted }
         var bankShow = 60;
+        var bankEditKey = null;
+        var bankEditSnapshot = "";
+        var bankKeySeq = 0;
+        var bankChanges = { edited: 0, deleted: 0, added: 0 };
+        var bankOutputText = "";
+        var bankReviewData = null;
 
         function fold(s) {
           return String(s || "").normalize("NFKC").toLowerCase()
@@ -1205,18 +1260,20 @@
             .replace(/[^\p{L}\p{N}]+/gu, "");
         }
 
+        function bankMsg(text, cls) {
+          var e = $("bankImportMsg");
+          e.textContent = text || "";
+          e.className = "form-msg" + (cls ? " " + cls : "");
+        }
+
         function parseBank(text) {
           var lines = text.split("\n");
           var start = -1, end = -1;
           for (var i = 0; i < lines.length; i++) {
             if (start === -1 && lines[i].indexOf('"q"') !== -1 && lines[i].indexOf("[") !== -1) { start = i; }
-            if (lines[i].indexOf("];") !== -1 && lines[i].indexOf("GQ_QUESTION_BANK") === -1) { end = i; break; }
           }
-          // 後備：]; 行在 var 行之後
-          if (end === -1) {
-            for (var j = lines.length - 1; j >= 0; j--) {
-              if (lines[j].indexOf("];") !== -1) { end = j; break; }
-            }
+          for (var j = start + 1; j < lines.length; j++) {
+            if (lines[j].indexOf("];") !== -1) { end = j; break; }
           }
           var list = [];
           for (var k = start; k < end; k++) {
@@ -1224,61 +1281,281 @@
             if (t.indexOf('{"q"') !== 0) continue;
             try {
               var obj = JSON.parse(t.replace(/,\s*$/, ""));
-              list.push({ idx: list.length, q: obj.q, options: obj.options, c: obj.c, line: k });
+              list.push({ key: "q" + (bankKeySeq++), q: obj.q, origQ: obj.q, options: obj.options, c: obj.c, line: k,
+                modified: false, added: false, deleted: false, wasEdited: false, wasDeleted: false, saved: true });
             } catch (e) { /* 跳過無法解析的行 */ }
           }
           return { lines: lines, start: start, end: end, list: list };
         }
 
+        function bankPending() {
+          return bankChanges.edited + bankChanges.deleted + bankChanges.added;
+        }
+
+        function updateChangeBar() {
+          var bar = $("bankChangeBar");
+          var dirty = bank.filter(function (b) { return !b.saved; }).length;
+          if (!dirty) {
+            if (bankSyncTime && bankLoaded) {
+              bar.style.display = "";
+              $("bankChangeText").textContent = "已自動儲存 ✓ " + bankSyncTime + " — 變更即時套用於競賽模擬與主持台。";
+              $("bankGen").style.display = "none";
+            } else {
+              bar.style.display = "none";
+            }
+            return;
+          }
+          bar.style.display = "";
+          $("bankGen").style.display = "";
+          $("bankChangeText").textContent =
+            "有 " + dirty + " 項變更未能同步到雲端（題庫資料表可能未建立）— 仍可產出檔案手動更新。";
+        }
+
+        function fetchBankOverrides(cb) {
+          fetch("/api/admin?op=bank-override", { cache: "no-store" })
+            .then(function (r) { return r.ok ? r.json() : { rows: [] }; })
+            .then(function (d) { cb((d && d.rows) || []); })
+            .catch(function () { cb([]); });
+        }
+
+        /* 套用雲端覆寫層到剛解析的基底題庫：刪除／覆寫／新增，全部標記已同步 */
+        function layerOverrides(rows) {
+          if (!rows || !rows.length) return;
+          var latest = {};
+          rows.forEach(function (r) {
+            if (!r || !r.q) return;
+            var k = fold(r.orig_q || r.q);
+            if (!latest[k]) latest[k] = r;
+          });
+          // 刪除
+          for (var d = bank.length - 1; d >= 0; d--) {
+            var kd = fold(bank[d].origQ || bank[d].q);
+            if (latest[kd] && latest[kd].deleted) bank.splice(d, 1);
+          }
+          // 覆寫／新增
+          var map = {};
+          bank.forEach(function (b, i) { var k = fold(b.origQ || b.q); if (!map[k]) map[k] = i; });
+          Object.keys(latest).forEach(function (k) {
+            var r = latest[k];
+            if (r.deleted) return;
+            var o = Array.isArray(r.options) ? r.options.map(String) : null;
+            if (!o || o.length < 2) return;
+            var entry = { q: String(r.q), origQ: String(r.orig_q || r.q), options: o, c: Number(r.c) || 0,
+              line: -1, modified: false, added: false, deleted: false, wasEdited: false, wasDeleted: false, saved: true };
+            if (map[k] != null) bank[map[k]] = entry;
+            else bank.push(entry);
+          });
+        }
+
         function loadBank() {
+          if (bankPending() && !confirm("有未同步的變更，重新載入會放棄這些變更。確定？")) return;
           $("bankStats").textContent = "載入中…";
           fetch("/competition/guoqing.js", { cache: "no-store" })
             .then(function (r) { if (!r.ok) throw new Error("無法載入題庫檔（" + r.status + "）"); return r.text(); })
             .then(function (text) {
               var parsed = parseBank(text);
               if (!parsed.list.length) throw new Error("題庫解析失敗。");
-              bankLines = parsed.lines; bankQStart = parsed.start; bankQEnd = parsed.end; bank = parsed.list;
-              bankLoaded = true;
-              bankShow = 60;
-              renderBank();
+              bankLines = parsed.lines;
+              bankHeaderEnd = parsed.start;
+              bankFooterStart = parsed.end;
+              bank = parsed.list;
+              bankChanges = { edited: 0, deleted: 0, added: 0 };
+              bankEditKey = null;
+              bankReviewData = null;
+              $("bankReview").style.display = "none";
+              $("bankOutput").style.display = "none";
+              fetchBankOverrides(function (rows) {
+                layerOverrides(rows);
+                bank.forEach(function (b) { b.saved = true; });
+                bankLoaded = true;
+                bankShow = 60;
+                renderBank();
+                updateChangeBar();
+              });
             })
             .catch(function (err) {
               $("bankStats").textContent = err.message || "載入失敗。";
             });
         }
 
+        /* ---- 自動儲存：任何變更立即 upsert 到雲端覆寫層 ---- */
+        var bankSyncTime = "";
+        function autoSave() {
+          var dirty = bank.filter(function (b) { return !b.saved; });
+          if (!dirty.length) { updateChangeBar(); return; }
+          var CHUNK = 800;
+          var batches = [];
+          for (var i = 0; i < dirty.length; i += CHUNK) {
+            batches.push(dirty.slice(i, i + CHUNK));
+          }
+          var failed = false;
+          var nextBatch = function (bi) {
+            if (bi >= batches.length) {
+              if (!failed) {
+                bankSyncTime = new Date().toTimeString().slice(0, 5);
+                for (var k = bank.length - 1; k >= 0; k--) {
+                  if (bank[k].deleted && bank[k].saved) bank.splice(k, 1);
+                }
+                renderBank();
+              }
+              updateChangeBar();
+              return;
+            }
+            var batch = batches[bi];
+            var entries = batch.map(function (b) {
+              return { q: b.q, origQ: b.origQ || b.q, options: b.options, c: b.c, deleted: !!b.deleted };
+            });
+            fetch("/api/admin?op=bank-override", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "x-admin-user": getUser(), "x-admin-pass": getPass() },
+              body: JSON.stringify({ entries: entries })
+            }).then(function (r) {
+              return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; });
+            }).then(function (res) {
+              if (res.ok) batch.forEach(function (b) { b.saved = true; });
+              else failed = true;
+              nextBatch(bi + 1);
+            }).catch(function () {
+              failed = true;
+              nextBatch(bi + 1);
+            });
+          };
+          nextBatch(0);
+        }
+
+        function bankLive() {
+          return bank.filter(function (b) { return !b.deleted; });
+        }
+
+        function bankByKey(key) {
+          for (var i = 0; i < bank.length; i++) if (bank[i].key === key) return bank[i];
+          return null;
+        }
+
         function bankFiltered() {
           var q = fold($("bankSearch").value);
-          if (!q) return bank;
-          return bank.filter(function (b) {
+          var live = bankLive();
+          if (!q) return live;
+          return live.filter(function (b) {
             return fold(b.q).indexOf(q) !== -1 || b.options.some(function (o) { return fold(o).indexOf(q) !== -1; });
           });
+        }
+
+        function bankEditFormHtml(b) {
+          var rows = b.options.map(function (o, i) {
+            return '<div class="bank-opt-row">' +
+              '<input type="radio" name="beAns" value="' + i + '"' + (i === b.c ? " checked" : "") + ' aria-label="設為正確答案" />' +
+              '<input type="text" value="' + esc(o) + '" />' +
+              '<button type="button" class="opt-x" data-act="delopt" aria-label="刪除此選項"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>' +
+              "</div>";
+          }).join("");
+          return '<div class="bank-edit">' +
+            '<textarea class="be-qin" data-role="q">' + esc(b.q) + "</textarea>" +
+            '<p class="be-hint">選項（點圓圈設為正確答案 · 最少 2 個 · 最多 6 個）</p>' +
+            rows +
+            (b.options.length < 6 ? '<button type="button" class="btn sm" data-act="addopt" style="margin-bottom: 0.6rem;">加選項</button>' : "") +
+            '<div style="display:flex; gap:0.5rem; margin-top:0.4rem; align-items:center;">' +
+              '<button type="button" class="btn sm primary" data-act="save">保存</button>' +
+              '<button type="button" class="btn sm" data-act="cancel">取消</button>' +
+              '<span class="form-msg" data-role="fmsg" style="margin:0;"></span>' +
+            "</div></div>";
         }
 
         function renderBank() {
           var rows = bankFiltered();
           var shown = rows.slice(0, bankShow);
-          $("bankStats").textContent = "共 " + bank.length + " 題" + (rows.length !== bank.length ? "（符合搜尋 " + rows.length + " 題）" : "");
+          var live = bankLive();
+          $("bankStats").textContent = "共 " + live.length + " 題" +
+            (rows.length !== live.length ? "（符合搜尋 " + rows.length + " 題）" : "");
           var el = $("bankList");
           if (!rows.length) { el.innerHTML = '<div class="empty">沒有符合的題目。</div>'; return; }
-          var html = shown.map(function (b) {
+          var html = "";
+          shown.forEach(function (b, n) {
             var opts = b.options.map(function (o, i) {
               return '<li' + (i === b.c ? ' class="ans"' : "") + ">" + esc(o) + "</li>";
             }).join("");
-            return '<div class="bank-item"><p class="bq"><span class="bnum">#' + (b.idx + 1) + "</span>" + esc(b.q) + "</p>" +
-              '<ul class="bopts">' + opts + "</ul></div>";
-          }).join("");
+            html += '<div class="bank-item' + (b.key === bankEditKey ? "" : "") + '" data-key="' + b.key + '">' +
+              '<p class="bq"><span class="bnum">#' + (n + 1) + "</span>" + esc(b.q) + "</p>" +
+              '<ul class="bopts">' + opts + "</ul>" +
+              (b.key === bankEditKey ? bankEditFormHtml(b) :
+                '<div class="bank-actions">' +
+                '<button type="button" class="btn sm" data-act="edit">編輯</button>' +
+                '<button type="button" class="btn sm danger" data-act="del">刪除</button>' +
+                "</div>") +
+              "</div>";
+          });
           if (rows.length > shown.length) {
-            html += '<div class="bank-item" style="text-align:center;"><button type="button" class="btn sm" id="bankMore">顯示更多（尚有 ' + (rows.length - shown.length) + ' 題）</button></div>';
+            html += '<div class="bank-item" style="text-align:center;"><button type="button" class="btn sm" data-act="more">顯示更多（尚有 ' + (rows.length - shown.length) + ' 題）</button></div>';
           }
           el.innerHTML = html;
-          var more = $("bankMore");
-          if (more) more.addEventListener("click", function () { bankShow += 200; renderBank(); });
+        }
+
+        /* ---- 編輯 ---- */
+        function closeBankEdit() { bankEditKey = null; renderBank(); }
+
+        function saveBankEdit(btn) {
+          var item = btn.closest(".bank-item");
+          var b = bankByKey(item.dataset.key);
+          if (!b) return;
+          var q = item.querySelector('[data-role="q"]').value.trim();
+          var optInputs = item.querySelectorAll(".bank-opt-row input[type=text]");
+          var opts = [];
+          optInputs.forEach(function (x) { opts.push(x.value.trim()); });
+          var msgEl = item.querySelector('[data-role="fmsg"]');
+          function fmsg(t) { msgEl.textContent = t; msgEl.className = "form-msg err"; return; }
+          if (!q) return fmsg("題目不可空白。");
+          if (opts.length < 2) return fmsg("至少需要 2 個選項。");
+          for (var i = 0; i < opts.length; i++) if (!opts[i]) return fmsg("有空白選項。");
+          if (new Set(opts).size !== opts.length) return fmsg("選項重複。");
+          var checked = item.querySelector(".bank-opt-row input[type=radio]:checked");
+          if (!checked) return fmsg("請選擇正確答案。");
+          var rowEls = item.querySelectorAll(".bank-opt-row");
+          var c = Array.prototype.indexOf.call(rowEls, checked.closest(".bank-opt-row"));
+          var unchanged = b.q === q && b.c === c && b.options.length === opts.length &&
+            opts.every(function (o, i2) { return o === b.options[i2]; });
+          if (!unchanged) {
+            b.q = q; b.options = opts; b.c = c; b.modified = true; b.saved = false;
+            if (!b.wasEdited) { b.wasEdited = true; bankChanges.edited++; }
+            bankEditKey = null;
+            renderBank();
+            autoSave();
+          } else {
+            bankEditKey = null;
+            renderBank();
+          }
+        }
+
+        function deleteBankEntry(key) {
+          var b = bankByKey(key);
+          if (!b) return;
+          if (!confirm("確定刪除此題？\n\n" + b.q.slice(0, 80))) return;
+          b.deleted = true; b.saved = false;
+          if (!b.wasDeleted) { b.wasDeleted = true; bankChanges.deleted++; }
+          if (bankEditKey === key) bankEditKey = null;
+          renderBank();
+          autoSave();
+        }
+
+        /* ---- 產出檔案（編輯／刪除／匯入共用） ---- */
+        function generateOutput() {
+          var parts = bankLines.slice(0, bankHeaderEnd);
+          bank.forEach(function (b) {
+            if (b.deleted) return;
+            if (b.modified || b.added) {
+              parts.push("  " + JSON.stringify({ q: b.q, options: b.options, c: b.c }));
+            } else {
+              parts.push(bankLines[b.line]);
+            }
+          });
+          parts = parts.concat(bankLines.slice(bankFooterStart));
+          bankOutputText = parts.join("\n");
+          $("bankOutput").style.display = "";
+          $("bankOutputMsg").textContent =
+            "已產出更新後的題庫檔：編輯 " + bankChanges.edited + " · 刪除 " + bankChanges.deleted +
+            " · 匯入新增 " + bankChanges.added + "（現共 " + bankLive().length + " 題）。";
         }
 
         /* ---- 匯入分析 ---- */
-        var bankReviewData = null; // { updates, adds, skips }
-
         function analyzeImport() {
           if (!bankLoaded) { bankMsg("請先載入題庫。", "err"); return; }
           var raw = $("bankImportText").value.trim();
@@ -1288,7 +1565,7 @@
           if (!data || typeof data !== "object" || Array.isArray(data)) { bankMsg("JSON 必須是 { 題目: { options, answer } } 物件。", "err"); return; }
 
           var byFold = {};
-          bank.forEach(function (b) {
+          bankLive().forEach(function (b) {
             var k = fold(b.q);
             if (!byFold[k]) byFold[k] = b;
           });
@@ -1301,43 +1578,29 @@
               return;
             }
             var opts = entry.options.map(function (o) { return String(o == null ? "" : o).trim(); });
-            if (opts.some(function (o) { return !o; })) {
-              skips.push({ q: qtext, note: "有空選項" });
-              return;
-            }
-            if (new Set(opts).size !== opts.length) {
-              skips.push({ q: qtext, note: "選項重複" });
-              return;
-            }
+            if (opts.some(function (o) { return !o; })) { skips.push({ q: qtext, note: "有空選項" }); return; }
+            if (new Set(opts).size !== opts.length) { skips.push({ q: qtext, note: "選項重複" }); return; }
             var existing = byFold[fold(qtext)];
             var ansIdx = -1;
             var ansText = entry.answer != null ? String(entry.answer).trim() : "";
             if (ansText) {
               var fa = fold(ansText);
-              for (var i = 0; i < opts.length; i++) {
-                if (fold(opts[i]) === fa) { ansIdx = i; break; }
-              }
+              for (var i = 0; i < opts.length; i++) if (fold(opts[i]) === fa) { ansIdx = i; break; }
             }
             if (existing) {
-              // 已存在：覆寫選項；答案文字重新定位（JSON 答案優先，否則沿用舊答案文字）
               var oldAnswer = existing.options[existing.c];
               var newC = -1, how = "";
-              if (ansIdx >= 0) {
-                newC = ansIdx; how = "以匯入答案定位";
-              } else {
+              if (ansIdx >= 0) { newC = ansIdx; how = "以匯入答案定位"; }
+              else {
                 var fo = fold(oldAnswer);
-                for (var j = 0; j < opts.length; j++) {
-                  if (fold(opts[j]) === fo) { newC = j; how = "沿用原答案文字重新定位"; break; }
-                }
+                for (var j = 0; j < opts.length; j++) if (fold(opts[j]) === fo) { newC = j; how = "沿用原答案文字重新定位"; break; }
                 if (newC === -1) { newC = existing.c; how = "⚠ 原答案文字不在新選項中，保留原位置（請人工核對）"; }
               }
-              updates.push({ q: qtext, bankIdx: existing.idx, oldOpts: existing.options, oldC: existing.c, newOpts: opts, newC: newC, how: how });
+              updates.push({ key: existing.key, q: qtext, bankQ: existing.q, newOpts: opts, newC: newC, how: how });
+            } else if (ansIdx >= 0) {
+              adds.push({ q: qtext, opts: opts, c: ansIdx });
             } else {
-              if (ansIdx >= 0) {
-                adds.push({ q: qtext, opts: opts, c: ansIdx });
-              } else {
-                skips.push({ q: qtext, note: ansText ? "新題目但答案文字與選項不符，無法確認答案" : "新題目但未提供答案" });
-              }
+              skips.push({ q: qtext, note: ansText ? "新題目但答案文字與選項不符，無法確認答案" : "新題目但未提供答案" });
             }
           });
 
@@ -1345,17 +1608,13 @@
           renderReview();
         }
 
-        function bankMsg(text, cls) {
-          var e = $("bankImportMsg");
-          e.textContent = text || "";
-          e.className = "form-msg" + (cls ? " " + cls : "");
-        }
-
         function renderReview() {
           var d = bankReviewData;
           $("bankReview").style.display = "";
           $("bankReviewSummary").textContent =
-            "更新 " + d.updates.length + " · 新增 " + d.adds.length + " · 略過 " + d.skips.length;
+            "更新 " + d.updates.length + " · 新增 " + d.adds.length +
+            ((d.deletes && d.deletes.length) ? " · 刪除 " + d.deletes.length : "") +
+            " · 略過 " + d.skips.length;
           var rows = [];
           d.updates.forEach(function (u) {
             rows.push('<tr><td><span class="rv-update">更新</span></td><td>' + esc(u.q.slice(0, 46)) +
@@ -1365,6 +1624,9 @@
             rows.push('<tr><td><span class="rv-add">新增</span></td><td>' + esc(a.q.slice(0, 46)) +
               '<p class="rv-note">答案：' + esc(a.opts[a.c]) + "</p></td></tr>");
           });
+          (d.deletes || []).forEach(function (dl) {
+            rows.push('<tr><td><span class="rv-skip">刪除</span></td><td>' + esc(dl.q.slice(0, 46)) + "</td></tr>");
+          });
           d.skips.forEach(function (s) {
             rows.push('<tr><td><span class="rv-skip">略過</span></td><td>' + esc(s.q.slice(0, 46)) +
               '<p class="rv-note">' + esc(s.note) + "</p></td></tr>");
@@ -1373,38 +1635,137 @@
           $("bankOutput").style.display = "none";
         }
 
-        /* ---- 套用 → 產出檔案 ---- */
-        function applyBank() {
+        /* ---- 匯入套用：寫入記憶體狀態 → 產出檔案 ---- */
+        function applyImport() {
           var d = bankReviewData;
           if (!d || (!d.updates.length && !d.adds.length)) { bankMsg("沒有可套用的變更。", "err"); return; }
-          var lines = bankLines.slice();
-          // 由行號大到小替換，避免位移
-          d.updates.slice().sort(function (a, b) { return b.bankIdx - a.bankIdx; }).forEach(function (u) {
-            var b = bank[u.bankIdx];
-            var obj = { q: u.q, options: u.newOpts, c: u.newC };
-            lines[b.line] = "  " + JSON.stringify(obj, ensureAsciiFalse) + ",";
+          d.updates.forEach(function (u) {
+            var b = bankByKey(u.key);
+            if (!b) return;
+            b.options = u.newOpts;
+            b.c = u.newC;
+            b.modified = true; b.saved = false;
+            if (!b.wasEdited) { b.wasEdited = true; bankChanges.edited++; }
           });
-          // 新題目插到最後一題之後
-          if (d.adds.length) {
-            var lastLine = bank[bank.length - 1].line;
-            var insert = d.adds.map(function (a) {
-              return "  " + JSON.stringify({ q: a.q, options: a.opts, c: a.c }, ensureAsciiFalse) + ",";
-            });
-            lines.splice.apply(lines, [lastLine + 1, 0].concat(insert));
-          }
-          var output = lines.join("\n");
-          bankOutputText = output;
-          $("bankOutput").style.display = "";
-          $("bankOutputMsg").textContent =
-            "已產出更新後的題庫檔：更新 " + d.updates.length + " 題、新增 " + d.adds.length + " 題（共 " + bank.length + " → " + (bank.length + d.adds.length) + " 題）。";
+          d.adds.forEach(function (a) {
+            bank.push({ key: "q" + (bankKeySeq++), q: a.q, origQ: a.q, options: a.opts, c: a.c, line: -1,
+              modified: true, added: true, deleted: false, wasEdited: false, wasDeleted: false, saved: false });
+            bankChanges.added++;
+          });
+          (d.deletes || []).forEach(function (dl) {
+            var b = bankByKey(dl.key);
+            if (!b || b.deleted) return;
+            b.deleted = true; b.saved = false;
+            if (!b.wasDeleted) { b.wasDeleted = true; bankChanges.deleted++; }
+          });
+          bankEditKey = null;
+          renderBank();
+          autoSave();
         }
 
-        function ensureAsciiFalse(k, v) { return v; } // JSON.stringify 已輸出 Unicode 原文
+        /* ---- 上傳整份題庫 ---- */
+        var bankUploadParsed = null;
 
-        var bankOutputText = "";
+        function parseUploaded(text, name) {
+          // 支援兩種格式：guoqing.js（逐行 {"q":...}）與 匯出 JSON（{ 題目: { options, answer } }）
+          var t = text.trim();
+          if (t.charAt(0) === "{") {
+            var obj = JSON.parse(t);
+            var list = [];
+            Object.keys(obj).forEach(function (q) {
+              var e = obj[q];
+              if (!e || !Array.isArray(e.options)) return;
+              var c = -1;
+              var ans = e.answer != null ? String(e.answer).trim() : "";
+              if (ans) {
+                for (var i = 0; i < e.options.length; i++) {
+                  if (fold(e.options[i]) === fold(ans)) { c = i; break; }
+                }
+              }
+              list.push({ q: q, options: e.options.map(String), c: c });
+            });
+            return list;
+          }
+          var parsed = parseBank(text);
+          return parsed.list.map(function (b) { return { q: b.q, options: b.options, c: b.c }; });
+        }
 
+        $("bankFilePick").addEventListener("click", function () { $("bankFile").click(); });
+        $("bankFile").addEventListener("change", function () {
+          var f = this.files && this.files[0];
+          if (!f) return;
+          $("bankFileName").textContent = f.name + "（" + fmtSize(f.size) + "）";
+          if (f.size > 4 * 1024 * 1024) {
+            bankUploadMsg("檔案超過 4MB 上限。", "err"); bankUploadParsed = null; return;
+          }
+          var reader = new FileReader();
+          reader.onload = function () {
+            try {
+              bankUploadParsed = parseUploaded(String(reader.result), f.name);
+              if (!bankUploadParsed.length) { bankUploadMsg("檔案內找不到題目。", "err"); bankUploadParsed = null; return; }
+              var withAns = bankUploadParsed.filter(function (x) { return x.c >= 0; }).length;
+              bankUploadMsg("已解析 " + bankUploadParsed.length + " 題（其中 " + withAns + " 題可確認答案）。按「上傳並同步」繼續。", "ok");
+            } catch (e) {
+              bankUploadParsed = null;
+              bankUploadMsg("解析失敗：" + e.message, "err");
+            }
+          };
+          reader.onerror = function () { bankUploadMsg("讀取檔案失敗。", "err"); };
+          reader.readAsText(f, "utf-8");
+        });
+
+        function bankUploadMsg(text, cls) {
+          var e = $("bankUploadMsg");
+          e.textContent = text || "";
+          e.className = "form-msg" + (cls ? " " + cls : "");
+        }
+
+        $("bankUploadBtn").addEventListener("click", function () {
+          if (!bankLoaded) { bankUploadMsg("請先載入題庫。", "err"); return; }
+          if (!bankUploadParsed) { bankUploadMsg("請先選擇並解析檔案。", "err"); return; }
+          var mode = $("bankSyncMode").value;
+          var replace = mode === "replace";
+          if (replace && !confirm("完全取代會刪除現有題庫中不在此檔案內的所有題目（共 " + bankLive().length + " 題 → " + bankUploadParsed.length + " 題）。確定？")) return;
+
+          var byFold = {};
+          bankLive().forEach(function (b) { var k = fold(b.origQ || b.q); if (!byFold[k]) byFold[k] = b; });
+          var updates = [], adds = [], deletes = [], skips = 0;
+          var seenFold = {};
+          bankUploadParsed.forEach(function (u) {
+            var k = fold(u.q);
+            seenFold[k] = true;
+            if (u.options.length < 2 || new Set(u.options).size !== u.options.length) { skips++; return; }
+            var existing = byFold[k];
+            var ansText = u.c >= 0 ? u.options[u.c] : "";
+            if (existing) {
+              var newC = u.c;
+              if (newC < 0) {
+                var fo = fold(existing.options[existing.c]);
+                for (var j = 0; j < u.options.length; j++) if (fold(u.options[j]) === fo) { newC = j; break; }
+                if (newC < 0) newC = existing.c;
+              }
+              updates.push({ key: existing.key, q: existing.origQ || existing.q, bankQ: existing.q, newOpts: u.options.slice(), newC: newC, how: "上傳同步" });
+            } else if (u.c >= 0) {
+              adds.push({ q: u.q, opts: u.options.slice(), c: u.c });
+            } else {
+              skips++;
+            }
+          });
+          if (replace) {
+            bankLive().forEach(function (b) {
+              if (!seenFold[fold(b.origQ || b.q)]) deletes.push({ key: b.key, q: b.q });
+            });
+          }
+
+          bankReviewData = { updates: updates, adds: adds, skips: [], deletes: deletes };
+          renderReview();
+          bankUploadMsg("已產生同步計劃：更新 " + updates.length + " · 新增 " + adds.length + " · 刪除 " + deletes.length + (skips ? " · 略過 " + skips : "") + " — 確認後按「套用」。", "ok");
+        });
+
+        /* ---- 事件 ---- */
         $("bankLoad").addEventListener("click", loadBank);
         $("bankSearch").addEventListener("input", function () { bankShow = 60; renderBank(); });
+        $("bankGen").addEventListener("click", generateOutput);
         $("bankAnalyze").addEventListener("click", analyzeImport);
         $("bankClearImport").addEventListener("click", function () {
           $("bankImportText").value = "";
@@ -1412,13 +1773,11 @@
           $("bankOutput").style.display = "none";
           bankMsg("");
         });
-        $("bankApply").addEventListener("click", applyBank);
+        $("bankApply").addEventListener("click", applyImport);
         $("bankCopyOut").addEventListener("click", function () {
           navigator.clipboard.writeText(bankOutputText).then(function () {
             $("bankOutputMsg").textContent = "已複製到剪貼簿。";
-          }).catch(function (e) {
-            bankMsg("複製失敗：" + (e && e.message), "err");
-          });
+          }).catch(function (e) { bankMsg("複製失敗：" + (e && e.message), "err"); });
         });
         $("bankDownloadOut").addEventListener("click", function () {
           var blob = new Blob([bankOutputText], { type: "text/javascript;charset=utf-8" });
@@ -1431,7 +1790,7 @@
         $("bankExport").addEventListener("click", function () {
           if (!bankLoaded) { bankMsg("請先載入題庫。", "err"); return; }
           var out = {};
-          bank.forEach(function (b) {
+          bankLive().forEach(function (b) {
             out[b.q] = { options: b.options, answer: b.options[b.c] };
           });
           var blob = new Blob([JSON.stringify(out, null, 2)], { type: "application/json;charset=utf-8" });
@@ -1440,6 +1799,50 @@
           a.download = "guoqing-bank.json";
           a.click();
           URL.revokeObjectURL(a.href);
+        });
+
+        $("bankList").addEventListener("click", function (e) {
+          var btn = e.target.closest ? e.target.closest("button[data-act]") : null;
+          if (!btn) return;
+          var item = btn.closest(".bank-item");
+          var key = item && item.dataset.key;
+          var act = btn.dataset.act;
+          if (act === "more") { bankShow += 200; renderBank(); return; }
+          if (!key) return;
+          if (act === "edit") {
+            bankEditKey = key;
+            var b = bankByKey(key);
+            bankEditSnapshot = JSON.stringify({ q: b.q, options: b.options, c: b.c });
+            renderBank();
+            return;
+          }
+          if (act === "del") { deleteBankEntry(key); return; }
+          if (act === "cancel") { closeBankEdit(); return; }
+          if (act === "save") { saveBankEdit(btn); return; }
+          if (act === "addopt") {
+            var form = item.querySelector(".bank-edit");
+            var rowCount = form.querySelectorAll(".bank-opt-row").length;
+            if (rowCount >= 6) return;
+            var row = document.createElement("div");
+            row.className = "bank-opt-row";
+            row.innerHTML = '<input type="radio" name="beAns" aria-label="設為正確答案" />' +
+              '<input type="text" value="" />' +
+              '<button type="button" class="opt-x" data-act="delopt" aria-label="刪除此選項"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>';
+            form.querySelector(".bank-opt-row:last-of-type").after(row);
+            row.querySelector('input[type=text]').focus();
+            return;
+          }
+          if (act === "delopt") {
+            var form2 = item.querySelector(".bank-edit");
+            var rows2 = form2.querySelectorAll(".bank-opt-row");
+            if (rows2.length <= 2) {
+              var m = form2.querySelector('[data-role="fmsg"]');
+              m.textContent = "至少需要 2 個選項。"; m.className = "form-msg err";
+              return;
+            }
+            btn.closest(".bank-opt-row").remove();
+            return;
+          }
         });
 
         /* ===================== 啟動 ===================== */

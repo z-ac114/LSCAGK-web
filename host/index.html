@@ -477,16 +477,60 @@
         /* ===================== 建立 ===================== */
         var K = { pin: null, poll: null, tick: null, last: null, busy: false, key: "", offset: 0, offsetReady: false, dash: false };
 
+        function fetchBankOverrides(cb) {
+          fetch("/api/admin?op=bank-override", { cache: "no-store" })
+            .then(function (r) { return r.ok ? r.json() : { rows: [] }; })
+            .then(function (d) { cb((d && d.rows) || []); })
+            .catch(function () { cb([]); });
+        }
+        function applyBankOverrideRows(bankArr, rows, guardKey) {
+          if (window[guardKey]) return;
+          window[guardKey] = true;
+          if (!Array.isArray(bankArr) || !rows || !rows.length) return;
+          var fold = function (s) { return String(s || "").normalize("NFKC").toLowerCase()
+            .replace(/那/g, "哪").replace(/什麼/g, "甚麼")
+            .replace(/哪一個/g, "哪個").replace(/哪一項/g, "哪項")
+            .replace(/[^\p{L}\p{N}]+/gu, ""); };
+          var latest = {};
+          rows.forEach(function (r) {
+            if (!r || !r.q) return;
+            var k = fold(r.orig_q || r.q);
+            if (!latest[k]) latest[k] = r;
+          });
+          for (var d = bankArr.length - 1; d >= 0; d--) {
+            var kd = fold(bankArr[d].q);
+            if (latest[kd] && latest[kd].deleted) bankArr.splice(d, 1);
+          }
+          var map = {};
+          bankArr.forEach(function (b, i) { var k = fold(b.q); if (!map[k]) map[k] = i; });
+          Object.keys(latest).forEach(function (k) {
+            var r = latest[k];
+            if (r.deleted) return;
+            var o = Array.isArray(r.options) ? r.options.map(String) : null;
+            if (!o || o.length < 2) return;
+            var entry = { q: String(r.q), options: o, c: Number(r.c) || 0 };
+            if (map[k] != null) bankArr[map[k]] = entry;
+            else bankArr.push(entry);
+          });
+        }
         function loadBank(name) {
           return new Promise(function (resolve, reject) {
             var w = window;
-            if (name === "guoqing" && w.GQ_QUESTION_BANK) return resolve(w.GQ_QUESTION_BANK);
+            function finishGuoqing(b) {
+              fetchBankOverrides(function (rows) {
+                applyBankOverrideRows(b, rows, "__gqOverridesAppliedHost");
+                resolve(b);
+              });
+            }
+            if (name === "guoqing" && w.GQ_QUESTION_BANK) return finishGuoqing(w.GQ_QUESTION_BANK);
             if (name === "nschallenge" && w.NS_QUESTION_BANK) return resolve(w.NS_QUESTION_BANK);
             var s = document.createElement("script");
             s.src = "/competition/" + (name === "guoqing" ? "guoqing.js" : "nschallenge.js");
             s.onload = function () {
               var b = name === "guoqing" ? w.GQ_QUESTION_BANK : w.NS_QUESTION_BANK;
-              b && b.length ? resolve(b) : reject(new Error("題庫為空"));
+              if (!(b && b.length)) return reject(new Error("題庫為空"));
+              if (name !== "guoqing") return resolve(b);
+              finishGuoqing(b);
             };
             s.onerror = function () { reject(new Error("題庫載入失敗。")); };
             document.head.appendChild(s);

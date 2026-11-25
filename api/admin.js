@@ -187,12 +187,71 @@ async function handleLeaderboard(req, res) {
   json(res, 405, { error: "Method not allowed" });
 }
 
+/* ---------- bank-override：題庫雲端覆寫層 ----------
+   GET（公開）— 讀取覆寫層（競賽頁／主持台／管理後台套用）
+   POST（管理員）— upsert 覆寫項 { entries: [{ q, origQ?, options, c, deleted? }] } */
+async function handleBankOverrideGet(res) {
+  const r = await sb("/rest/v1/question_overrides?select=*&bank=eq.guoqing&order=updated_at.desc&limit=3000", { headers: serviceHeaders() });
+  const text = await r.text();
+  if (!r.ok) { json(res, 502, { error: "讀取失敗：" + text.slice(0, 150) }); return; }
+  let rows = [];
+  try { rows = JSON.parse(text); } catch (e) { rows = []; }
+  json(res, 200, { rows });
+}
+
+async function handleBankOverridePost(req, res) {
+  const body = await readBody(req);
+  const entries = Array.isArray(body.entries) ? body.entries : [];
+  if (!entries.length) { json(res, 400, { error: "沒有要儲存的項目。" }); return; }
+  const rows = [];
+  const staleQ = [];  // 改題時須刪除的舊題文字行
+  for (const e of entries) {
+    const q = String(e.q || "").trim();
+    if (!q || !Array.isArray(e.options) || e.options.length < 2) continue;
+    const origQ = String(e.origQ || "").trim();
+    if (origQ && origQ !== q) staleQ.push(origQ);
+    rows.push({
+      bank: "guoqing", q,
+      options: e.options.map((o) => String(o == null ? "" : o)),
+      c: Number.isInteger(e.c) && e.c >= 0 && e.c < e.options.length ? e.c : 0,
+      deleted: !!e.deleted
+    });
+  }
+  if (!rows.length) { json(res, 400, { error: "沒有有效的項目。" }); return; }
+  // 題目文字曾被修改：先刪走以舊文字儲存的行（避免新舊兩版同時存在）
+  if (staleQ.length) {
+    const list = encodeURIComponent(staleQ.map((q) => "\"" + q + "\"").join(","));
+    await sb("/rest/v1/question_overrides?bank=eq.guoqing&q=in.(" + list + ")", {
+      method: "DELETE", headers: serviceHeaders()
+    });
+  }
+  const r = await sb("/rest/v1/question_overrides?on_conflict=bank,q", {
+    method: "POST",
+    headers: serviceHeaders({ "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=representation" }),
+    body: JSON.stringify(rows)
+  });
+  if (!r.ok) {
+    const t = await r.text();
+    json(res, 502, { error: "儲存失敗：" + t.slice(0, 150) });
+    return;
+  }
+  json(res, 200, { ok: true, saved: rows.length });
+}
+
 module.exports = async (req, res) => {
   const op = new URL(req.url, "http://x").searchParams.get("op") || "";
   try {
     if (op === "verify") {
       if (req.method !== "POST") { json(res, 405, { error: "Method not allowed" }); return; }
       await handleVerify(req, res);
+      return;
+    }
+
+    // 題庫覆寫層：GET 公開（唯讀，供競賽頁／主持台套用）
+    if (op === "bank-override" && req.method === "GET") {
+      if (!process.env.SUPABASE_SERVICE_KEY) { envError(res, "SUPABASE_SERVICE_KEY"); return; }
+      if (!rateLimit(req, 120, 60000)) { json(res, 429, { error: "請稍後再試。" }); return; }
+      await handleBankOverrideGet(res);
       return;
     }
 
@@ -204,6 +263,7 @@ module.exports = async (req, res) => {
     if (op === "sign") { await handleSign(req, res); return; }
     if (op === "finalize") { await handleFinalize(req, res); return; }
     if (op === "leaderboard") { await handleLeaderboard(req, res); return; }
+    if (op === "bank-override") { await handleBankOverridePost(req, res); return; }
 
     json(res, 400, { error: "未知的操作。" });
   } catch (err) {
