@@ -45,12 +45,13 @@ module.exports = async (req, res) => {
     }
     if (body.exam_style === true) row.exam_style = true;
     if (body.details != null) {
-      if (!Array.isArray(body.details) || body.details.length > 500) {
+      // 詳情只含已作答的題目（客戶端已過濾）；上限放寬以涵蓋整池作答的無限模式
+      if (!Array.isArray(body.details) || body.details.length > 5000) {
         json(res, 400, { error: "無效的作答詳情。" });
         return;
       }
       const text = JSON.stringify(body.details);
-      if (text.length > 50000) { json(res, 400, { error: "作答詳情過大。" }); return; }
+      if (text.length > 600000) { json(res, 400, { error: "作答詳情過大。" }); return; }
       row.details = body.details;
     }
 

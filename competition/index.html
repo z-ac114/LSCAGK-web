@@ -1817,7 +1817,7 @@
             accuracy: accuracy,
             time_taken: timeTaken,
             mode: gameMode,
-            details: runDetails,
+            details: runDetails.filter(function (d) { return d.ua != null; }),
             exam_style: optStyle === "compact"
           };
           // 經伺服器端 /api/score 寫入（防偽造；速率限制 10 次／分鐘）
