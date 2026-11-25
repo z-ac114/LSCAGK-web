@@ -218,6 +218,31 @@
       .gr-timeout { color: var(--muted); font-size: 0.8rem; margin: 0.15rem 0; line-height: 1.5; }
       .gr-load { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 1rem 0; }
 
+      /* ---- 題庫 ---- */
+      .bank-list { max-height: 480px; overflow-y: auto; border: 1px solid var(--hairline); border-radius: var(--radius); background: var(--surface); }
+      .bank-item { padding: 0.7rem 1rem; border-bottom: 1px solid var(--hairline); }
+      .bank-item:last-child { border-bottom: 0; }
+      .bank-item .bq { font-weight: 600; font-size: 0.9rem; line-height: 1.55; }
+      .bank-item .bopts { margin: 0.3rem 0 0; padding: 0; list-style: none; font-size: 0.84rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 0.3rem 0.5rem; }
+      .bank-item .bopts li { padding: 0.12rem 0.6rem; border-radius: 9999px; border: 1px solid var(--hairline); background: var(--cream, #faf9f5); }
+      .dark-mode .bank-item .bopts li { background: rgb(255 255 255 / 5%); }
+      .bank-item .bopts li.ans { border-color: var(--school-gold, #c9a227); color: var(--ink); font-weight: 600; background: rgb(198 154 58 / 12%); }
+      .bank-item .bnum { color: var(--muted); font-size: 0.75rem; font-variant-numeric: tabular-nums; margin-right: 0.4rem; }
+      .bank-textarea {
+        width: 100%; box-sizing: border-box; min-height: 150px; resize: vertical;
+        padding: 0.7rem 0.85rem; border: 1px solid var(--hairline-strong, var(--hairline)); border-radius: 8px;
+        background: var(--cream, #faf9f5); color: var(--ink); font: 0.85rem/1.55 ui-monospace, "SF Mono", Menlo, monospace;
+      }
+      .dark-mode .bank-textarea { background: rgb(255 255 255 / 4%); }
+      .bank-textarea:focus { outline: 2px solid var(--school-gold, #c9a227); outline-offset: 1px; }
+      .rv-update { color: #1b7f3b; font-weight: 700; }
+      .dark-mode .rv-update { color: #7bd39a; }
+      .rv-add { color: var(--purple); font-weight: 700; }
+      .dark-mode .rv-add { color: #e3c6dc; }
+      .rv-skip { color: #b3261e; font-weight: 700; }
+      .dark-mode .rv-skip { color: #f28779; }
+      .rv-note { color: var(--muted); font-size: 0.82rem; }
+
       .hidden { display: none !important; }
 
       @media (prefers-reduced-motion: reduce) {
@@ -273,6 +298,7 @@
               <button class="tab" role="tab" id="tabBtn-pdfs" aria-controls="tab-pdfs" aria-selected="true" data-tab="pdfs" tabindex="0">資源管理</button>
               <button class="tab" role="tab" id="tabBtn-board" aria-controls="tab-board" aria-selected="false" data-tab="board" tabindex="-1">排行榜記錄</button>
               <button class="tab" role="tab" id="tabBtn-games" aria-controls="tab-games" aria-selected="false" data-tab="games" tabindex="-1">遊戲記錄</button>
+              <button class="tab" role="tab" id="tabBtn-bank" aria-controls="tab-bank" aria-selected="false" data-tab="bank" tabindex="-1">題庫</button>
             </div>
 
             <!-- ======== 資源管理 ======== -->
@@ -380,6 +406,55 @@
               <h2 class="admin-title" style="font-size: 1.15rem; margin: 1.8rem 0 0.8rem;">過往遊戲</h2>
               <div class="list" id="gamesList"><div class="empty">載入中…</div></div>
             </section>
+
+            <!-- ======== 題庫 ======== -->
+            <section id="tab-bank" role="tabpanel" aria-labelledby="tabBtn-bank" class="hidden">
+              <div class="board-tools">
+                <button type="button" class="btn sm" id="bankLoad">載入題庫</button>
+                <input type="text" id="bankSearch" placeholder="搜尋題目／選項…" aria-label="搜尋題目" style="flex: 1; min-width: 160px;" />
+                <span class="spacer"></span>
+                <button type="button" class="btn sm" id="bankExport">匯出 JSON</button>
+              </div>
+              <p class="admin-sub" id="bankStats" style="margin: 0.7rem 0 0.8rem;"></p>
+              <div class="bank-list" id="bankList"><div class="empty">尚未載入題庫。</div></div>
+
+              <div class="card" style="margin-top: 1.4rem;">
+                <h2>匯入選項（Quiz Helper 選項庫 JSON）</h2>
+                <p class="admin-sub" style="margin: -0.4rem 0 0.8rem;">貼上擴充功能「選項庫 → 複製」的 JSON。已存在的題目會以新選項覆寫（答案文字會在新選項中重新定位，找不到則保留原位並標示）；新題目僅在能確認答案時新增。</p>
+                <textarea id="bankImportText" class="bank-textarea" placeholder='{
+  "題目文字": {
+    "options": ["選項一", "選項二", "選項三", "選項四"],
+    "answer": "選項二"
+  }
+}'></textarea>
+                <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.8rem;">
+                  <button type="button" class="btn primary" id="bankAnalyze">分析</button>
+                  <button type="button" class="btn" id="bankClearImport">清空</button>
+                </div>
+                <p class="form-msg" id="bankImportMsg" role="status"></p>
+                <div id="bankReview" style="display: none;">
+                  <div class="board-tools" style="margin-top: 1rem;">
+                    <span class="admin-sub" id="bankReviewSummary"></span>
+                    <span class="spacer"></span>
+                    <button type="button" class="btn primary" id="bankApply">套用並產出題庫檔</button>
+                  </div>
+                  <div class="board-scroll" style="max-height: 320px; overflow-y: auto;">
+                    <table class="board">
+                      <thead><tr><th>動作</th><th>題目</th><th>處理</th></tr></thead>
+                      <tbody id="bankReviewBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+                <div id="bankOutput" style="display: none; margin-top: 1rem;">
+                  <p class="form-msg ok" id="bankOutputMsg"></p>
+                  <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.6rem;">
+                    <button type="button" class="btn primary" id="bankCopyOut">複製更新後的檔案</button>
+                    <button type="button" class="btn" id="bankDownloadOut">下載 guoqing.js</button>
+                  </div>
+                  <p class="admin-sub" style="margin-top: 0.6rem;">下載／複製後，用它取代 competition/guoqing.js，確認無誤後 commit 並 push 即可上線。</p>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
       </main>
@@ -474,11 +549,12 @@
             x.setAttribute("aria-selected", String(sel));
             x.tabIndex = sel ? 0 : -1;
           });
-          ["pdfs", "board", "games"].forEach(function (name) {
+          ["pdfs", "board", "games", "bank"].forEach(function (name) {
             $("tab-" + name).classList.toggle("hidden", name !== t.dataset.tab);
           });
           if (t.dataset.tab === "board" && !boardLoaded) { loadBoard(); }
           if (t.dataset.tab === "games" && !gamesLoaded) { loadGames(); }
+          if (t.dataset.tab === "bank" && !bankLoaded) { loadBank(); }
         }
         tabs.forEach(function (t, i) {
           t.addEventListener("click", function () { selectTab(t); });
@@ -1113,6 +1189,258 @@
         }
 
         $("gamesRefresh").addEventListener("click", loadGames);
+
+        /* ===================== 題庫（檢視＋匯入選項） ===================== */
+        var bankLoaded = false;
+        var bankLines = [];      // 原始檔逐行
+        var bankQStart = -1;     // 第一題所在行
+        var bankQEnd = -1;       // 題目結尾（];）行
+        var bank = [];           // { idx, q, options, c, line }
+        var bankShow = 60;
+
+        function fold(s) {
+          return String(s || "").normalize("NFKC").toLowerCase()
+            .replace(/那/g, "哪").replace(/什麼/g, "甚麼")
+            .replace(/哪一個/g, "哪個").replace(/哪一項/g, "哪項")
+            .replace(/[^\p{L}\p{N}]+/gu, "");
+        }
+
+        function parseBank(text) {
+          var lines = text.split("\n");
+          var start = -1, end = -1;
+          for (var i = 0; i < lines.length; i++) {
+            if (start === -1 && lines[i].indexOf('"q"') !== -1 && lines[i].indexOf("[") !== -1) { start = i; }
+            if (lines[i].indexOf("];") !== -1 && lines[i].indexOf("GQ_QUESTION_BANK") === -1) { end = i; break; }
+          }
+          // 後備：]; 行在 var 行之後
+          if (end === -1) {
+            for (var j = lines.length - 1; j >= 0; j--) {
+              if (lines[j].indexOf("];") !== -1) { end = j; break; }
+            }
+          }
+          var list = [];
+          for (var k = start; k < end; k++) {
+            var t = lines[k].trim();
+            if (t.indexOf('{"q"') !== 0) continue;
+            try {
+              var obj = JSON.parse(t.replace(/,\s*$/, ""));
+              list.push({ idx: list.length, q: obj.q, options: obj.options, c: obj.c, line: k });
+            } catch (e) { /* 跳過無法解析的行 */ }
+          }
+          return { lines: lines, start: start, end: end, list: list };
+        }
+
+        function loadBank() {
+          $("bankStats").textContent = "載入中…";
+          fetch("/competition/guoqing.js", { cache: "no-store" })
+            .then(function (r) { if (!r.ok) throw new Error("無法載入題庫檔（" + r.status + "）"); return r.text(); })
+            .then(function (text) {
+              var parsed = parseBank(text);
+              if (!parsed.list.length) throw new Error("題庫解析失敗。");
+              bankLines = parsed.lines; bankQStart = parsed.start; bankQEnd = parsed.end; bank = parsed.list;
+              bankLoaded = true;
+              bankShow = 60;
+              renderBank();
+            })
+            .catch(function (err) {
+              $("bankStats").textContent = err.message || "載入失敗。";
+            });
+        }
+
+        function bankFiltered() {
+          var q = fold($("bankSearch").value);
+          if (!q) return bank;
+          return bank.filter(function (b) {
+            return fold(b.q).indexOf(q) !== -1 || b.options.some(function (o) { return fold(o).indexOf(q) !== -1; });
+          });
+        }
+
+        function renderBank() {
+          var rows = bankFiltered();
+          var shown = rows.slice(0, bankShow);
+          $("bankStats").textContent = "共 " + bank.length + " 題" + (rows.length !== bank.length ? "（符合搜尋 " + rows.length + " 題）" : "");
+          var el = $("bankList");
+          if (!rows.length) { el.innerHTML = '<div class="empty">沒有符合的題目。</div>'; return; }
+          var html = shown.map(function (b) {
+            var opts = b.options.map(function (o, i) {
+              return '<li' + (i === b.c ? ' class="ans"' : "") + ">" + esc(o) + "</li>";
+            }).join("");
+            return '<div class="bank-item"><p class="bq"><span class="bnum">#' + (b.idx + 1) + "</span>" + esc(b.q) + "</p>" +
+              '<ul class="bopts">' + opts + "</ul></div>";
+          }).join("");
+          if (rows.length > shown.length) {
+            html += '<div class="bank-item" style="text-align:center;"><button type="button" class="btn sm" id="bankMore">顯示更多（尚有 ' + (rows.length - shown.length) + ' 題）</button></div>';
+          }
+          el.innerHTML = html;
+          var more = $("bankMore");
+          if (more) more.addEventListener("click", function () { bankShow += 200; renderBank(); });
+        }
+
+        /* ---- 匯入分析 ---- */
+        var bankReviewData = null; // { updates, adds, skips }
+
+        function analyzeImport() {
+          if (!bankLoaded) { bankMsg("請先載入題庫。", "err"); return; }
+          var raw = $("bankImportText").value.trim();
+          if (!raw) { bankMsg("請先貼上 JSON。", "err"); return; }
+          var data;
+          try { data = JSON.parse(raw); } catch (e) { bankMsg("JSON 格式無效：" + e.message, "err"); return; }
+          if (!data || typeof data !== "object" || Array.isArray(data)) { bankMsg("JSON 必須是 { 題目: { options, answer } } 物件。", "err"); return; }
+
+          var byFold = {};
+          bank.forEach(function (b) {
+            var k = fold(b.q);
+            if (!byFold[k]) byFold[k] = b;
+          });
+
+          var updates = [], adds = [], skips = [];
+          Object.keys(data).forEach(function (qtext) {
+            var entry = data[qtext];
+            if (!entry || !Array.isArray(entry.options) || entry.options.length < 2) {
+              skips.push({ q: qtext, note: "選項無效（須為 ≥2 個的文字陣列）" });
+              return;
+            }
+            var opts = entry.options.map(function (o) { return String(o == null ? "" : o).trim(); });
+            if (opts.some(function (o) { return !o; })) {
+              skips.push({ q: qtext, note: "有空選項" });
+              return;
+            }
+            if (new Set(opts).size !== opts.length) {
+              skips.push({ q: qtext, note: "選項重複" });
+              return;
+            }
+            var existing = byFold[fold(qtext)];
+            var ansIdx = -1;
+            var ansText = entry.answer != null ? String(entry.answer).trim() : "";
+            if (ansText) {
+              var fa = fold(ansText);
+              for (var i = 0; i < opts.length; i++) {
+                if (fold(opts[i]) === fa) { ansIdx = i; break; }
+              }
+            }
+            if (existing) {
+              // 已存在：覆寫選項；答案文字重新定位（JSON 答案優先，否則沿用舊答案文字）
+              var oldAnswer = existing.options[existing.c];
+              var newC = -1, how = "";
+              if (ansIdx >= 0) {
+                newC = ansIdx; how = "以匯入答案定位";
+              } else {
+                var fo = fold(oldAnswer);
+                for (var j = 0; j < opts.length; j++) {
+                  if (fold(opts[j]) === fo) { newC = j; how = "沿用原答案文字重新定位"; break; }
+                }
+                if (newC === -1) { newC = existing.c; how = "⚠ 原答案文字不在新選項中，保留原位置（請人工核對）"; }
+              }
+              updates.push({ q: qtext, bankIdx: existing.idx, oldOpts: existing.options, oldC: existing.c, newOpts: opts, newC: newC, how: how });
+            } else {
+              if (ansIdx >= 0) {
+                adds.push({ q: qtext, opts: opts, c: ansIdx });
+              } else {
+                skips.push({ q: qtext, note: ansText ? "新題目但答案文字與選項不符，無法確認答案" : "新題目但未提供答案" });
+              }
+            }
+          });
+
+          bankReviewData = { updates: updates, adds: adds, skips: skips };
+          renderReview();
+        }
+
+        function bankMsg(text, cls) {
+          var e = $("bankImportMsg");
+          e.textContent = text || "";
+          e.className = "form-msg" + (cls ? " " + cls : "");
+        }
+
+        function renderReview() {
+          var d = bankReviewData;
+          $("bankReview").style.display = "";
+          $("bankReviewSummary").textContent =
+            "更新 " + d.updates.length + " · 新增 " + d.adds.length + " · 略過 " + d.skips.length;
+          var rows = [];
+          d.updates.forEach(function (u) {
+            rows.push('<tr><td><span class="rv-update">更新</span></td><td>' + esc(u.q.slice(0, 46)) +
+              '<p class="rv-note">答案：' + esc(u.newOpts[u.newC]) + "（" + esc(u.how) + "）</p></td></tr>");
+          });
+          d.adds.forEach(function (a) {
+            rows.push('<tr><td><span class="rv-add">新增</span></td><td>' + esc(a.q.slice(0, 46)) +
+              '<p class="rv-note">答案：' + esc(a.opts[a.c]) + "</p></td></tr>");
+          });
+          d.skips.forEach(function (s) {
+            rows.push('<tr><td><span class="rv-skip">略過</span></td><td>' + esc(s.q.slice(0, 46)) +
+              '<p class="rv-note">' + esc(s.note) + "</p></td></tr>");
+          });
+          $("bankReviewBody").innerHTML = rows.join("") || '<tr><td colspan="2" class="empty">沒有可處理的題目。</td></tr>';
+          $("bankOutput").style.display = "none";
+        }
+
+        /* ---- 套用 → 產出檔案 ---- */
+        function applyBank() {
+          var d = bankReviewData;
+          if (!d || (!d.updates.length && !d.adds.length)) { bankMsg("沒有可套用的變更。", "err"); return; }
+          var lines = bankLines.slice();
+          // 由行號大到小替換，避免位移
+          d.updates.slice().sort(function (a, b) { return b.bankIdx - a.bankIdx; }).forEach(function (u) {
+            var b = bank[u.bankIdx];
+            var obj = { q: u.q, options: u.newOpts, c: u.newC };
+            lines[b.line] = "  " + JSON.stringify(obj, ensureAsciiFalse) + ",";
+          });
+          // 新題目插到最後一題之後
+          if (d.adds.length) {
+            var lastLine = bank[bank.length - 1].line;
+            var insert = d.adds.map(function (a) {
+              return "  " + JSON.stringify({ q: a.q, options: a.opts, c: a.c }, ensureAsciiFalse) + ",";
+            });
+            lines.splice.apply(lines, [lastLine + 1, 0].concat(insert));
+          }
+          var output = lines.join("\n");
+          bankOutputText = output;
+          $("bankOutput").style.display = "";
+          $("bankOutputMsg").textContent =
+            "已產出更新後的題庫檔：更新 " + d.updates.length + " 題、新增 " + d.adds.length + " 題（共 " + bank.length + " → " + (bank.length + d.adds.length) + " 題）。";
+        }
+
+        function ensureAsciiFalse(k, v) { return v; } // JSON.stringify 已輸出 Unicode 原文
+
+        var bankOutputText = "";
+
+        $("bankLoad").addEventListener("click", loadBank);
+        $("bankSearch").addEventListener("input", function () { bankShow = 60; renderBank(); });
+        $("bankAnalyze").addEventListener("click", analyzeImport);
+        $("bankClearImport").addEventListener("click", function () {
+          $("bankImportText").value = "";
+          $("bankReview").style.display = "none";
+          $("bankOutput").style.display = "none";
+          bankMsg("");
+        });
+        $("bankApply").addEventListener("click", applyBank);
+        $("bankCopyOut").addEventListener("click", function () {
+          navigator.clipboard.writeText(bankOutputText).then(function () {
+            $("bankOutputMsg").textContent = "已複製到剪貼簿。";
+          }).catch(function (e) {
+            bankMsg("複製失敗：" + (e && e.message), "err");
+          });
+        });
+        $("bankDownloadOut").addEventListener("click", function () {
+          var blob = new Blob([bankOutputText], { type: "text/javascript;charset=utf-8" });
+          var a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "guoqing.js";
+          a.click();
+          URL.revokeObjectURL(a.href);
+        });
+        $("bankExport").addEventListener("click", function () {
+          if (!bankLoaded) { bankMsg("請先載入題庫。", "err"); return; }
+          var out = {};
+          bank.forEach(function (b) {
+            out[b.q] = { options: b.options, answer: b.options[b.c] };
+          });
+          var blob = new Blob([JSON.stringify(out, null, 2)], { type: "application/json;charset=utf-8" });
+          var a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "guoqing-bank.json";
+          a.click();
+          URL.revokeObjectURL(a.href);
+        });
 
         /* ===================== 啟動 ===================== */
         if (getPass() && getUser()) {
