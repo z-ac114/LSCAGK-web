@@ -99,10 +99,6 @@
         background: rgb(226 187 98 / 16%);
         color: #e2bb62;
       }
-      .res-lock {
-        color: var(--muted);
-        opacity: 0.75;
-      }
       .res-title {
         font-family: "Noto Serif TC", "Songti TC", serif;
         font-size: 1.15rem;
@@ -337,6 +333,18 @@
       .gate-btn.primary:hover { background: var(--red-active, #ae0906); border-color: var(--red-active, #ae0906); }
       .gate-err { color: #b3261e; font-size: 0.85rem; min-height: 1.2em; margin: 0.6rem 0 0; }
       .dark-mode .gate-err { color: #f28779; }
+      /* 密碼顯示切換 */
+      .pw-wrap { position: relative; }
+      .pw-wrap .gate-input { padding-right: 2.7rem; }
+      .pw-toggle {
+        position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+        width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center;
+        background: none; border: 0; border-radius: 8px; color: var(--muted); cursor: pointer;
+        touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+      }
+      .pw-toggle:hover { color: var(--ink); background: var(--hairline-soft); }
+      .pw-toggle:focus-visible { outline: 2px solid var(--red); outline-offset: 1px; }
+      .pw-toggle .hidden { display: none; }
       .gate-shake { animation: gateshake 320ms ease; }
       @keyframes gateshake { 0%, 100% { transform: none; } 20% { transform: translateX(-7px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
       .gate-lock {
@@ -407,7 +415,13 @@
         <p>請輸入資源庫密碼以瀏覽及閱覽全部資料。驗證後 24 小時內無需重新輸入。</p>
         <form id="gateForm">
           <label for="gatePass">密碼</label>
-          <input class="gate-input" type="password" id="gatePass" autocomplete="current-password" />
+          <div class="pw-wrap">
+            <input class="gate-input" type="password" id="gatePass" autocomplete="current-password" />
+            <button type="button" class="pw-toggle" data-for="gatePass" aria-label="顯示密碼">
+              <svg class="eye-open" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              <svg class="eye-closed hidden" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+            </button>
+          </div>
           <p class="gate-err" id="gateErr" role="alert"></p>
           <div class="gate-actions">
             <button type="submit" class="gate-btn primary" id="gateGo">解鎖</button>
@@ -549,6 +563,19 @@
           openGate();
           return false;
         }
+
+        /* 密碼顯示切換（眼睛按鈕） */
+        Array.prototype.forEach.call(document.querySelectorAll(".pw-toggle"), function (btn) {
+          btn.addEventListener("click", function () {
+            var input = document.getElementById(btn.dataset.for);
+            var reveal = input.type === "password";
+            input.type = reveal ? "text" : "password";
+            btn.querySelector(".eye-open").classList.toggle("hidden", reveal);
+            btn.querySelector(".eye-closed").classList.toggle("hidden", !reveal);
+            btn.setAttribute("aria-label", reveal ? "隱藏密碼" : "顯示密碼");
+            input.focus({ preventScroll: true });
+          });
+        });
 
         $("gateOpen").addEventListener("click", openGate);
         $("gateCancel").addEventListener("click", closeGate);
@@ -719,10 +746,9 @@
         function cardHtml(item, index) {
           var badgeClass = item.extra ? "res-badge extra" : "res-badge";
           return (
-            '<button type="button" class="res-card reveal" style="--reveal-delay:' + Math.min((index % 6) * 60, 300) + 'ms" data-index="' + index + '" data-extra="' + (item.extra ? "1" : "0") + '" aria-label="開啟「' + esc(item.title) + '（需密碼）">' +
+            '<button type="button" class="res-card reveal" style="--reveal-delay:' + Math.min((index % 6) * 60, 300) + 'ms" data-index="' + index + '" data-extra="' + (item.extra ? "1" : "0") + '" aria-label="開啟「' + esc(item.title) + '">' +
               '<div class="res-top">' +
                 '<span class="' + badgeClass + '">PDF · ' + esc(item.tag) + "</span>" +
-                '<span class="res-lock" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></span>' +
               "</div>" +
               '<h3 class="res-title">' + esc(item.title) + "</h3>" +
               '<p class="res-desc">' + esc(item.desc) + "</p>" +

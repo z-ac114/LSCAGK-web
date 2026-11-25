@@ -35,6 +35,17 @@
       }
       .dark-mode .field input, .dark-mode .field select { background: rgb(255 255 255 / 4%); }
       .field input:focus, .field select:focus { outline: 2px solid var(--school-gold, #c9a227); outline-offset: 1px; }
+      /* 密碼顯示切換 */
+      .pw-wrap { position: relative; }
+      .pw-wrap input { padding-right: 2.7rem; }
+      .pw-toggle {
+        position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+        width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center;
+        background: none; border: 0; border-radius: 8px; color: var(--muted); cursor: pointer;
+        touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+      }
+      .pw-toggle:hover { color: var(--ink); background: var(--hairline-soft); }
+      .pw-toggle:focus-visible { outline: 2px solid var(--red); outline-offset: 1px; }
 
       .btn {
         display: inline-flex; align-items: center; justify-content: center; gap: 6px;
@@ -295,7 +306,15 @@
             <p>請輸入管理員帳號密碼以繼續。</p>
             <form id="loginForm">
               <label class="field"><span>帳號</span><input type="text" id="loginUser" autocomplete="username" required /></label>
-              <label class="field"><span>密碼</span><input type="password" id="loginPass" autocomplete="current-password" required /></label>
+              <label class="field"><span>密碼</span>
+                <div class="pw-wrap">
+                  <input type="password" id="loginPass" autocomplete="current-password" required />
+                  <button type="button" class="pw-toggle" data-for="loginPass" aria-label="顯示密碼">
+                    <svg class="eye-open" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    <svg class="eye-closed hidden" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                  </button>
+                </div>
+              </label>
               <button type="submit" class="btn primary" id="loginBtn" style="width: 100%;">進入</button>
               <p class="form-msg err" id="loginMsg" role="alert"></p>
             </form>
@@ -410,6 +429,18 @@
         function kMsg(el, text, cls) { var e = $(el); e.textContent = text || ""; e.className = "form-msg" + (cls ? " " + cls : ""); }
 
         /* ===================== 登入 ===================== */
+        Array.prototype.forEach.call(document.querySelectorAll(".pw-toggle"), function (btn) {
+          btn.addEventListener("click", function () {
+            var input = document.getElementById(btn.dataset.for);
+            var reveal = input.type === "password";
+            input.type = reveal ? "text" : "password";
+            btn.querySelector(".eye-open").classList.toggle("hidden", reveal);
+            btn.querySelector(".eye-closed").classList.toggle("hidden", !reveal);
+            btn.setAttribute("aria-label", reveal ? "隱藏密碼" : "顯示密碼");
+            input.focus({ preventScroll: true });
+          });
+        });
+
         function showPanel() {
           setView("panelView");
           $("joinUrlHint").textContent = location.origin + "/play";
