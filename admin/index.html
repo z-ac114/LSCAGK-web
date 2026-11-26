@@ -9,34 +9,72 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="icon" type="image/png" href="../assets/agk-icon.png" />
     <script src="../theme.js"></script>
+    <script>document.documentElement.classList.add("js");</script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@400;700&display=swap" />
     <title>管理後台 | LSCAGKT</title>
     <meta name="robots" content="noindex" />
     <style>
-      .admin-wrap { max-width: 1080px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+      .admin-wrap { position: relative; max-width: 1080px; margin: 0 auto; padding: 2.2rem 1rem 4rem; }
+      .admin-glow {
+        position: absolute; top: -170px; right: -190px; width: 500px; height: 500px;
+        border-radius: 50%; filter: blur(64px); pointer-events: none; z-index: 0;
+        background: radial-gradient(circle at center, rgb(212 37 34 / 7%), transparent 70%);
+      }
+      .dark-mode .admin-glow { background: radial-gradient(circle at center, rgb(224 82 74 / 11%), transparent 70%); }
+      @media (max-width: 640px) {
+        .admin-glow { width: 340px; height: 340px; top: -130px; right: -150px; filter: blur(46px); }
+      }
+      .admin-head, #panelView, .login-box { position: relative; z-index: 1; }
       .admin-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
-      .admin-title { font-family: "Noto Serif TC", serif; font-size: 1.7rem; font-weight: 500; letter-spacing: -0.015em; color: var(--purple); margin: 0; }
+      .admin-title { font-family: var(--font-serif); font-size: 2rem; font-weight: 500; letter-spacing: -0.015em; color: var(--purple); margin: 0.5rem 0 0; }
       .dark-mode .admin-title { color: #e3c6dc; }
-      .admin-sub { color: var(--muted); font-size: 0.88rem; margin: 0.2rem 0 0; }
+      .admin-sub { color: var(--muted); font-size: 0.88rem; margin: 0.3rem 0 0; }
+      .admin-kicker {
+        display: inline-flex; align-items: center; gap: 10px;
+        font-size: 0.72rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+        color: var(--red); margin: 0;
+      }
+      .admin-kicker::before { content: ""; width: 22px; height: 2px; border-radius: 2px; background: var(--red); }
 
       /* ---- 登入 ---- */
       .login-box {
-        max-width: 380px; margin: 4rem auto 0; padding: 2.2rem 2rem;
-        background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius);
+        max-width: 400px; margin: 3.2rem auto 0; padding: 2.4rem 2.2rem 2.2rem;
+        text-align: center; overflow: hidden;
+        background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius-xl);
+        box-shadow: 0 1px 2px rgb(20 20 19 / 4%), 0 14px 36px rgb(20 20 19 / 7%);
+        animation: login-in 560ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
       }
-      .login-box h1 { font-family: "Noto Serif TC", serif; font-size: 1.4rem; font-weight: 500; color: var(--purple); margin: 0 0 0.3rem; }
+      @keyframes login-in {
+        from { opacity: 0; transform: translateY(18px) scale(0.99); }
+        to { opacity: 1; transform: none; }
+      }
+      @media (prefers-reduced-motion: reduce) { .login-box { animation: none; } }
+      .login-glow {
+        position: absolute; left: 50%; top: -120px; width: 360px; height: 210px;
+        transform: translateX(-50%); border-radius: 50%; filter: blur(48px); pointer-events: none;
+        background: radial-gradient(closest-side, rgb(212 37 34 / 12%), transparent);
+      }
+      .dark-mode .login-glow { background: radial-gradient(closest-side, rgb(224 82 74 / 17%), transparent); }
+      .login-box .admin-kicker { margin-top: 0.4rem; }
+      .login-box .admin-kicker::before { display: none; }
+      .login-box h1 { font-family: var(--font-serif); font-size: 1.55rem; font-weight: 500; letter-spacing: -0.015em; color: var(--purple); margin: 0.5rem 0 0.35rem; }
       .dark-mode .login-box h1 { color: #e3c6dc; }
-      .login-box p { color: var(--muted); font-size: 0.88rem; margin: 0 0 1.4rem; }
+      .login-box .login-sub { color: var(--muted); font-size: 0.88rem; margin: 0 0 1.5rem; }
+      .login-box form { position: relative; text-align: left; }
       .field { display: block; margin-bottom: 1rem; }
       .field span { display: block; font-size: 0.82rem; font-weight: 600; color: var(--ink); margin-bottom: 0.35rem; }
       .field input[type="text"], .field input[type="password"], .field textarea, .field select {
-        width: 100%; box-sizing: border-box; padding: 0.6rem 0.8rem;
-        border: 1px solid var(--hairline-strong, var(--hairline)); border-radius: 8px;
+        width: 100%; box-sizing: border-box; padding: 0.65rem 0.85rem;
+        border: 1px solid var(--hairline-strong, var(--hairline)); border-radius: 10px;
         background: var(--cream, #faf9f5); color: var(--ink); font: inherit; font-size: 0.95rem;
+        transition: border-color 140ms ease, box-shadow 140ms ease;
       }
       .dark-mode .field input, .dark-mode .field textarea, .dark-mode .field select { background: rgb(255 255 255 / 4%); }
       .field textarea { resize: vertical; min-height: 84px; }
-      .field input:focus, .field textarea:focus, .field select:focus { outline: 2px solid var(--school-gold, #c9a227); outline-offset: 1px; }
+      .field input:focus, .field textarea:focus, .field select:focus {
+        outline: none; border-color: var(--red);
+        box-shadow: 0 0 0 3px rgb(212 37 34 / 13%);
+      }
       /* 密碼顯示切換 */
       .pw-wrap { position: relative; }
       .pw-wrap input { padding-right: 2.7rem; }
@@ -62,6 +100,8 @@
         transition: border-color 150ms ease, background 150ms ease, opacity 150ms ease, transform 120ms ease;
       }
       .btn:hover { border-color: var(--purple); }
+      .btn:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+      .btn:active { transform: scale(0.98); }
       .btn:disabled { opacity: 0.5; cursor: not-allowed; }
       .btn.primary { background: var(--red); border-color: var(--red); color: #fff; }
       .btn.primary:hover { background: var(--lasalle-red-dark); border-color: var(--lasalle-red-dark); }
@@ -70,38 +110,64 @@
       .btn.sm { min-height: 2.1rem; padding: 0 0.8rem; font-size: 0.82rem; }
       .dark-mode .btn.danger { color: #f28779; }
 
-      /* ---- 分頁 ---- */
-      .tabs { display: flex; gap: 0.4rem; margin: 1.6rem 0 1.4rem; border-bottom: 1px solid var(--hairline); overflow-x: auto; }
-      .tab {
-        padding: 0.65rem 1.1rem; border: 0; border-bottom: 2px solid transparent; background: none;
-        font: inherit; font-size: 0.95rem; font-weight: 600; color: var(--muted); cursor: pointer;
-        white-space: nowrap; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+      /* ---- 分頁（分段式控制） ---- */
+      .tabs {
+        position: relative; display: flex; gap: 4px; margin: 1.7rem 0 1.4rem; padding: 4px;
+        background: var(--surface-tint); border-radius: 12px; overflow-x: auto; scrollbar-width: none;
       }
-      .tab[aria-selected="true"] { color: var(--purple); border-bottom-color: var(--purple); }
-      .dark-mode .tab[aria-selected="true"] { color: #e3c6dc; }
+      .tabs::-webkit-scrollbar { display: none; }
+      .tab {
+        flex: 1 0 auto; padding: 0.55rem 1.1rem; border: 0; border-radius: 9px; background: none;
+        font: inherit; font-size: 0.92rem; font-weight: 600; color: var(--muted); cursor: pointer;
+        white-space: nowrap; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+        transition: color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+      }
+      .tab:hover { color: var(--ink); }
+      .tab:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+      .tab[aria-selected="true"] {
+        color: var(--red); background: var(--surface);
+        box-shadow: 0 1px 2px rgb(20 20 19 / 10%), 0 2px 8px rgb(20 20 19 / 8%);
+      }
+      .dark-mode .tabs { background: rgb(255 255 255 / 5%); }
+      .dark-mode .tab:hover { color: #faf9f5; }
+      .dark-mode .tab[aria-selected="true"] {
+        color: #f2a49f; background: var(--surface-dark-elevated);
+        box-shadow: 0 1px 2px rgb(0 0 0 / 35%), 0 2px 10px rgb(0 0 0 / 30%);
+      }
+
+      /* ---- 分頁面板切換 ---- */
+      [role="tabpanel"]:not(.hidden) { animation: panel-in 260ms cubic-bezier(0.22, 0.61, 0.36, 1); }
+      @keyframes panel-in { from { opacity: 0; transform: translateY(10px); } }
+      @media (prefers-reduced-motion: reduce) { [role="tabpanel"]:not(.hidden) { animation: none; } }
 
       /* ---- 上傳卡 ---- */
       .card { background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius); padding: 1.4rem; }
       .card + .card, .card + .list, .list + .card { margin-top: 1.2rem; }
-      .card h2 { font-family: "Noto Serif TC", serif; font-size: 1.15rem; font-weight: 500; color: var(--purple); margin: 0 0 1rem; }
+      .card h2 { display: flex; align-items: center; gap: 10px; font-family: var(--font-serif); font-size: 1.18rem; font-weight: 500; color: var(--purple); margin: 0 0 1rem; }
+      .card h2::before { content: ""; width: 4px; height: 1.05em; border-radius: 2px; background: var(--red); flex-shrink: 0; }
       .dark-mode .card h2 { color: #e3c6dc; }
       .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.2rem; }
       .form-grid .span2 { grid-column: 1 / -1; }
       @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
       .file-drop {
         display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
-        padding: 1.7rem 1rem; text-align: center;
-        border: 1.5px dashed var(--hairline-strong, var(--hairline)); border-radius: 12px; cursor: pointer;
+        padding: 2.1rem 1rem; text-align: center;
+        border: 1.5px dashed var(--hairline-strong, var(--hairline)); border-radius: var(--radius); cursor: pointer;
         color: var(--muted); font-size: 0.92rem;
         transition: border-color 150ms ease, background 150ms ease;
       }
-      .file-drop:hover { border-color: var(--purple); }
+      .file-drop:hover { border-color: var(--purple); background: rgb(107 58 99 / 4%); }
+      .dark-mode .file-drop:hover { background: rgb(107 58 99 / 12%); }
       .file-drop.dragover {
         border-color: var(--red); background: var(--rose-soft, #fdeceb); color: var(--ink);
       }
       .dark-mode .file-drop.dragover { background: rgb(224 82 74 / 10%); }
       .file-drop.has-file { border-style: solid; color: var(--ink); }
-      .file-drop .file-icon { color: var(--purple); opacity: 0.75; }
+      .file-drop .file-icon {
+        padding: 11px; box-sizing: content-box; border-radius: 999px;
+        background: var(--plum-soft); color: var(--purple); opacity: 1; margin-bottom: 0.4rem;
+      }
+      .dark-mode .file-drop .file-icon { background: rgb(107 58 99 / 28%); color: #e3c6dc; }
       .file-drop .file-sub { font-size: 0.76rem; color: var(--muted-soft, var(--muted)); }
       .file-chip {
         display: flex; align-items: center; gap: 0.7rem; margin-top: 0.6rem;
@@ -123,7 +189,7 @@
       .check-row input { width: 16px; height: 16px; }
       .progress { height: 6px; border-radius: 9999px; background: var(--hairline); overflow: hidden; margin-top: 0.8rem; display: none; }
       .progress.show { display: block; }
-      .progress i { display: block; height: 100%; width: 0; background: var(--purple); transition: width 150ms ease; }
+      .progress i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--purple), var(--red)); transition: width 200ms ease; }
       .form-msg { font-size: 0.85rem; margin: 0.7rem 0 0; }
       .form-msg.err { color: #b3261e; }
       .dark-mode .form-msg.err { color: #f28779; }
@@ -135,7 +201,10 @@
       .item {
         background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius);
         padding: 1rem 1.2rem;
+        transition: border-color 160ms ease, box-shadow 160ms ease;
       }
+      .item:hover { border-color: var(--hairline-strong); box-shadow: 0 4px 18px rgb(20 20 19 / 6%); }
+      .dark-mode .item:hover { box-shadow: 0 4px 18px rgb(0 0 0 / 30%); }
       .item-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.8rem; }
       .item-title { font-family: "Noto Serif TC", serif; font-weight: 500; font-size: 1.02rem; color: var(--purple); margin: 0; line-height: 1.45; }
       .dark-mode .item-title { color: #e3c6dc; }
@@ -162,11 +231,15 @@
       .board-scroll { overflow-x: auto; border: 1px solid var(--hairline); border-radius: var(--radius); background: var(--surface); }
       table.board { width: 100%; border-collapse: collapse; font-size: 0.88rem; min-width: 640px; }
       .board th {
-        text-align: left; padding: 0.7rem 0.9rem; font-size: 0.76rem; letter-spacing: 0.06em;
-        color: var(--muted); border-bottom: 1px solid var(--hairline); white-space: nowrap; font-weight: 600;
+        position: sticky; top: 0; z-index: 2; background: var(--surface);
+        text-align: left; padding: 0.7rem 0.9rem; font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase;
+        color: var(--muted); box-shadow: 0 1px 0 var(--hairline); white-space: nowrap; font-weight: 600;
       }
       .board td { padding: 0.65rem 0.9rem; border-bottom: 1px solid var(--hairline); vertical-align: middle; }
       .board tr:last-child td { border-bottom: 0; }
+      .board tbody tr { transition: background-color 120ms ease; }
+      .board tbody tr:hover { background: rgb(20 20 19 / 2.5%); }
+      .dark-mode .board tbody tr:hover { background: rgb(255 255 255 / 4%); }
       .board td.num, .board th.num { text-align: right; font-variant-numeric: tabular-nums; }
       .board .name { font-weight: 600; }
       .board .star { color: var(--school-gold, #c9a227); }
@@ -174,22 +247,23 @@
       .dark-mode .board-scroll { background: var(--surface); }
       .board-mode { display: inline-flex; padding: 2px 9px; border-radius: 9999px; border: 1px solid var(--hairline); font-size: 0.72rem; color: var(--muted); }
 
-      /* ---- Kahoot 佔位 ---- */
-      .soon { text-align: center; padding: 3rem 1.5rem; }
-      .soon-icon { color: var(--purple); opacity: 0.6; }
-      .soon h2 { font-family: "Noto Serif TC", serif; font-size: 1.3rem; color: var(--purple); margin: 0.8rem 0 0.4rem; }
-      .dark-mode .soon h2 { color: #e3c6dc; }
-      .soon p { color: var(--muted); font-size: 0.92rem; max-width: 440px; margin: 0 auto 1.4rem; line-height: 1.7; }
-      .soon ul { list-style: none; padding: 0; margin: 0 auto 1.6rem; max-width: 380px; text-align: left; color: var(--muted); font-size: 0.88rem; }
-      .soon li { padding: 0.45rem 0; border-bottom: 1px solid var(--hairline); display: flex; gap: 0.6rem; }
-      .soon li:last-child { border-bottom: 0; }
-
       /* ---- 遊戲記錄 ---- */
       .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.7rem; }
-      .stat-tile { background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius); padding: 0.85rem 1rem; }
-      .stat-num { font-family: "Noto Serif TC", serif; font-size: 1.45rem; font-weight: 500; color: var(--purple); line-height: 1.25; font-variant-numeric: tabular-nums; }
+      .stat-tile {
+        position: relative; overflow: hidden;
+        background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius);
+        padding: 1.05rem 1.1rem 0.95rem;
+        transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+      }
+      .stat-tile::before {
+        content: ""; position: absolute; top: 0; left: 1.1rem; width: 26px; height: 3px;
+        border-radius: 0 0 3px 3px; background: var(--school-gold);
+      }
+      .stat-tile:hover { transform: translateY(-2px); border-color: var(--hairline-strong); box-shadow: 0 8px 22px rgb(20 20 19 / 8%); }
+      .dark-mode .stat-tile:hover { box-shadow: 0 8px 22px rgb(0 0 0 / 35%); }
+      .stat-num { font-family: var(--font-serif); font-size: 1.75rem; font-weight: 500; letter-spacing: -0.01em; color: var(--purple); line-height: 1.2; font-variant-numeric: tabular-nums; }
       .dark-mode .stat-num { color: #e3c6dc; }
-      .stat-label { font-size: 0.76rem; color: var(--muted); margin-top: 0.1rem; }
+      .stat-label { font-size: 0.76rem; color: var(--muted); margin-top: 0.15rem; letter-spacing: 0.02em; }
       .insight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
       @media (max-width: 640px) { .insight-grid { grid-template-columns: 1fr; } }
       .insight-title { font-size: 0.85rem; font-weight: 700; color: var(--ink); margin: 0 0 0.4rem; }
@@ -271,10 +345,6 @@
 
       .hidden { display: none !important; }
 
-      @media (prefers-reduced-motion: reduce) {
-        .skel { animation-duration: 2.4s !important; }
-      }
-
       @media (max-width: 640px) {
         .admin-wrap { padding: 1rem 0.85rem 3rem; }
         .card { padding: 1.1rem 1rem; }
@@ -290,10 +360,13 @@
 
       <main class="flex-1">
         <div class="admin-wrap">
+          <div class="admin-glow" aria-hidden="true"></div>
           <!-- 登入 -->
           <div class="login-box" id="loginView">
+            <div class="login-glow" aria-hidden="true"></div>
+            <p class="admin-kicker"><span>LSC AGKT · ADMIN</span></p>
             <h1>管理後台</h1>
-            <p>請輸入管理員密碼以繼續。</p>
+            <p class="login-sub">請輸入管理員密碼以繼續。</p>
             <form id="loginForm">
               <label class="field"><span>帳號</span><input type="text" id="loginUser" autocomplete="username" required /></label>
               <label class="field"><span>密碼</span>
@@ -314,8 +387,9 @@
           <div id="panelView" class="hidden">
             <div class="admin-head">
               <div>
+                <p class="admin-kicker"><span>LSC AGKT · 管理主控台</span></p>
                 <h1 class="admin-title">管理後台</h1>
-                <p class="admin-sub">管理資源庫 PDF、排行榜記錄與問答遊戲記錄。</p>
+                <p class="admin-sub">管理資源庫 PDF、排行榜記錄、問答遊戲與線上題庫。</p>
               </div>
               <button type="button" class="btn sm" id="logoutBtn">登出</button>
             </div>
@@ -329,7 +403,7 @@
 
             <!-- ======== 資源管理 ======== -->
             <section id="tab-pdfs" role="tabpanel" aria-labelledby="tabBtn-pdfs">
-              <div class="card">
+              <div class="card reveal">
                 <h2>上傳 PDF</h2>
                 <div class="form-grid">
                   <label class="field span2" id="fileField">
@@ -367,14 +441,14 @@
                 </div>
               </div>
 
-              <h2 class="admin-title" style="font-size: 1.15rem; margin: 1.8rem 0 0.8rem;">已上傳的 PDF（雲端）</h2>
-              <p class="admin-sub" style="margin-bottom: 0.9rem;">這些檔案會自動顯示在資源庫頁面。靜態資源（隨網站部署的 PDF）不在此列。</p>
-              <div class="list" id="pdfList"><div class="empty">載入中…</div></div>
+              <h2 class="admin-title reveal" style="font-size: 1.15rem; margin: 1.8rem 0 0.8rem; --reveal-delay: 60ms;">已上傳的 PDF（雲端）</h2>
+              <p class="admin-sub reveal" style="margin-bottom: 0.9rem; --reveal-delay: 80ms;">這些檔案會自動顯示在資源庫頁面。靜態資源（隨網站部署的 PDF）不在此列。</p>
+              <div class="list reveal" id="pdfList" style="--reveal-delay: 100ms;"><div class="empty">載入中…</div></div>
             </section>
 
             <!-- ======== 排行榜 ======== -->
             <section id="tab-board" role="tabpanel" aria-labelledby="tabBtn-board" class="hidden">
-              <div class="board-tools">
+              <div class="board-tools reveal">
                 <select id="boardMode" aria-label="模式篩選">
                   <option value="all">全部模式</option>
                   <option value="sprint">限時模式</option>
@@ -385,7 +459,7 @@
                 <button type="button" class="btn danger" id="boardDelete" disabled>刪除所選</button>
                 <button type="button" class="btn sm" id="boardRefresh">重新載入</button>
               </div>
-              <div class="board-scroll">
+              <div class="board-scroll reveal" style="--reveal-delay: 60ms;">
                 <table class="board">
                   <thead>
                     <tr>
@@ -413,9 +487,9 @@
                 <button type="button" class="btn sm" id="gamesRefresh">重新載入</button>
               </div>
 
-              <div class="stat-grid" id="gamesStats"><div class="empty" style="grid-column: 1 / -1;">載入中…</div></div>
+              <div class="stat-grid reveal" id="gamesStats" style="--reveal-delay: 60ms;"><div class="empty" style="grid-column: 1 / -1;">載入中…</div></div>
 
-              <div class="card" id="insightCard" style="display: none; margin-top: 1.2rem;">
+              <div class="card reveal" id="insightCard" style="display: none; margin-top: 1.2rem; --reveal-delay: 100ms;">
                 <h2>題目難度洞察</h2>
                 <div class="insight-grid">
                   <div>
@@ -429,13 +503,13 @@
                 </div>
               </div>
 
-              <h2 class="admin-title" style="font-size: 1.15rem; margin: 1.8rem 0 0.8rem;">過往遊戲</h2>
-              <div class="list" id="gamesList"><div class="empty">載入中…</div></div>
+              <h2 class="admin-title reveal" style="font-size: 1.15rem; margin: 1.8rem 0 0.8rem; --reveal-delay: 140ms;">過往遊戲</h2>
+              <div class="list reveal" id="gamesList" style="--reveal-delay: 180ms;"><div class="empty">載入中…</div></div>
             </section>
 
             <!-- ======== 題庫 ======== -->
             <section id="tab-bank" role="tabpanel" aria-labelledby="tabBtn-bank" class="hidden">
-              <div class="board-tools">
+              <div class="board-tools reveal">
                 <button type="button" class="btn sm" id="bankLoad">載入題庫</button>
                 <input type="text" id="bankSearch" placeholder="搜尋題目／選項…" aria-label="搜尋題目" style="flex: 1; min-width: 160px;" />
                 <span class="spacer"></span>
@@ -447,9 +521,9 @@
                 <span class="spacer"></span>
                 <button type="button" class="btn primary sm" id="bankGen">產出更新後的檔案</button>
               </div>
-              <div class="bank-list" id="bankList"><div class="empty">尚未載入題庫。</div></div>
+              <div class="bank-list reveal" id="bankList" style="--reveal-delay: 60ms;"><div class="empty">尚未載入題庫。</div></div>
 
-              <div class="card" style="margin-top: 1.4rem;">
+              <div class="card reveal" style="margin-top: 1.4rem; --reveal-delay: 100ms;">
                 <h2>匯入選項（Quiz Helper 選項庫 JSON）</h2>
                 <p class="admin-sub" style="margin: -0.4rem 0 0.8rem;">貼上擴充功能「選項庫 → 複製」的 JSON。已存在的題目會以新選項覆寫（答案文字會在新選項中重新定位，找不到則保留原位並標示）；新題目僅在能確認答案時新增。</p>
                 <textarea id="bankImportText" class="bank-textarea" placeholder='{
@@ -1099,6 +1173,29 @@
           return '<div class="stat-tile"><div class="stat-num">' + num + '</div><div class="stat-label">' + esc(label) + "</div></div>";
         }
 
+        /* 數字滾動：只動文字內容，偏好減少動態時直接顯示最終值 */
+        function animateStats() {
+          if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+          Array.prototype.forEach.call($("gamesStats").querySelectorAll(".stat-num"), function (el) {
+            var m = el.textContent.match(/^([\d,]+(?:\.\d+)?)(.*)$/);
+            if (!m) return;
+            var target = parseFloat(m[1].replace(/,/g, ""));
+            if (!isFinite(target) || target === 0) return;
+            var suffix = m[2] || "";
+            var decimals = (m[1].split(".")[1] || "").length;
+            var t0 = null;
+            function step(ts) {
+              if (t0 === null) t0 = ts;
+              var p = Math.min(1, (ts - t0) / 900);
+              var eased = 1 - Math.pow(1 - p, 3);
+              var v = (target * eased).toFixed(decimals);
+              el.textContent = (decimals ? v : v.replace(/\B(?=(\d{3})+(?!\d))/g, ",")) + suffix;
+              if (p < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+          });
+        }
+
         function renderGamesStats() {
           var el = $("gamesStats");
           var t = statsData && statsData.totals;
@@ -1110,6 +1207,7 @@
             statTile(t.answers, "作答次數") +
             statTile((t.accuracy || 0) + "%", "總答對率") +
             statTile(t.avgScore, "全場平均分");
+          animateStats();
           var h = (statsData && statsData.hardest) || [];
           var e = (statsData && statsData.easiest) || [];
           if (h.length || e.length) {
