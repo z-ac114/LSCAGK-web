@@ -534,6 +534,12 @@ button:active {
   left: -200px;
   background: radial-gradient(circle at center, rgb(107 58 99 / 9%), transparent 70%);
   animation: hero-drift-b 34s ease-in-out infinite alternate;
+  /* 在到達 hero 下緣之前先淡出，消除 overflow: hidden 於段落邊界的硬切線
+     （漸層斷裂）。元素底部固定落在 hero 下緣下方 280px（各斷點通用），
+     故以「距元素底部」計算：380px 處開始淡出、296px 處完全透明
+     （= 靜止時於邊界前 16px 收掉；上漂動畫／視差只會離開邊界，更安全）。 */
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 380px), transparent calc(100% - 296px));
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 380px), transparent calc(100% - 296px));
 }
 @keyframes hero-drift-a {
   from { transform: translate3d(0, 0, 0) scale(1); }
