@@ -1,9 +1,17 @@
 const themeKey = "agk-theme";
 const savedTheme = localStorage.getItem(themeKey);
 
-if (savedTheme === "dark") {
+/* 深色為預設主題：只有明確選過「淺色」才用淺色 */
+if (savedTheme !== "light") {
   document.documentElement.classList.add("dark-mode");
 }
+
+/* 同步瀏覽器介面色彩（theme-color meta）與目前主題 */
+function syncThemeColor(isDark) {
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute("content", isDark ? "#181715" : "#fafafa");
+}
+syncThemeColor(document.documentElement.classList.contains("dark-mode"));
 
 function addThemeButton() {
   const themeButton = document.createElement("button");
@@ -16,6 +24,7 @@ function addThemeButton() {
   themeButton.addEventListener("click", () => {
     const isDark = document.documentElement.classList.toggle("dark-mode");
     localStorage.setItem(themeKey, isDark ? "dark" : "light");
+    syncThemeColor(isDark);
   });
 
   document.body.append(themeButton);

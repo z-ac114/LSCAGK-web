@@ -1,9 +1,9 @@
 /* =====================================================================
-   LSCAGKT · 喇沙書院學術時事及常識問答隊 — 設計系統 v5.1（Claude 風格 · 對齊規範色值）
-   參考：getdesign.md「Claude」DESIGN.md 規範
-   · 畫布 canvas #faf9f5 · 淺米卡 surface-card #efe9de · 強米 #e8e0d2
-   · 髮絲線 hairline #e6dfd8 / #ebe6df（暖米色，非灰階）
-   · 深暖墨 ink #141413 · 內文 body #3d3d3a · 次要 muted #6c6a64
+   LSCAGKT · 喇沙書院學術時事及常識問答隊 — 設計系統 v5.2（Claude 風格 · 中性畫布）
+   · 深色為預設主題（theme.js）；淺色為乾淨近白，不再偏黃
+   · 畫布 canvas #fafafa · 卡片 surface #f3f2f0 · 柔面 #f5f5f4
+   · 髮絲線 hairline #e6e5e2 / #ebeae7（中性，微暖）
+   · 墨色 ink #141413 · 內文 body #3d3d3a · 次要 muted #6c6a64
    · 襯線顯示標題（字重 400、負字距）＋ 人文無襯線內文
    · 品牌電壓 = 校徽紅 #d42522（CTA／品牌重音，保留校隊識別）
    · 深色面板 surface-dark #181715 / elevated #252320（dark: on-dark #faf9f5）
@@ -11,8 +11,8 @@
    ===================================================================== */
 
 :root {
-  --cream: #faf9f5;              /* canvas */
-  --canvas-soft: #f5f0e8;        /* surface-soft */
+  --cream: #fafafa;              /* canvas（中性近白） */
+  --canvas-soft: #f5f5f4;        /* surface-soft */
   --ink: #141413;
   --ink-solid: #141413;
   --body-text: #3d3d3a;
@@ -25,14 +25,14 @@
   --lasalle-red-dark: #ae0906;
   --plum-soft: #efe0ea;
   --rose-soft: #fdeceb;
-  --surface: #efe9de;            /* surface-card */
-  --surface-soft: #f5f0e8;
-  --surface-tint: #e8e0d2;       /* surface-cream-strong */
+  --surface: #f3f2f0;            /* surface-card */
+  --surface-soft: #f5f5f4;
+  --surface-tint: #eae9e6;       /* surface-strong */
   --surface-dark: #181715;
   --surface-dark-elevated: #252320;
-  --hairline: #e6dfd8;
-  --hairline-soft: #ebe6df;
-  --hairline-strong: #d9d0c3;
+  --hairline: #e6e5e2;
+  --hairline-soft: #ebeae7;
+  --hairline-strong: #d3d1cc;
   --school-gold: #c69a3a;
   --space-unit: 0.25rem;
   --font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", -apple-system, "Segoe UI", sans-serif;
@@ -55,7 +55,7 @@ a, button, input, select, textarea, summary, [tabindex] {
 
 html {
   scroll-behavior: smooth;
-  background: #faf9f5;
+  background: #fafafa;
 }
 html.dark-mode {
   background: #181715;
@@ -329,6 +329,17 @@ button:active {
   background: var(--cream);
   border-bottom: 1px solid var(--hairline);
 }
+/* 支援時：半透明畫布 + 背景模糊，捲動時內容自標題下透出 */
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .site-header {
+    background: color-mix(in srgb, var(--cream) 84%, transparent);
+    -webkit-backdrop-filter: blur(14px) saturate(1.5);
+    backdrop-filter: blur(14px) saturate(1.5);
+  }
+  .dark-mode .site-header {
+    background: color-mix(in srgb, #181715 84%, transparent);
+  }
+}
 .site-header-inner {
   display: flex;
   align-items: center;
@@ -486,17 +497,29 @@ button:active {
   background: var(--cream);
   color: var(--ink);
 }
-/* 慢速漂移的暖色光暈（純 CSS，無 JS／無依賴）：校徽紅 + 品牌梅紫 */
-.ls-hero::before,
-.ls-hero::after {
-  content: "";
+@media (min-width: 900px) {
+  /* 桌面：主視覺佔滿首屏，內容垂直置中，捲軸提示落於底部 */
+  .ls-hero {
+    min-height: calc(100vh - var(--nav-h));
+    min-height: calc(100svh - var(--nav-h));
+    display: flex;
+    align-items: center;
+    padding-top: 72px;
+    padding-bottom: 72px;
+  }
+  .ls-hero > div:not(.ls-glow) {
+    width: 100%;
+  }
+}
+/* 慢速漂移的暖色光暈（CSS 漂移；GSAP 載入時再加捲軸視差）：校徽紅 + 品牌梅紫 */
+.ls-glow {
   position: absolute;
   border-radius: 50%;
   filter: blur(64px);
   pointer-events: none;
   z-index: 0;
 }
-.ls-hero::before {
+.ls-glow-a {
   width: 540px;
   height: 540px;
   top: -180px;
@@ -504,7 +527,7 @@ button:active {
   background: radial-gradient(circle at center, rgb(212 37 34 / 10%), transparent 70%);
   animation: hero-drift-a 26s ease-in-out infinite alternate;
 }
-.ls-hero::after {
+.ls-glow-b {
   width: 660px;
   height: 660px;
   bottom: -280px;
@@ -520,31 +543,32 @@ button:active {
   from { transform: translate3d(0, 0, 0) scale(1); }
   to { transform: translate3d(88px, -64px, 0) scale(1.08); }
 }
-.dark-mode .ls-hero::before {
+.dark-mode .ls-glow-a {
   background: radial-gradient(circle at center, rgb(224 82 74 / 13%), transparent 70%);
 }
-.dark-mode .ls-hero::after {
+.dark-mode .ls-glow-b {
   background: radial-gradient(circle at center, rgb(191 166 184 / 11%), transparent 70%);
 }
-.ls-hero > div {
+.ls-hero > div:not(.ls-glow) {
   position: relative;
   z-index: 1;
 }
 @media (max-width: 640px) {
-  .ls-hero::before {
-    width: 380px;
-    height: 380px;
+  .ls-glow {
     filter: blur(44px);
   }
-  .ls-hero::after {
+  .ls-glow-a {
+    width: 380px;
+    height: 380px;
+  }
+  .ls-glow-b {
     width: 440px;
     height: 440px;
-    filter: blur(44px);
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ls-hero::before,
-  .ls-hero::after {
+  .ls-glow-a,
+  .ls-glow-b {
     animation: none !important;
   }
 }
@@ -555,6 +579,20 @@ button:active {
   text-transform: uppercase;
   color: var(--red);
   margin: 0;
+}
+/* 首頁 kicker：前置紅色短線，與內頁頁首呼應 */
+.ls-hero .ls-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+.ls-hero .ls-kicker::before {
+  content: "";
+  flex: none;
+  width: 36px;
+  height: 2px;
+  background: var(--red);
+  border-radius: 1px;
 }
 .ls-kicker-red {
   font-size: 0.72rem;
@@ -567,19 +605,19 @@ button:active {
 .ls-title {
   font-family: var(--font-serif);
   font-weight: 400;
-  line-height: 1.12;
+  line-height: 1.1;
   letter-spacing: -0.022em;
   font-feature-settings: "palt" 1;
   text-wrap: balance;
-  font-size: clamp(2.1rem, 5.4vw, 3.75rem);
+  font-size: clamp(2.35rem, 6vw, 4.25rem);
   color: var(--ink);
   margin: 18px 0 0;
-  max-width: 20em;
+  max-width: 18em;
 }
 .ls-sub {
-  font-size: 1.05rem;
+  font-size: clamp(1rem, 0.96rem + 0.35vw, 1.125rem);
   letter-spacing: -0.01em;
-  color: var(--ink);
+  color: var(--body-text);
   margin: 18px 0 0;
   max-width: 34em;
   text-wrap: pretty;
@@ -594,7 +632,7 @@ button:active {
 .ls-btn {
   display: inline-flex;
   align-items: center;
-  min-height: 40px;
+  min-height: 44px;
   margin-top: 28px;
   padding: 0 20px;
   background: var(--red);
@@ -629,7 +667,30 @@ button:active {
   background: var(--surface);
   border: 1px solid var(--hairline);
   border-radius: var(--radius);
+  overflow: hidden;
   transition: border-color 160ms ease, transform 200ms cubic-bezier(0.22, 0.61, 0.36, 1), box-shadow 200ms ease;
+}
+/* 懸停：頂部紅線掃入 */
+.entry-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--red);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.entry-card:hover::before,
+.entry-card:focus-visible::before {
+  transform: scaleX(1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .entry-card::before {
+    transition: none;
+  }
 }
 .entry-card:hover,
 .entry-card:focus-visible {
@@ -672,6 +733,53 @@ button:active {
 .entry-card:focus-visible .entry-arrow {
   color: var(--red-active);
   transform: translateX(4px);
+}
+
+/* ===================== CTA 面板（校徽紅） ===================== */
+.cta-panel {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(120% 160% at 100% 0%, rgb(255 255 255 / 12%), transparent 55%), var(--red);
+  color: #ffffff;
+  border-radius: var(--radius-xl);
+  padding: clamp(36px, 5vw, 56px) clamp(26px, 4.5vw, 48px);
+}
+.cta-panel .ls-heading {
+  color: #ffffff;
+  margin: 0;
+}
+.cta-text {
+  margin: 14px 0 0;
+  max-width: 36em;
+  line-height: 1.9;
+  color: rgb(255 255 255 / 90%);
+}
+.cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
+}
+.cta-actions .ls-btn {
+  margin-top: 0;
+}
+.ls-btn.cta-btn-solid {
+  background: var(--cream);
+  color: var(--ink-solid);
+}
+.ls-btn.cta-btn-solid:hover {
+  background: #ffffff;
+  transform: translateY(-1px);
+}
+.ls-btn.cta-btn-outline {
+  background: transparent;
+  border: 1px solid rgb(255 255 255 / 38%);
+  color: #ffffff;
+}
+.ls-btn.cta-btn-outline:hover {
+  background: rgb(255 255 255 / 12%);
+  border-color: rgb(255 255 255 / 55%);
+  transform: translateY(-1px);
 }
 
 /* ===================== Sections ===================== */
@@ -824,10 +932,20 @@ main > section.bg-purple::before {
   content: none;
 }
 main > section.bg-purple p.text-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
   font-size: 0.78rem;
   font-weight: 600;
   letter-spacing: 0.22em;
   color: var(--red);
+}
+main > section.bg-purple p.text-sm::before {
+  content: "";
+  width: 36px;
+  height: 2px;
+  background: var(--red);
+  border-radius: 1px;
 }
 main > section.bg-cream {
   background: var(--cream);
@@ -850,6 +968,22 @@ footer.bg-purple-deep .text-cream {
 
 footer.bg-purple-deep .text-plum-soft {
   color: var(--muted);
+}
+
+footer.bg-purple-deep .text-muted {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: 0.02em;
+}
+
+footer.bg-purple-deep .text-muted::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  background: var(--red);
+  opacity: 0.85;
 }
 
 footer.bg-purple-deep a {
@@ -997,9 +1131,12 @@ main .rounded-xl.bg-surface h2 {
   color: #ffffff;
 }
 
-.dark-mode header.bg-purple,
-.dark-mode .site-header {
+.dark-mode header.bg-purple {
   background: #181715;
+}
+
+/* 深色下 .site-header 背景沿用 var(--cream)（=墨色），令 backdrop-filter 半透明生效 */
+.dark-mode .site-header {
   border-color: var(--hairline);
 }
 
