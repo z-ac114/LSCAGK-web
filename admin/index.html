@@ -1420,10 +1420,18 @@
             if (r.deleted) return;
             var o = Array.isArray(r.options) ? r.options.map(String) : null;
             if (!o || o.length < 2) return;
-            var entry = { q: String(r.q), origQ: String(r.orig_q || r.q), options: o, c: Number(r.c) || 0,
+            var entry = { key: null, q: String(r.q), origQ: String(r.orig_q || r.q), options: o, c: Number(r.c) || 0,
               line: -1, modified: false, added: false, deleted: false, wasEdited: false, wasDeleted: false, saved: true };
-            if (map[k] != null) bank[map[k]] = entry;
-            else bank.push(entry);
+            if (map[k] != null) {
+              // 原地取代：沿用基底題目的 key（否則該題 data-key 變 undefined，
+              // 編輯／刪除按鈕會因 bankByKey 找不到而靜默失效）
+              entry.key = bank[map[k]].key || ("q" + (bankKeySeq++));
+              bank[map[k]] = entry;
+            } else {
+              // 雲端新增題：補發新 key
+              entry.key = "q" + (bankKeySeq++);
+              bank.push(entry);
+            }
           });
         }
 
@@ -1791,8 +1799,9 @@
           if (act === "more") { bankShow += 200; renderBank(); return; }
           if (!key) return;
           if (act === "edit") {
-            bankEditKey = key;
             var b = bankByKey(key);
+            if (!b) return;  // key 異常時不動作（避免 throw 令按鈕靜默失效）
+            bankEditKey = key;
             bankEditSnapshot = JSON.stringify({ q: b.q, options: b.options, c: b.c });
             renderBank();
             return;
