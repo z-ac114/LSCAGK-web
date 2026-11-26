@@ -212,24 +212,38 @@ async function handleBankOverridePost(req, res) {
     if (origQ && origQ !== q) staleQ.push(origQ);
     rows.push({
       bank: "guoqing", q,
+      // orig_q = 基底題庫的原始題文字（未改題前）。讀取方以它對回基底題目作覆寫／刪除；
+      // 缺了它，改題文字後的覆寫無法對回原題，會在題庫出現新舊兩條。
+      orig_q: origQ || q,
       options: e.options.map((o) => String(o == null ? "" : o)),
       c: Number.isInteger(e.c) && e.c >= 0 && e.c < e.options.length ? e.c : 0,
       deleted: !!e.deleted
     });
   }
   if (!rows.length) { json(res, 400, { error: "沒有有效的項目。" }); return; }
-  // 題目文字曾被修改：先刪走以舊文字儲存的行（避免新舊兩版同時存在）
+  // 題目文字曾被修改：先刪走以舊文字（q 或 orig_q）儲存的行（避免新舊兩版同時存在）
   if (staleQ.length) {
-    const list = encodeURIComponent(staleQ.map((q) => "\"" + q + "\"").join(","));
-    await sb("/rest/v1/question_overrides?bank=eq.guoqing&q=in.(" + list + ")", {
+    const list = staleQ.map((q) => "\"" + q + "\"").join(",");
+    const filter = "or=" + encodeURIComponent("(q.in.(" + list + "),orig_q.in.(" + list + "))");
+    await sb("/rest/v1/question_overrides?bank=eq.guoqing&" + filter, {
       method: "DELETE", headers: serviceHeaders()
     });
   }
-  const r = await sb("/rest/v1/question_overrides?on_conflict=bank,q", {
+  const upsertBody = JSON.stringify(rows);
+  let r = await sb("/rest/v1/question_overrides?on_conflict=bank,q", {
     method: "POST",
     headers: serviceHeaders({ "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=representation" }),
-    body: JSON.stringify(rows)
+    body: upsertBody
   });
+  // 資料表尚未加 orig_q 欄時：退回不含 orig_q 的寫入（行為同舊版）
+  if (!r.ok && /orig_q/i.test(await r.clone().text())) {
+    const legacy = rows.map(({ orig_q, ...rest }) => rest);
+    r = await sb("/rest/v1/question_overrides?on_conflict=bank,q", {
+      method: "POST",
+      headers: serviceHeaders({ "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=representation" }),
+      body: JSON.stringify(legacy)
+    });
+  }
   if (!r.ok) {
     const t = await r.text();
     json(res, 502, { error: "儲存失敗：" + t.slice(0, 150) });
