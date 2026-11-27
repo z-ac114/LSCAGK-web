@@ -169,10 +169,13 @@ async function handleLeaderboard(req, res) {
 
   if (req.method === "DELETE") {
     const body = await readBody(req);
-    const ids = Array.isArray(body.ids) ? body.ids.filter((i) => UUID_RE.test(String(i))) : [];
+    // leaderboard.id 是整數主鍵（非 UUID）——只接受純數字字串，避免 parseInt 寬鬆解析
+    const ids = Array.isArray(body.ids)
+      ? [...new Set(body.ids.map((i) => (/^\d{1,15}$/.test(String(i)) ? parseInt(i, 10) : 0)).filter((n) => n > 0))]
+      : [];
     if (!ids.length) { json(res, 400, { error: "沒有有效的記錄 id。" }); return; }
     // 只編碼 id 值；若把整段 id=in.(...) 編碼，PostgREST 會收到一個未知參數而非 id 篩選器
-    const list = ids.map((i) => '"' + encodeURIComponent(String(i)) + '"').join(",");
+    const list = ids.map((i) => encodeURIComponent(String(i))).join(",");
     const r = await sb("/rest/v1/leaderboard?id=in.(" + list + ")", {
       method: "DELETE",
       headers: serviceHeaders({ Prefer: "return=representation" })
