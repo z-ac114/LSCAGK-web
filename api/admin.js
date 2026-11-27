@@ -171,8 +171,9 @@ async function handleLeaderboard(req, res) {
     const body = await readBody(req);
     const ids = Array.isArray(body.ids) ? body.ids.filter((i) => UUID_RE.test(String(i))) : [];
     if (!ids.length) { json(res, 400, { error: "沒有有效的記錄 id。" }); return; }
-    const filter = "id=in.(\"" + ids.join("\",\"") + "\")";
-    const r = await sb("/rest/v1/leaderboard?" + encodeURIComponent(filter), {
+    // 只編碼 id 值；若把整段 id=in.(...) 編碼，PostgREST 會收到一個未知參數而非 id 篩選器
+    const list = ids.map((i) => '"' + encodeURIComponent(String(i)) + '"').join(",");
+    const r = await sb("/rest/v1/leaderboard?id=in.(" + list + ")", {
       method: "DELETE",
       headers: serviceHeaders({ Prefer: "return=representation" })
     });
