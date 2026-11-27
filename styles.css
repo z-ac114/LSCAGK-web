@@ -333,6 +333,14 @@ button:active {
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .site-header {
     background: color-mix(in srgb, var(--cream) 84%, transparent);
+  }
+  /* 模糊放在偽元素：backdrop-filter 會為 fixed 子元素建立 containing block，
+     若留在 header 上，手機選單會被限制在 64px 的標題列內而無法完整顯示 */
+  .site-header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
     -webkit-backdrop-filter: blur(14px) saturate(1.5);
     backdrop-filter: blur(14px) saturate(1.5);
   }
@@ -441,7 +449,7 @@ button:active {
     flex-direction: column;
     align-items: stretch;
     gap: 2px;
-    padding: calc(var(--nav-h) + 10px) 14px 20px;
+    padding: calc(var(--nav-h) + 10px) 14px calc(20px + env(safe-area-inset-bottom));
     background: var(--cream);
     border-left: 1px solid var(--hairline);
     box-shadow: -16px 0 40px rgb(0 0 0 / 14%);
