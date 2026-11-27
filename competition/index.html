@@ -1676,8 +1676,10 @@
         /* ===================== 鍵盤快捷鍵 ===================== */
         document.addEventListener("keydown", function (e) {
           if (!started || finished) return;
-          var tag = e.target && e.target.tagName;
-          if (tag === "INPUT" || tag === "TEXTAREA" || tag === "BUTTON") return;
+          var tgt = e.target;
+          // 只避開文字輸入元素；按鈕焦點不可擋快捷鍵（滑鼠點過選項後，焦點留在按鈕上，
+          // 若略過 BUTTON，自訂按鍵在標準模式下會全部失效）
+          if (tgt && (tgt.isContentEditable || (tgt.tagName && /^(INPUT|TEXTAREA|SELECT)$/.test(tgt.tagName)))) return;
           var item = QUESTIONS[idx];
           if (!item) return;
 
@@ -1908,26 +1910,32 @@
           return slot === "next" || slot === "prev" ? KEYBINDS[slot] : KEYBINDS.options[Number(slot)];
         }
         function setSlotKey(slot, key) {
+          var changed = true;
           // 重複鍵：與另一個槽位對調，避免衝突
           if (slot === "next" || slot === "prev") {
-            if (KEYBINDS[slot] === key) return;
-            for (var i = 0; i < KEYBINDS.options.length; i++) {
-              if (KEYBINDS.options[i] === key) { KEYBINDS.options[i] = KEYBINDS[slot]; break; }
+            if (KEYBINDS[slot] === key) { changed = false; }
+            else {
+              for (var i = 0; i < KEYBINDS.options.length; i++) {
+                if (KEYBINDS.options[i] === key) { KEYBINDS.options[i] = KEYBINDS[slot]; break; }
+              }
+              KEYBINDS[slot] = key;
             }
-            KEYBINDS[slot] = key;
           } else {
             var idx = Number(slot);
-            if (KEYBINDS.options[idx] === key) return;
-            if (KEYBINDS.next === key) { KEYBINDS.next = KEYBINDS.options[idx]; }
-            else if (KEYBINDS.prev === key) { KEYBINDS.prev = KEYBINDS.options[idx]; }
+            if (KEYBINDS.options[idx] === key) { changed = false; }
             else {
-              for (var j = 0; j < KEYBINDS.options.length; j++) {
-                if (j !== idx && KEYBINDS.options[j] === key) { KEYBINDS.options[j] = KEYBINDS.options[idx]; break; }
+              if (KEYBINDS.next === key) { KEYBINDS.next = KEYBINDS.options[idx]; }
+              else if (KEYBINDS.prev === key) { KEYBINDS.prev = KEYBINDS.options[idx]; }
+              else {
+                for (var j = 0; j < KEYBINDS.options.length; j++) {
+                  if (j !== idx && KEYBINDS.options[j] === key) { KEYBINDS.options[j] = KEYBINDS.options[idx]; break; }
+                }
               }
+              KEYBINDS.options[idx] = key;
             }
-            KEYBINDS.options[idx] = key;
           }
-          saveBinds();
+          if (changed) saveBinds();
+          // 同鍵重綁也要離開「按鍵…」狀態，否則按鈕看似壞掉
           refreshBinds();
         }
         document.getElementById("kbdBind").addEventListener("click", function (e) {
